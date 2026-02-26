@@ -8,7 +8,7 @@ const router = express.Router();
 router.get('/offline-sync', getSucursales);
 
 router.route('/')
-    .get(protect, getSucursales)
+    .get(getSucursales)
     .post(protect, authorize('admin'), createSucursal);
 
 router.route('/:id')
