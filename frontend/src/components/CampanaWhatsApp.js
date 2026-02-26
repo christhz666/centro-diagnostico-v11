@@ -139,8 +139,7 @@ const CampanaWhatsApp = () => {
         {/* Panel izquierdo: configurar */}
         <div style={{ background: 'white', borderRadius: 15, padding: 25, boxShadow: '0 2px 10px rgba(0,0,0,0.08)' }}>
                     {/* Botón y formulario solo para admin */}
-                    {esAdmin && (
-                      <>
+                    <>
                         <button onClick={() => setMostrarCredenciales(v => !v)} style={{ marginBottom: 15, background: '#f0f0f0', border: 'none', borderRadius: 8, padding: 8, cursor: 'pointer', fontWeight: 'bold' }}>
                           {mostrarCredenciales ? 'Ocultar' : 'Configurar credenciales WhatsApp'}
                         </button>
@@ -158,7 +157,6 @@ const CampanaWhatsApp = () => {
                           </form>
                         )}
                       </>
-                    )}
           <h3 style={{ margin: '0 0 20px', color: '#2c3e50' }}>⚙️ Configurar Campaña</h3>
           
           <div style={{ marginBottom: 15 }}>
