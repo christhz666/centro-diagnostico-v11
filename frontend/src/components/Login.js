@@ -159,10 +159,6 @@ const Login = ({ onLogin }) => {
                 <MouseTrail />
                 {/* fondo con partículas flotantes opcional */}
                 <Particles />
-          from { opacity: 0; transform: translateY(24px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes slideInLeft {
           from { opacity: 0; transform: translateX(-30px); }
           to   { opacity: 1; transform: translateX(0); }
         }
