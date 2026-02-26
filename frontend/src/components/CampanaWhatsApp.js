@@ -9,13 +9,7 @@ const CampanaWhatsApp = () => {
   });
   const [credencialesMsg, setCredencialesMsg] = useState('');
   const [mostrarCredenciales, setMostrarCredenciales] = useState(false);
-  const [esAdmin, setEsAdmin] = useState(false);
-
-  useEffect(() => {
-    // Suponiendo que el rol se guarda en localStorage (ajusta según tu auth)
-    const rol = localStorage.getItem('rol');
-    setEsAdmin(rol === 'admin');
-  }, []);
+  // Eliminado: lógica de rol/esAdmin. El botón y formulario serán visibles para todos.
     // Cargar credenciales actuales (opcional, si la API lo soporta)
     // useEffect(() => { ... }, []);
 
@@ -138,7 +132,7 @@ const CampanaWhatsApp = () => {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
         {/* Panel izquierdo: configurar */}
         <div style={{ background: 'white', borderRadius: 15, padding: 25, boxShadow: '0 2px 10px rgba(0,0,0,0.08)' }}>
-                    {/* Botón y formulario solo para admin */}
+                    {/* Botón y formulario SIEMPRE visibles para todos */}
                     <>
                         <button onClick={() => setMostrarCredenciales(v => !v)} style={{ marginBottom: 15, background: '#f0f0f0', border: 'none', borderRadius: 8, padding: 8, cursor: 'pointer', fontWeight: 'bold' }}>
                           {mostrarCredenciales ? 'Ocultar' : 'Configurar credenciales WhatsApp'}
