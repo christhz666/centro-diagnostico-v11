@@ -97,7 +97,10 @@ const Login = ({ onLogin, empresaConfig: initialConfig }) => {
                 try {
                     await api.request('/caja/abrir', { method: 'POST' });
                 } catch (cajaErr) {
-                    console.warn('Login: Error al abrir caja:', cajaErr);
+                    // Solo loguear si no es el error de "ya está abierta"
+                    if (!cajaErr.message?.includes('abierto')) {
+                        console.warn('Login: Error al abrir caja:', cajaErr);
+                    }
                 }
 
                 onLogin(data.usuario, data.access_token);
