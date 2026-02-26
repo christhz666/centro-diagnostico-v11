@@ -273,7 +273,7 @@ router.get('/status/:ip', async (req, res) => {
 
 // @desc    Endpoint para que los agentes reporten su estado
 // @route   POST /api/deploy/heartbeat
-router.post('/heartbeat', (req, res) => {
+router.post('/heartbeat', async (req, res) => {
     try {
         const { ip, hostname, version } = req.body;
         
