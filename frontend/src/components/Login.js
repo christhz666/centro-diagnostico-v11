@@ -155,76 +155,100 @@ const Login = ({ onLogin }) => {
             position: 'relative',
             overflow: 'hidden',
         }}>
+            <style>{`
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+            @keyframes float-particle {
+              0%, 100% { transform: translateY(0) scale(1); }
+              50%       { transform: translateY(-30px) scale(1.1); }
+            }
+            @keyframes heartbeat {
+              0%, 100% { transform: scale(1); }
+              14%       { transform: scale(1.15); }
+              28%       { transform: scale(1); }
+              42%       { transform: scale(1.1); }
+              56%       { transform: scale(1); }
+            }
+            @keyframes fadeInUp {
+              from { opacity: 0; transform: translateY(24px); }
+              to   { opacity: 1; transform: translateY(0); }
+            }
+            @keyframes slideInLeft {
+              from { opacity: 0; transform: translateX(-30px); }
+              to   { opacity: 1; transform: translateX(0); }
+            }
+            @keyframes spin {
+              from { transform: rotate(0deg); }
+              to   { transform: rotate(360deg); }
+            }
+            @keyframes pulse-ring {
+              0%   { box-shadow: 0 0 0 0 rgba(135,206,235,0.4); }
+              70%  { box-shadow: 0 0 0 20px rgba(135,206,235,0); }
+              100% { box-shadow: 0 0 0 0 rgba(135,206,235,0); }
+            }
+            @keyframes trail { to { transform: translate(-50%, -50%) scale(2); opacity:0; } }
+            .login-input {
+              width: 100%;
+              padding: 15px 15px 15px 46px;
+              background: rgba(255,255,255,0.6);
+              border: 2px solid rgba(255,255,255,0.8);
+              border-radius: 14px;
+              color: #2c3e50;
+              font-size: 15px;
+              font-family: inherit;
+              box-sizing: border-box;
+              transition: all 0.25s;
+              -webkit-font-smoothing: antialiased;
+            }
+            .login-input::placeholder { color: rgba(44,62,80,0.5); }
+            .login-input:focus {
+              outline: none;
+              border-color: ${C.sky};
+              background: rgba(255,255,255,0.8);
+              box-shadow: 0 0 0 4px rgba(135,206,235,0.1);
+            }
+            .login-btn {
+              width: 100%;
+              padding: 16px;
+              background: linear-gradient(135deg, ${C.sky} 0%, ${colorB} 100%);
+              color: ${C.dark};
+              border: none;
+              border-radius: 14px;
+              font-size: 16px;
+              font-weight: 700;
+              font-family: inherit;
+              cursor: pointer;
+              transition: all 0.25s;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 10px;
+              letter-spacing: 0.3px;
+            }
+            .login-btn:hover:not(:disabled) {
+              transform: translateY(-2px);
+              box-shadow: 0 8px 25px rgba(41,128,185,0.5);
+            }
+            .login-btn:disabled {
+              opacity: 0.7;
+              cursor: not-allowed;
+              transform: none;
+            }
+            .feature-item {
+              display: flex;
+              align-items: center;
+              gap: 12px;
+              padding: 12px 16px;
+              background: rgba(255,255,255,0.06);
+              border-radius: 12px;
+              margin-bottom: 10px;
+              border: 1px solid rgba(255,255,255,0.08);
+              animation: slideInLeft 0.5s ease both;
+            }
+          `}</style>
                 {/* mouse-follow particles */}
                 <MouseTrail />
                 {/* fondo con partículas flotantes opcional */}
                 <Particles />
-          0%   { box-shadow: 0 0 0 0 rgba(135,206,235,0.4); }
-          70%  { box-shadow: 0 0 0 20px rgba(135,206,235,0); }
-          100% { box-shadow: 0 0 0 0 rgba(135,206,235,0); }
-        }
-        @keyframes trail { to { transform: translate(-50%, -50%) scale(2); opacity:0; } }
-        .login-input {
-          width: 100%;
-          padding: 15px 15px 15px 46px;
-          background: rgba(255,255,255,0.6);
-          border: 2px solid rgba(255,255,255,0.8);
-          border-radius: 14px;
-          color: #2c3e50;
-          font-size: 15px;
-          font-family: inherit;
-          box-sizing: border-box;
-          transition: all 0.25s;
-          -webkit-font-smoothing: antialiased;
-        }
-        .login-input::placeholder { color: rgba(44,62,80,0.5); }
-        .login-input:focus {
-          outline: none;
-          border-color: ${C.sky};
-          background: rgba(255,255,255,0.8);
-          box-shadow: 0 0 0 4px rgba(135,206,235,0.1);
-        }
-        .login-btn {
-          width: 100%;
-          padding: 16px;
-          background: linear-gradient(135deg, ${C.sky} 0%, ${colorB} 100%);
-          color: ${C.dark};
-          border: none;
-          border-radius: 14px;
-          font-size: 16px;
-          font-weight: 700;
-          font-family: inherit;
-          cursor: pointer;
-          transition: all 0.25s;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          letter-spacing: 0.3px;
-        }
-        .login-btn:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(41,128,185,0.5);
-        }
-        .login-btn:disabled {
-          opacity: 0.7;
-          cursor: not-allowed;
-          transform: none;
-        }
-        .feature-item {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 12px 16px;
-          background: rgba(255,255,255,0.06);
-          border-radius: 12px;
-          margin-bottom: 10px;
-          border: 1px solid rgba(255,255,255,0.08);
-          animation: slideInLeft 0.5s ease both;
-        }
-      `}</style>
-
-            <Particles />
 
             {/* ════ CONTENEDOR ════ */}
             <div style={{
