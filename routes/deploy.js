@@ -127,7 +127,7 @@ async function pingIP(ip) {
 
 // @desc    Obtener lista de agentes instalados y su estado
 // @route   GET /api/deploy/agents
-router.get('/agents', (req, res) => {
+router.get('/agents', async (req, res) => {
     try {
         // Obtener agentes desde MongoDB
         const agentes = await Agente.find({});
