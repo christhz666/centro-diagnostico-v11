@@ -59,6 +59,7 @@ const Login = ({ onLogin }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        console.log('Login: Intentando iniciar sesión para:', username);
         if (!username.trim() || !password) {
             setError('Complete usuario y contraseña');
             return;
@@ -67,7 +68,10 @@ const Login = ({ onLogin }) => {
         setLoading(true);
         try {
             const data = await api.login({ username, password });
-            if (data.access_token) {
+            console.log('Login: Respuesta recibida:', data ? 'OK' : 'VACÍA');
+
+            if (data && data.access_token) {
+                console.log('Login: Éxito, guardando sesión...');
                 localStorage.setItem('token', data.access_token);
                 localStorage.setItem('user', JSON.stringify(data.usuario));
 
@@ -82,15 +86,17 @@ const Login = ({ onLogin }) => {
                 try {
                     await api.request('/caja/abrir', { method: 'POST' });
                 } catch (cajaErr) {
-                    console.log('Caja lista o usuario no aplica:', cajaErr);
+                    console.warn('Login: Error al abrir caja:', cajaErr);
                 }
 
                 onLogin(data.usuario, data.access_token);
             } else {
+                console.warn('Login: Token no encontrado en la respuesta');
                 setError('Usuario o contraseña incorrectos');
             }
-        } catch {
-            setError('Usuario o contraseña incorrectos');
+        } catch (err) {
+            console.error('Login: Error inesperado:', err);
+            setError(err.message || 'Error de conexión con el servidor');
         } finally {
             setLoading(false);
         }
@@ -142,6 +148,8 @@ const Login = ({ onLogin }) => {
                                 onChange={e => setUsername(e.target.value)}
                                 required
                                 autoFocus
+                                autoComplete="username"
+                                name="username"
                             />
                         </div>
                     </div>
@@ -157,6 +165,8 @@ const Login = ({ onLogin }) => {
                                 value={password}
                                 onChange={e => setPassword(e.target.value)}
                                 required
+                                autoComplete="current-password"
+                                name="password"
                             />
                             <button
                                 type="button"
@@ -179,9 +189,8 @@ const Login = ({ onLogin }) => {
                             checked={rememberMe}
                             onChange={(e) => setRememberMe(e.target.checked)}
                             style={{
-                                appearance: 'none', width: 18, height: 18, border: '1px solid rgba(255,255,255,0.2)',
-                                borderRadius: '6px', background: rememberMe ? '#3b82f6' : 'transparent',
-                                cursor: 'pointer', position: 'relative', marginRight: 10
+                                width: 18, height: 18,
+                                cursor: 'pointer', marginRight: 10
                             }}
                         />
                         <label htmlFor="rememberMe" style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, cursor: 'pointer' }}>
