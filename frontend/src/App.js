@@ -126,6 +126,17 @@ function App() {
       .catch(() => { });
   }, []);
 
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      setUser(null);
+      setToken(null);
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+    };
+    window.addEventListener('session-expired', handleSessionExpired);
+    return () => window.removeEventListener('session-expired', handleSessionExpired);
+  }, []);
+
   const handleLogin = (u, t) => {
     localStorage.setItem('token', t);
     localStorage.setItem('user', JSON.stringify(u));
@@ -273,7 +284,7 @@ function App() {
               >
                 {/* Logo / nombre empresa */}
                 <div style={{
-                  padding: '24px 16px', borderBottom: '1px solid var(--glass-border)',
+                  padding: '24px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)',
                   display: 'flex', alignItems: 'center', gap: 12, minHeight: 72, flexShrink: 0,
                 }}>
                   {logoUrl
@@ -283,8 +294,8 @@ function App() {
                     </div>
                   }
                   <div className="nav-label-text" style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ color: 'var(--color-dark)', fontWeight: 800, fontSize: 15, lineHeight: 1.2 }}>{empresaNombre}</div>
-                    <div style={{ color: 'var(--text-muted)', fontSize: 11, fontWeight: 600, marginTop: 2 }}>PLATAFORMA MÉDICA</div>
+                    <div style={{ color: 'white', fontWeight: 800, fontSize: 15, lineHeight: 1.2 }}>{empresaNombre}</div>
+                    <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11, fontWeight: 600, marginTop: 2 }}>PLATAFORMA MÉDICA</div>
                   </div>
                 </div>
 
@@ -336,7 +347,7 @@ function App() {
                   {/* Info usuario */}
                   <div style={{
                     display: 'flex', alignItems: 'center', gap: 12, padding: '12px', marginBottom: 16,
-                    background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0'
+                    background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)'
                   }}>
                     <div style={{
                       width: 34, height: 34, borderRadius: 8, background: ROL_COLORS[rol] || '#3498db',
@@ -346,19 +357,19 @@ function App() {
                       {(user.nombre || 'U')[0].toUpperCase()}
                     </div>
                     <div className="nav-label-text" style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ color: 'var(--color-dark)', fontSize: 13, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.nombre}</div>
+                      <div style={{ color: 'white', fontSize: 13, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.nombre}</div>
                       <div style={{ color: 'var(--color-primary)', fontSize: 10, fontWeight: 800, textTransform: 'uppercase' }}>{rol}</div>
                     </div>
                   </div>
 
                   <button onClick={handleLogout} style={{
-                    width: '100%', padding: '12px', background: '#fef2f2',
-                    border: '1px solid #fecaca', borderRadius: 10, color: '#ef4444',
+                    width: '100%', padding: '12px', background: 'rgba(239,68,68,0.1)',
+                    border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, color: '#f87171',
                     cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                     fontSize: 13, fontWeight: 700, fontFamily: 'inherit', transition: 'all 0.2s',
                   }}
-                    onMouseEnter={e => { e.currentTarget.style.background = '#fee2e2'; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = '#fef2f2'; }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.15)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; }}
                   >
                     <FaSignOutAlt style={{ fontSize: 16 }} />
                     <span className="nav-label-text">Finalizar Sesión</span>

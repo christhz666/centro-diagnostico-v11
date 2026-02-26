@@ -25,10 +25,8 @@ class ApiService {
         if (response.status === 401) {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
-            // Evitar bucle infinito de reloads si ya estamos en la raíz o login
-            if (window.location.pathname !== '/' && window.location.pathname !== '/login') {
-                window.location.href = '/';
-            }
+            // Notificar al App.js para limpiar estado React
+            window.dispatchEvent(new CustomEvent('session-expired'));
             throw new Error('Sesion expirada');
         }
 
