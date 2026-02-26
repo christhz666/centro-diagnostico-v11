@@ -156,97 +156,76 @@ const Login = ({ onLogin }) => {
             position: 'relative',
             overflow: 'hidden',
         }}>
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <input
-                    className="login-input"
-                    type="text"
-                    placeholder="Usuario"
-                    value={username}
-                    onChange={e => setUsername(e.target.value)}
-                    required
-                />
-                <input
-                    className="login-input"
-                    type="password"
-                    placeholder="Contraseña"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    required
-                />
-                <button type="submit" className="login-btn" style={{ marginTop: 8 }}>
-                    {loading ? 'Verificando...' : 'Ingresar'}
-                </button>
-            </form>
-        </div>
-
-                    {/* Encabezado móvil */}
-                    {isMobile && (
-                        <div style={{ textAlign: 'center', marginBottom: 36 }}>
-                            {empresaConfig.logo_login ? (
-                                <img
-                                    src={empresaConfig.logo_login}
-                                    alt={empresaConfig.nombre}
-                                    style={{
-                                        maxWidth: '220px', maxHeight: '90px', objectFit: 'contain', marginBottom: 16,
-                                        filter: 'brightness(1.1) drop-shadow(0 4px 10px rgba(0,0,0,0.3))'
-                                    }}
-                                    onError={e => { e.target.style.display = 'none'; }}
-                                />
-                            ) : (
-                                <div style={{
-                                    width: 72, height: 72,
-                                    background: 'rgba(135,206,235,0.1)',
-                                    border: `2px solid ${C.sky}`,
-                                    borderRadius: '50%',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    margin: '0 auto 16px',
-                                    animation: 'pulse-ring 2.5s ease-out infinite',
-                                }}>
-                                    <FaHeartbeat style={{ fontSize: 34, color: C.sky, animation: 'heartbeat 1.5s ease-in-out infinite' }} />
-                                </div>
-                            )}
-                            <h2 style={{ color: C.dark, margin: '0 0 4px', fontSize: 20, fontWeight: 700 }}>
-                                {empresaConfig.nombre || 'Centro Diagnóstico'}
-                            </h2>
-                            <p style={{ color: 'rgba(135,206,235,0.7)', margin: 0, fontSize: 13 }}>Sistema de Gestión Médica</p>
-                        </div>
-                    )}
-
-                    {/* tarjeta glass con contenido */}
-                    <div style={{
-                        background: 'rgba(255,255,255,0.25)',
-                        backdropFilter: 'blur(12px)',
-                        borderRadius: 20,
-                        padding: isMobile ? '24px' : '40px',
-                        boxShadow: '0 16px 48px rgba(0,0,0,0.08)',
-                        maxWidth: 420,
-                        width: '100%',
-                        position: 'relative',
-                        zIndex: 1,
-                        animation: 'fadeInUp 0.5s ease'
-                    }}>
-                        {/* Título del formulario */}
-                        <div style={{ marginBottom: 32 }}>
-                        <h2 style={{ color: C.dark, margin: '0 0 6px', fontSize: isMobile ? 24 : 28, fontWeight: 700 }}>
-                            Iniciar Sesión
-                        </h2>
-                        <p style={{ color: 'rgba(44,62,80,0.7)', margin: 0, fontSize: 14 }}>
-                            Ingresa tus credenciales de acceso
-                        </p>
-                    </div>
-
-                    {/* Error */}
-                    {error && (
+            {/* Encabezado móvil */}
+            {isMobile && (
+                <div style={{ textAlign: 'center', marginBottom: 36 }}>
+                    {empresaConfig.logo_login ? (
+                        <img
+                            src={empresaConfig.logo_login}
+                            alt={empresaConfig.nombre}
+                            style={{
+                                maxWidth: '220px', maxHeight: '90px', objectFit: 'contain', marginBottom: 16,
+                                filter: 'brightness(1.1) drop-shadow(0 4px 10px rgba(0,0,0,0.3))'
+                            }}
+                            onError={e => { e.target.style.display = 'none'; }}
+                        />
+                    ) : (
                         <div style={{
-                            padding: '13px 16px', background: 'rgba(231,76,60,0.15)',
-                            border: '1px solid rgba(231,76,60,0.4)', borderRadius: 12,
-                            color: '#ff8a80', fontSize: 14, marginBottom: 22,
-                            display: 'flex', alignItems: 'center', gap: 8,
-                            animation: 'fadeInUp 0.3s ease',
+                            width: 72, height: 72,
+                            background: 'rgba(135,206,235,0.1)',
+                            border: `2px solid ${C.sky}`,
+                            borderRadius: '50%',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            margin: '0 auto 16px',
+                            animation: 'pulse-ring 2.5s ease-out infinite',
                         }}>
-                            ⚠️ {error}
+                            <FaHeartbeat style={{ fontSize: 34, color: C.sky, animation: 'heartbeat 1.5s ease-in-out infinite' }} />
                         </div>
                     )}
+                    <h2 style={{ color: C.dark, margin: '0 0 4px', fontSize: 20, fontWeight: 700 }}>
+                        {empresaConfig.nombre || 'Centro Diagnóstico'}
+                    </h2>
+                    <p style={{ color: 'rgba(135,206,235,0.7)', margin: 0, fontSize: 13 }}>Sistema de Gestión Médica</p>
+                </div>
+            )}
+
+            {/* tarjeta glass con contenido */}
+            <div style={{
+                background: 'rgba(255,255,255,0.25)',
+                backdropFilter: 'blur(12px)',
+                borderRadius: 20,
+                padding: isMobile ? '24px' : '40px',
+                boxShadow: '0 16px 48px rgba(0,0,0,0.08)',
+                maxWidth: 420,
+                width: '100%',
+                position: 'relative',
+                zIndex: 1,
+                animation: 'fadeInUp 0.5s ease'
+            }}>
+                {/* Título del formulario */}
+                <div style={{ marginBottom: 32 }}>
+                    <h2 style={{ color: C.dark, margin: '0 0 6px', fontSize: isMobile ? 24 : 28, fontWeight: 700 }}>
+                        Iniciar Sesión
+                    </h2>
+                    <p style={{ color: 'rgba(44,62,80,0.7)', margin: 0, fontSize: 14 }}>
+                        Ingresa tus credenciales de acceso
+                    </p>
+                </div>
+
+                {/* Error */}
+                {error && (
+                    <div style={{
+                        padding: '13px 16px', background: 'rgba(231,76,60,0.15)',
+                        border: '1px solid rgba(231,76,60,0.4)', borderRadius: 12,
+                        color: '#ff8a80', fontSize: 14, marginBottom: 22,
+                        display: 'flex', alignItems: 'center', gap: 8,
+                        animation: 'fadeInUp 0.3s ease',
+                    }}>
+                        ⚠️ {error}
+                    </div>
+                )}
+
+
 
                     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
 
@@ -341,7 +320,7 @@ const Login = ({ onLogin }) => {
                 </div>
 
             </div>
-        </div>
+
     );
 };
 
