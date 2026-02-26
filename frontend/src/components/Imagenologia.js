@@ -45,7 +45,11 @@ const ESTADO_COLORES = {
 
 /* ─── Helper: obtener rol del usuario actual ─────────────────── */
 function getRol() {
-  try { const u = JSON.parse(localStorage.getItem('user') || '{}'); return u.role || u.rol || 'recepcion'; } catch { return 'recepcion'; }
+  try {
+    const uStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+    const u = JSON.parse(uStr || '{}');
+    return u.role || u.rol || 'recepcion';
+  } catch { return 'recepcion'; }
 }
 function puedeEditar() {
   const r = getRol(); return r === 'admin' || r === 'medico';
@@ -134,7 +138,7 @@ const Imagenologia = () => {
       Array.from(files).forEach(f => formData.append('imagenes', f));
       const resp = await fetch(`/api/imagenologia/upload/${estudioActual._id || estudioActual.id}`, {
         method: 'POST',
-        headers: { Authorization: 'Bearer ' + localStorage.getItem('token') },
+        headers: { Authorization: 'Bearer ' + (localStorage.getItem('token') || sessionStorage.getItem('token')) },
         body: formData,
       });
       const data = await resp.json();

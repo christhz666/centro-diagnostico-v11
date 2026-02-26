@@ -115,22 +115,29 @@ const DicomViewer = ({ imagenes = [], ajustesIniciales = {}, onCambioAjustes = n
             }
         };
 
-        // Intentar inmediatamente y con ResizeObserver si el tamaño cambia
+        // Intentar inmediatamente la habilitación
         tryEnable();
-        const ro = new ResizeObserver(() => {
-            if (!ready) {
-                tryEnable();
-            } else {
-                try { cornerstone.resize(el, true); } catch (_) { }
-            }
-        });
-        ro.observe(el);
 
         return () => {
-            ro.disconnect();
             try { cornerstone.disable(el); } catch (_) { }
         };
     }, []); // eslint-disable-line
+
+    /* ── Notificar a Cornerstone cuando cambia el tamaño del contenedor ── */
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el || !ready) return;
+
+        const ro = new ResizeObserver(() => {
+            try {
+                cornerstone.resize(el, true);
+                // Forzar un redibujado para evitar áreas negras
+                cornerstone.updateImage(el);
+            } catch (_) { }
+        });
+        ro.observe(el);
+        return () => ro.disconnect();
+    }, [ready]);
 
     /* ── Cargar imagen cuando cambia índice ──────────────────── */
     useEffect(() => {
