@@ -142,8 +142,8 @@ function App() {
   const onSidebarLeave = () => { hoverTimeout.current = setTimeout(() => { setSidebarHovered(false); setAdminMenuOpen(false); }, 220); };
 
   if (loading) return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#0d1f2d' }}>
-      <FaHeartbeat style={{ fontSize: 60, color: '#e74c3c', animation: 'heartbeat 1.2s ease-in-out infinite' }} />
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#f8fafc' }}>
+      <FaHeartbeat style={{ fontSize: 60, color: '#2563eb', animation: 'heartbeat 1.2s ease-in-out infinite' }} />
     </div>
   );
 
@@ -204,9 +204,9 @@ function App() {
   const adminNavLinkStyle = ({ isActive }) => ({
     display: 'flex', alignItems: 'center', gap: 12,
     padding: '11px 20px 11px 40px',
-    color: isActive ? '#ffffff' : 'rgba(255,255,255,0.4)',
+    color: isActive ? 'var(--color-primary)' : 'var(--text-muted)',
     textDecoration: 'none',
-    background: isActive ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+    background: isActive ? 'var(--color-primary-glow)' : 'transparent',
     fontSize: 13, transition: 'all 0.2s',
     whiteSpace: 'nowrap', overflow: 'hidden',
     margin: '2px 12px',
@@ -219,7 +219,7 @@ function App() {
   return (
     <OfflineScreen>
       <Router>
-        <div style={{ display: 'flex', minHeight: '100vh', fontFamily: "'Inter','Segoe UI',Arial,sans-serif" }}>
+        <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
 
           <Joyride
             steps={tourSteps}
@@ -230,7 +230,7 @@ function App() {
             callback={handleTourCallback}
             styles={{
               options: {
-                primaryColor: '#0f4c75',
+                primaryColor: '#2563eb',
                 zIndex: 10000,
               }
             }}
@@ -243,19 +243,19 @@ function App() {
           @keyframes fadeSlideIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
           @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
           .spin { animation: spin 0.8s linear infinite; }
-          .sidebar-nav-item:hover { background: rgba(255,255,255,0.1) !important; color: white !important; transform: translateX(4px) scale(1.03); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-          .sidebar-nav-item:hover a, .sidebar-nav-item:hover { color: white !important; }
+          .sidebar-nav-item:hover { background: #f1f5f9 !important; color: var(--color-primary) !important; transform: translateX(4px); }
+          .sidebar-nav-item:hover a, .sidebar-nav-item:hover { color: var(--color-primary) !important; }
           .nav-label-text { opacity: ${sidebarExpanded ? 1 : 0}; max-width: ${sidebarExpanded ? '180px' : '0px'}; transition: opacity 0.25s, max-width 0.25s; overflow: hidden; white-space: nowrap; display: inline-block; }
           .app-main-content { transition: margin-left 0.3s ease; }
           ::-webkit-scrollbar { width:5px; }
-          ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius:4px; }
+          ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius:4px; }
         `}</style>
 
           {/* ─── Overlay móvil ─── */}
           {isMobile && sidebarMobileOpen && (
             <div onClick={() => { setSidebarMobileOpen(false); setAdminMenuOpen(false); }} style={{
-              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
-              zIndex: 999, backdropFilter: 'blur(3px)'
+              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)',
+              zIndex: 999, backdropFilter: 'blur(2px)'
             }} />
           )}
 
@@ -266,28 +266,28 @@ function App() {
             className="sidebar-v2"
             style={{
               width: isMobile ? (sidebarMobileOpen ? SIDEBAR_W : 0) : sidebarW,
-              left: isMobile && !sidebarMobileOpen ? '-100%' : (isMobile ? 0 : 16)
+              left: isMobile && !sidebarMobileOpen ? '-100%' : 0
             }}
           >
             {/* Logo / nombre empresa */}
             <div style={{
-              padding: '20px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)',
+              padding: '24px 16px', borderBottom: '1px solid var(--glass-border)',
               display: 'flex', alignItems: 'center', gap: 12, minHeight: 72, flexShrink: 0,
             }}>
               {logoUrl
-                ? <img src={logoUrl} alt={empresaNombre} style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'contain', flexShrink: 0 }} onError={e => e.target.style.display = 'none'} />
-                : <div style={{ width: 36, height: 36, background: 'rgba(231,76,60,0.2)', border: '2px solid rgba(231,76,60,0.5)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <FaHeartbeat style={{ color: '#e74c3c', fontSize: 18, animation: 'heartbeat 1.5s ease-in-out infinite' }} />
+                ? <img src={logoUrl} alt={empresaNombre} style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'contain', flexShrink: 0 }} />
+                : <div style={{ width: 36, height: 36, background: 'rgba(37,99,235,0.05)', border: '1.5px solid rgba(37,99,235,0.2)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <FaHeartbeat style={{ color: '#2563eb', fontSize: 18, animation: 'heartbeat 1.5s ease-in-out infinite' }} />
                 </div>
               }
               <div className="nav-label-text" style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ color: 'white', fontWeight: 700, fontSize: 14, lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis' }}>{empresaNombre}</div>
-                <div style={{ color: 'rgba(135,206,235,0.7)', fontSize: 11, marginTop: 2 }}>Sistema Médico</div>
+                <div style={{ color: 'var(--color-dark)', fontWeight: 800, fontSize: 15, lineHeight: 1.2 }}>{empresaNombre}</div>
+                <div style={{ color: 'var(--text-muted)', fontSize: 11, fontWeight: 600, marginTop: 2 }}>PLATAFORMA MÉDICA</div>
               </div>
             </div>
 
             {/* Menú principal */}
-            <nav style={{ flex: 1, padding: '16px 0', overflowY: 'auto', overflowX: 'hidden' }}>
+            <nav style={{ flex: 1, padding: '20px 0', overflowY: 'auto', overflowX: 'hidden' }}>
               {filteredMenu.map((item, i) => (
                 <NavLink key={i} to={item.path} end={item.path === '/'}
                   className={({ isActive }) => `nav-link-v2 ${isActive ? 'active' : ''} tour-step-${item.path.replace(/\//g, '') || 'home'}`}
@@ -300,18 +300,19 @@ function App() {
 
               {showAdminMenu && (
                 <>
-                  <div style={{ margin: '8px 16px', borderTop: '1px solid rgba(255,255,255,0.07)' }} />
+                  <div style={{ margin: '8px 16px', borderTop: '1px solid var(--glass-border)' }} />
                   <div
                     onClick={() => setAdminMenuOpen(!adminMenuOpen)}
                     style={{
-                      display: 'flex', alignItems: 'center', gap: 14, padding: '13px 20px',
-                      color: 'rgba(255,255,255,0.65)', cursor: 'pointer', transition: 'all 0.2s',
-                      borderLeft: '3px solid transparent', fontSize: 14,
+                      display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px',
+                      color: 'var(--text-muted)', cursor: 'pointer', transition: 'all 0.2s',
+                      fontSize: 14, fontWeight: 600, margin: '4px 12px', borderRadius: 8
                     }}
-                    className="sidebar-nav-item"
+                    onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >
                     <span style={{ fontSize: 18, flexShrink: 0 }}><FaCogs /></span>
-                    <span className="nav-label-text" style={{ flex: 1 }}>Admin Panel</span>
+                    <span className="nav-label-text" style={{ flex: 1 }}>Configuración</span>
                     <span className="nav-label-text" style={{ fontSize: 11, maxWidth: 16 }}>
                       {adminMenuOpen ? <FaChevronDown /> : <FaChevronRight />}
                     </span>
@@ -329,37 +330,36 @@ function App() {
             </nav>
 
             {/* Footer del sidebar */}
-            <div style={{ padding: '20px 12px', borderTop: '1px solid var(--glass-border)', flexShrink: 0 }}>
+            <div style={{ padding: '20px 16px', borderTop: '1px solid var(--glass-border)', flexShrink: 0 }}>
               {/* Info usuario */}
               <div style={{
-                display: 'flex', alignItems: 'center', gap: 12, padding: '12px', marginBottom: 12,
-                background: 'rgba(255,255,255,0.03)', borderRadius: 14, overflow: 'hidden',
-                border: '1px solid rgba(255,255,255,0.05)'
+                display: 'flex', alignItems: 'center', gap: 12, padding: '12px', marginBottom: 16,
+                background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0'
               }}>
                 <div style={{
-                  width: 36, height: 36, borderRadius: 10, background: ROL_COLORS[rol] || '#3498db',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700,
-                  fontSize: 16, flexShrink: 0, boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+                  width: 34, height: 34, borderRadius: 8, background: ROL_COLORS[rol] || '#3498db',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800,
+                  fontSize: 14, flexShrink: 0
                 }}>
                   {(user.nombre || 'U')[0].toUpperCase()}
                 </div>
                 <div className="nav-label-text" style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ color: 'white', fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.nombre}</div>
-                  <div style={{ color: 'var(--color-primary)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{rol}</div>
+                  <div style={{ color: 'var(--color-dark)', fontSize: 13, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.nombre}</div>
+                  <div style={{ color: 'var(--color-primary)', fontSize: 10, fontWeight: 800, textTransform: 'uppercase' }}>{rol}</div>
                 </div>
               </div>
 
               <button onClick={handleLogout} style={{
-                width: '100%', padding: '12px', background: 'rgba(239,68,68,0.1)',
-                border: '1px solid rgba(239,68,68,0.2)', borderRadius: 12, color: '#ef4444',
+                width: '100%', padding: '12px', background: '#fef2f2',
+                border: '1px solid #fecaca', borderRadius: 10, color: '#ef4444',
                 cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                fontSize: 13, fontWeight: 600, fontFamily: 'inherit', transition: 'all 0.2s',
+                fontSize: 13, fontWeight: 700, fontFamily: 'inherit', transition: 'all 0.2s',
               }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.2)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                onMouseEnter={e => { e.currentTarget.style.background = '#fee2e2'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = '#fef2f2'; }}
               >
                 <FaSignOutAlt style={{ fontSize: 16 }} />
-                <span className="nav-label-text">Cerrar Sesión</span>
+                <span className="nav-label-text">Finalizar Sesión</span>
               </button>
             </div>
           </aside>
@@ -369,16 +369,16 @@ function App() {
             flex: 1,
             marginLeft: isMobile ? 0 : sidebarW,
             minHeight: '100vh',
-            background: '#ffffff', /* página blanca */
+            background: 'var(--color-bg)',
             transition: 'margin-left 0.3s ease',
           }}>
             {/* Header */}
-            <header className="header-v2">
+            <header className="header-v2" style={{ background: 'white !important' }}>
               {/* Botón menú (móvil o siempre visible) */}
               <button
                 className="sidebar-colapsador"
                 onClick={() => isMobile ? setSidebarMobileOpen(!sidebarMobileOpen) : setSidebarHovered(!sidebarHovered)}
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', fontSize: 18, cursor: 'pointer', color: 'white', width: 42, height: 42, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+                style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', fontSize: 18, cursor: 'pointer', color: 'var(--color-dark)', width: 42, height: 42, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
               >
                 {(isMobile ? sidebarMobileOpen : sidebarHovered) ? <FaTimes /> : <FaBars />}
               </button>

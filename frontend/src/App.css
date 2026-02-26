@@ -1,37 +1,38 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
 
 :root {
-  /* Ultra-Premium Crystal Medical Palette */
-  --color-dark: #07080c;
-  --color-primary: #00f2ff;
-  /* Electric Cyan */
-  --color-primary-glow: rgba(0, 242, 255, 0.3);
-  --color-accent: #7c4dff;
-  /* Deep Indigo */
-  --color-accent-glow: rgba(124, 77, 255, 0.2);
+  /* Pure Clinical Light Palette - Apple High-End Feel */
+  --color-dark: #0f172a;
+  --color-primary: #2563eb;
+  /* Corporate Blue */
+  --color-primary-glow: rgba(37, 99, 235, 0.1);
+  --color-accent: #4f46e5;
+  --color-accent-glow: rgba(79, 70, 229, 0.08);
   --color-sky: #0ea5e9;
-  --color-bg: #0a0b10;
-  /* Deep Charcoal Navy */
-  --color-card: rgba(255, 255, 255, 0.02);
+  --color-bg: #f8fafc;
+  /* Very Light Professional Gray */
+  --color-card: #ffffff;
+  /* pure white */
   --color-white: #ffffff;
-  --color-danger: #ff4d4d;
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
+  --color-danger: #ef4444;
+  --text-main: #1e293b;
+  /* Slate-800 */
+  --text-muted: #64748b;
+  /* Slate-500 */
 
   --sidebar-w: 260px;
   --sidebar-sm: 80px;
   --header-h: 70px;
-  --radius: 12px;
-  /* Sharper / Precise */
-  --radius-lg: 18px;
+  --radius: 10px;
+  --radius-lg: 14px;
 
-  --glass-bg: rgba(255, 255, 255, 0.012);
-  --glass-border: rgba(255, 255, 255, 0.04);
-  --glass-blur: blur(24px);
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(0, 0, 0, 0.06);
+  --glass-blur: blur(12px);
 
-  --shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.7);
-  --transition: all 0.25s cubic-bezier(0.23, 1, 0.32, 1);
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   --font-body: 'Inter', sans-serif;
   --font-title: 'Outfit', sans-serif;
 }
@@ -55,7 +56,6 @@ body {
   color: var(--text-main);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-attachment: fixed;
 }
 
 h1,
@@ -66,161 +66,34 @@ h5,
 h6 {
   font-family: var(--font-title);
   font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--color-white);
+  letter-spacing: -0.01em;
+  color: var(--color-dark);
+  /* Dark text on light BG */
 }
 
-/* ── Tipografía responsiva ────────────────────────────────── */
-h1 {
-  font-size: clamp(20px, 3vw, 28px);
-  margin: 0 0 8px;
-}
-
-h2 {
-  font-size: clamp(18px, 2.5vw, 24px);
-  margin: 0 0 6px;
-}
-
-h3 {
-  font-size: clamp(16px, 2vw, 20px);
-  margin: 0 0 6px;
-}
-
-h4 {
-  font-size: clamp(14px, 1.8vw, 17px);
-  margin: 0 0 4px;
-}
-
-/* ── Cursores correctos ───────────────────────────────────── */
-body,
-div,
-span,
-p,
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-label,
-table,
-tr,
-td,
-th,
-nav,
-aside,
-header,
-footer,
-main,
-section {
-  cursor: default;
-}
-
-input,
-textarea,
-[contenteditable="true"] {
-  cursor: text;
-}
-
-button,
-a,
-[role="button"],
-.clickable,
-select,
-label[for] {
-  cursor: pointer;
-}
-
-/* ── User select ──────────────────────────────────────────── */
-button,
-nav,
-aside,
-.no-select {
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-p,
-span,
-td,
-th,
-input,
-textarea {
-  user-select: text;
-  -webkit-user-select: text;
-}
-
-/* ── Scrollbar ────────────────────────────────────────────── */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.04);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.18);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.3);
-}
-
-/* ── Focus visible (accesibilidad) ───────────────────────── */
-button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-  outline: 3px solid var(--color-sky);
-  outline-offset: 2px;
-}
-
-/* ── Glassmorphism Utils ────────────────────────────────── */
+/* ── Light Glass Panels ────────────────────────────────── */
 .glass-panel {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
+  background: var(--color-card);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   position: relative;
-  overflow: hidden;
 }
 
-.glass-panel::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  border-radius: inherit;
-  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.08);
-  /* Crystal "inner" edge */
-}
-
-/* Sidebar principal Ultra-Premium */
+/* Sidebar principal Light Premium */
 .sidebar-v2 {
   position: fixed;
-  top: 14px;
-  left: 14px;
-  height: calc(100vh - 28px);
-  background: rgba(10, 11, 16, 0.85) !important;
-  backdrop-filter: blur(40px);
-  -webkit-backdrop-filter: blur(40px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: var(--radius-lg);
+  top: 0;
+  left: 0;
+  height: 100vh;
+  background: #ffffff !important;
+  border-right: 1px solid var(--glass-border);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: width 0.35s cubic-bezier(0.23, 1, 0.32, 1);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1000;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+  box-shadow: 4px 0 10px rgba(0, 0, 0, 0.02);
 }
 
 .sidebar-v2 .sidebar-header {
@@ -231,47 +104,41 @@ textarea:focus-visible {
 .sidebar-v2 .nav-link-v2 {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 12px 18px;
+  gap: 12px;
+  padding: 12px 20px;
   color: var(--text-muted);
   text-decoration: none;
   transition: var(--transition);
-  position: relative;
-  border-radius: 10px;
-  margin: 4px 14px;
-  font-weight: 500;
+  border-radius: 8px;
+  margin: 4px 12px;
+  font-weight: 600;
   font-size: 14px;
 }
 
 .sidebar-v2 .nav-link-v2:hover {
-  background: rgba(255, 255, 255, 0.03);
-  color: var(--color-white);
+  background: #f1f5f9;
+  color: var(--color-primary);
 }
 
 .sidebar-v2 .nav-link-v2.active {
-  background: linear-gradient(90deg, var(--color-primary-glow), transparent);
+  background: var(--color-primary-glow);
   color: var(--color-primary);
-  border-left: 2px solid var(--color-primary);
-  border-radius: 0 10px 10px 0;
 }
 
-/* Header V2 - Ultra-Clean */
+/* Header V2 - Pure & Clean */
 .header-v2 {
   position: sticky;
-  top: 14px;
+  top: 0;
   z-index: 100;
   height: 64px;
-  background: rgba(10, 11, 16, 0.7) !important;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--glass-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
-  margin: 14px 14px 0 14px;
-  border-radius: var(--radius);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  padding: 0 32px;
 }
 
 /* Área de contenido interior */

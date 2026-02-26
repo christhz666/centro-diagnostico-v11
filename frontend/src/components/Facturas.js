@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaFileInvoiceDollar, FaEye, FaPrint, FaSpinner, FaPlus, FaCheck, FaTimes, FaCalendarAlt, FaChartLine, FaWallet } from 'react-icons/fa';
+import { FaFileInvoiceDollar, FaEye, FaPrint, FaSpinner, FaPlus, FaCheck, FaTimes, FaCalendarAlt, FaChartLine, FaWallet, FaClock } from 'react-icons/fa';
 import api from '../services/api';
 import FacturaTermica from './FacturaTermica';
 
@@ -51,7 +51,7 @@ const Facturas = () => {
   };
 
   const cerrarTurnoManual = async () => {
-    if (!window.confirm('¿Está segura que desea CERRAR la caja de hoy?')) return;
+    if (!window.confirm('¿Desea cerrar la caja actual?')) return;
     try {
       setLoading(true);
       await api.cerrarTurnoCaja();
@@ -128,7 +128,7 @@ const Facturas = () => {
   };
 
   const crearFactura = async () => {
-    if (!turnoActivo) { alert("Debe ABRIR EL TURNO DE CAJA antes de facturar."); return; }
+    if (!turnoActivo) { alert("Inicie el turno de caja."); return; }
     if (!citaSeleccionada) return;
 
     try {
@@ -175,8 +175,8 @@ const Facturas = () => {
 
   if (loading) return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: 16 }}>
-      <FaSpinner className="spin" style={{ fontSize: 40, color: 'var(--color-primary)' }} />
-      <p style={{ color: 'var(--text-muted)' }}>Sincronizando registros fiscales...</p>
+      <FaSpinner className="spin" style={{ fontSize: 32, color: '#2563eb' }} />
+      <p style={{ color: '#64748b', fontWeight: 500 }}>Sincronizando caja fiscal...</p>
     </div>
   );
 
@@ -192,141 +192,99 @@ const Facturas = () => {
   }
 
   return (
-    <div style={{ padding: '32px', maxWidth: 1600, margin: '0 auto' }}>
-      {/* ── Encabezado Cristal ── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 48, flexWrap: 'wrap', gap: 24 }}>
+    <div style={{ padding: '32px', maxWidth: 1400, margin: '0 auto' }}>
+      {/* ── Encabezado ── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 44, flexWrap: 'wrap', gap: 20 }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 32, fontWeight: 800, color: 'var(--color-white)', fontFamily: 'var(--font-title)', display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(0, 242, 255, 0.05)', border: '1px solid rgba(0, 242, 255, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)' }}>
+          <h1 style={{ margin: 0, fontSize: 30, fontWeight: 800, color: '#0f172a', fontFamily: 'var(--font-title)', display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(37, 99, 235, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563eb' }}>
               <FaFileInvoiceDollar size={20} />
             </div>
-            Gestión de Caja
+            Gestión Fiscal
           </h1>
-          <p style={{ margin: '12px 0 0', color: 'var(--text-muted)', fontSize: 16 }}>Control de ingresos y comprobantes fiscales en tiempo real</p>
+          <p style={{ margin: '8px 0 0', color: '#64748b', fontSize: 16, fontWeight: 500 }}>Control de ingresos y comprobantes autorizados</p>
         </div>
         <button
           onClick={() => setShowModalNueva(true)}
           style={{
-            padding: '14px 28px', borderRadius: 10,
-            background: 'var(--color-primary)', color: 'var(--color-dark)',
-            border: 'none', fontWeight: 800, fontSize: 14,
+            padding: '14px 24px', borderRadius: 10,
+            background: '#2563eb', color: 'white',
+            border: 'none', fontWeight: 700, fontSize: 14,
             cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10,
-            boxShadow: '0 8px 20px rgba(0, 242, 255, 0.2)', transition: 'all 0.2s'
+            boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2)'
           }}
-          onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-          onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
         >
-          <FaPlus /> NUEVA FACTURACIÓN
+          <FaPlus /> FACTURACIÓN RÁPIDA
         </button>
       </div>
 
       {/* ── Stat Tiles ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24, marginBottom: 48 }}>
-
-        {/* Caja State Tile */}
-        <div className="glass-panel" style={{ padding: '32px', borderLeft: `4px solid ${turnoActivo ? '#10b981' : 'var(--color-danger)'}` }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
-            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>ESTADO DE TURNO</div>
-            <button
-              onClick={turnoActivo ? cerrarTurnoManual : abrirTurnoManual}
-              style={{
-                padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.05)',
-                background: 'rgba(255,255,255,0.03)', color: 'white', fontSize: 11, fontWeight: 700, cursor: 'pointer'
-              }}
-            >
-              {turnoActivo ? 'FINALIZAR TURNO' : 'INICIAR TURNO'}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24, marginBottom: 44 }}>
+        <div style={{ background: 'white', padding: 28, borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: 'var(--shadow)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase' }}>Caja de Hoy</div>
+            <button onClick={turnoActivo ? cerrarTurnoManual : abrirTurnoManual} style={{ background: 'none', border: 'none', color: '#2563eb', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
+              {turnoActivo ? 'CERRAR CAJA' : 'ABRIR CAJA'}
             </button>
           </div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
-            <h2 style={{ margin: 0, fontSize: 36, fontWeight: 800 }}>
-              RD$ {calcularTotalHoy().toLocaleString()}
-            </h2>
-            <span style={{ fontSize: 13, color: turnoActivo ? '#10b981' : 'var(--color-danger)', fontWeight: 700 }}>
-              {turnoActivo ? '• ACTIVO' : '• CERRADO'}
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+            <h2 style={{ margin: 0, fontSize: 34, fontWeight: 800, color: '#0f172a' }}>RD$ {calcularTotalHoy().toLocaleString()}</h2>
+            <span style={{ fontSize: 12, color: turnoActivo ? '#10b981' : '#ef4444', fontWeight: 800 }}>
+              {turnoActivo ? 'ACTIVA' : 'CERRADA'}
             </span>
           </div>
         </div>
 
-        {/* Global Stats Tile */}
-        <div className="glass-panel" style={{ padding: '32px' }}>
-          <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 20 }}>VOLUMEN MENSUAL</div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
-            <h2 style={{ margin: 0, fontSize: 36, fontWeight: 800 }}>RD$ {facturas.reduce((sum, f) => sum + (f.total || 0), 0).toLocaleString()}</h2>
-            <div style={{ width: 40, height: 40, borderRadius: 8, background: 'rgba(124, 77, 255, 0.05)', color: 'var(--color-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <FaChartLine />
-            </div>
+        <div style={{ background: 'white', padding: 28, borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: 'var(--shadow)' }}>
+          <div style={{ fontSize: 11, fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', marginBottom: 16 }}>Operaciones del Mes</div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+            <h2 style={{ margin: 0, fontSize: 34, fontWeight: 800, color: '#0f172a' }}>RD$ {facturas.reduce((sum, f) => sum + (f.total || 0), 0).toLocaleString()}</h2>
+            <div style={{ color: '#2563eb' }}><FaChartLine size={20} /></div>
           </div>
         </div>
       </div>
 
-      {/* ── Historial de Crystal Table ── */}
-      <div className="glass-panel" style={{ padding: '40px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 40, flexWrap: 'wrap', gap: 24 }}>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800 }}>Historial de Transacciones</h2>
-          <select
-            value={filtroEstado}
-            onChange={e => setFiltroEstado(e.target.value)}
-            style={{
-              padding: '10px 16px', borderRadius: 8,
-              background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)',
-              color: 'white', fontWeight: 600, fontSize: 13, outline: 'none'
-            }}
-          >
-            <option value="" style={{ background: '#0a0b10' }}>Todos los registros</option>
-            <option value="pagada" style={{ background: '#0a0b10' }}>Pagadas</option>
-            <option value="anulada" style={{ background: '#0a0b10' }}>Anuladas</option>
+      {/* ── Tabla de Historial ── */}
+      <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: 'var(--shadow)' }}>
+        <div style={{ padding: '24px 32px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#0f172a' }}>Registros Emitidos</h2>
+          <select value={filtroEstado} onChange={e => setFiltroEstado(e.target.value)} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', outline: 'none', fontSize: 13 }}>
+            <option value="">Estados: Todos</option>
+            <option value="pagada">Pagadas</option>
+            <option value="anulada">Anuladas</option>
           </select>
         </div>
 
         <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 12px', background: 'transparent' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr>
-                {['ID FISCAL', 'FECHA', 'PACIENTE', 'TOTAL RD$', 'ESTADO', 'ACCIONES'].map(h => (
-                  <th key={h} style={{ padding: '0 24px 12px', textAlign: h === 'TOTAL RD$' ? 'right' : 'left', color: 'var(--text-muted)', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', border: 'none' }}>{h}</th>
+              <tr style={{ background: '#f8fafc' }}>
+                {['COMPROBANTE', 'FECHA', 'PACIENTE', 'TOTAL RD$', 'ESTADO', 'ACCIONES'].map(h => (
+                  <th key={h} style={{ padding: '16px 24px', textAlign: h === 'TOTAL RD$' ? 'right' : 'left', color: '#64748b', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {facturas.length === 0 ? (
-                <tr>
-                  <td colSpan="6" style={{ padding: '64px', textAlign: 'center', color: 'var(--text-muted)', border: '1px dashed rgba(255,255,255,0.03)', borderRadius: 16 }}>
-                    No se encontraron transacciones registradas
-                  </td>
-                </tr>
+                <tr><td colSpan="6" style={{ padding: '60px', textAlign: 'center', color: '#94a3b8' }}>Sin transacciones registradas</td></tr>
               ) : (
                 facturas.map(f => (
-                  <tr key={f._id} style={{ background: 'rgba(255,255,255,0.01)', transition: 'all 0.2s' }}>
-                    <td style={{ padding: '20px 24px', color: 'var(--color-primary)', fontWeight: 800, fontFamily: 'monospace', borderTopLeftRadius: 12, borderBottomLeftRadius: 12 }}>
-                      #{f.numero || f.numero_factura}
-                    </td>
-                    <td style={{ padding: '20px 24px', color: 'white', fontSize: 14 }}>
-                      {new Date(f.fecha_factura || f.createdAt).toLocaleDateString('es-DO')}
-                    </td>
-                    <td style={{ padding: '20px 24px', color: 'white', fontWeight: 700, fontSize: 14 }}>
-                      {f.datosCliente?.nombre || f.paciente?.nombre || 'Paciente'}
-                    </td>
-                    <td style={{ padding: '20px 24px', textAlign: 'right', fontWeight: 900, color: 'white', fontSize: 16 }}>
-                      ${(f.total || 0).toLocaleString()}
-                    </td>
+                  <tr key={f._id} style={{ borderBottom: '1px solid #f1f5f9', transition: 'all 0.1s' }} className="hover-row">
+                    <td style={{ padding: '20px 24px', color: '#2563eb', fontWeight: 700, fontSize: 13 }}>#{f.numero || f.numero_factura}</td>
+                    <td style={{ padding: '20px 24px', color: '#64748b', fontSize: 14 }}>{new Date(f.fecha_factura || f.createdAt).toLocaleDateString('es-DO')}</td>
+                    <td style={{ padding: '20px 24px', color: '#1e293b', fontWeight: 600, fontSize: 14 }}>{f.datosCliente?.nombre || f.paciente?.nombre || 'Paciente'}</td>
+                    <td style={{ padding: '20px 24px', textAlign: 'right', fontWeight: 800, color: '#0f172a', fontSize: 15 }}>${(f.total || 0).toLocaleString()}</td>
                     <td style={{ padding: '20px 24px' }}>
                       <span style={{
-                        padding: '6px 12px', borderRadius: 6, fontSize: 10, fontWeight: 800, textTransform: 'uppercase',
-                        background: f.estado === 'pagada' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                        color: f.estado === 'pagada' ? '#10b981' : '#ef4444',
-                        border: `1px solid ${f.estado === 'pagada' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`
-                      }}>
-                        {f.estado}
-                      </span>
+                        padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
+                        background: f.estado === 'pagada' ? '#ecfdf5' : '#fef2f2',
+                        color: f.estado === 'pagada' ? '#10b981' : '#ef4444'
+                      }}>{f.estado}</span>
                     </td>
-                    <td style={{ padding: '20px 24px', borderTopRightRadius: 12, borderBottomRightRadius: 12 }}>
-                      <div style={{ display: 'flex', gap: 12 }}>
-                        <button onClick={() => verDetalle(f)} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', color: 'white', width: 34, height: 34, borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <FaEye size={14} />
-                        </button>
-                        <button onClick={() => imprimirFactura(f)} style={{ background: 'rgba(0, 242, 255, 0.05)', border: '1px solid rgba(0, 242, 255, 0.1)', color: 'var(--color-primary)', width: 34, height: 34, borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <FaPrint size={14} />
-                        </button>
+                    <td style={{ padding: '20px 24px' }}>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button onClick={() => verDetalle(f)} style={{ background: '#f1f5f9', border: 'none', color: '#1e293b', width: 32, height: 32, borderRadius: 6, cursor: 'pointer' }}><FaEye size={12} /></button>
+                        <button onClick={() => imprimirFactura(f)} style={{ background: '#eff6ff', border: 'none', color: '#2563eb', width: 32, height: 32, borderRadius: 6, cursor: 'pointer' }}><FaPrint size={12} /></button>
                       </div>
                     </td>
                   </tr>
@@ -337,67 +295,49 @@ const Facturas = () => {
         </div>
       </div>
 
-      {/* ── Modal Detalle Cristal ── */}
+      {/* ── Modales ── */}
       {facturaDetalle && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(7, 8, 12, 0.9)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000, padding: 24 }}>
-          <div className="glass-panel" style={{ width: '100%', maxWidth: 600, maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ padding: '24px 32px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>DETALLE FISCAL <span style={{ color: 'var(--color-primary)', marginLeft: 8 }}>#{facturaDetalle.numero || facturaDetalle.numero_factura}</span></h2>
-              <button onClick={() => setFacturaDetalle(null)} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}><FaTimes /></button>
-            </div>
-            <div style={{ padding: '32px', overflowY: 'auto' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 32 }}>
-                <div><div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-muted)' }}>PACIENTE</div><div style={{ color: 'white', fontWeight: 700, marginTop: 4 }}>{facturaDetalle.datosCliente?.nombre || facturaDetalle.paciente?.nombre}</div></div>
-                <div><div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-muted)' }}>FECHA</div><div style={{ color: 'white', fontWeight: 700, marginTop: 4 }}>{new Date(facturaDetalle.fecha_factura || facturaDetalle.createdAt).toLocaleDateString('es-DO')}</div></div>
-              </div>
-              <div style={{ background: 'rgba(0,0,0,0.2)', borderRadius: 12, padding: 24 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}><span style={{ color: 'var(--text-muted)' }}>Subtotal Bruto</span><span style={{ color: 'white' }}>${(facturaDetalle.subtotal || 0).toLocaleString()}</span></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}><span style={{ color: 'var(--color-danger)' }}>Cobertura</span><span style={{ color: 'var(--color-danger)' }}>-${(facturaDetalle.cobertura || 0).toLocaleString()}</span></div>
-                <div style={{ borderTop: '1px dashed rgba(255,255,255,0.05)', paddingTop: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                  <span style={{ fontWeight: 800, color: 'white', fontSize: 18 }}>TOTAL NETO</span>
-                  <span style={{ fontSize: 28, fontWeight: 900, color: 'var(--color-primary)' }}>${(facturaDetalle.total || 0).toLocaleString()}</span>
-                </div>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000 }}>
+          <div style={{ background: 'white', borderRadius: 12, width: '100%', maxWidth: 500, padding: 32, boxShadow: 'var(--shadow-lg)' }}>
+            <h3 style={{ margin: '0 0 24px', fontSize: 20, fontWeight: 800 }}>Comprobante #{facturaDetalle.numero || facturaDetalle.numero_factura}</h3>
+            <div style={{ background: '#f8fafc', padding: 20, borderRadius: 10, marginBottom: 24 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}><span style={{ color: '#64748b' }}>Subtotal</span><span>${(facturaDetalle.subtotal || 0).toLocaleString()}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}><span style={{ color: '#ef4444' }}>Cobertura</span><span style={{ color: '#ef4444' }}>-${(facturaDetalle.cobertura || 0).toLocaleString()}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e2e8f0', paddingTop: 15 }}>
+                <span style={{ fontWeight: 800 }}>TOTAL PAGADO</span>
+                <span style={{ fontWeight: 900, color: '#2563eb', fontSize: 22 }}>${(facturaDetalle.total || 0).toLocaleString()}</span>
               </div>
             </div>
-            <div style={{ padding: '24px 32px', background: 'rgba(255,255,255,0.01)', display: 'flex', gap: 12 }}>
-              <button onClick={() => { setFacturaDetalle(null); imprimirFactura(facturaDetalle); }} style={{ flex: 1, padding: 14, borderRadius: 8, background: 'var(--color-primary)', border: 'none', color: 'var(--color-dark)', fontWeight: 800, cursor: 'pointer' }}>REIMPRIMIR TICKET</button>
-              <button onClick={() => setFacturaDetalle(null)} style={{ flex: 1, padding: 14, borderRadius: 8, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', color: 'white', fontWeight: 700, cursor: 'pointer' }}>CERRAR</button>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => { setFacturaDetalle(null); imprimirFactura(facturaDetalle); }} style={{ flex: 1, padding: 12, borderRadius: 8, background: '#2563eb', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer' }}>REIMPRIMIR</button>
+              <button onClick={() => setFacturaDetalle(null)} style={{ padding: 12, borderRadius: 8, background: '#f1f5f9', border: 'none', color: '#1e293b', fontWeight: 700, cursor: 'pointer' }}>CERRAR</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── Modal Nueva Factura Precision ── */}
       {showModalNueva && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(7, 8, 12, 0.95)', backdropFilter: 'blur(12px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000, padding: 24 }}>
-          <div className="glass-panel" style={{ width: '100%', maxWidth: 550, maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ padding: '24px 32px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>FACTURACIÓN PENDIENTE</h2>
-              <button onClick={() => setShowModalNueva(false)} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}><FaTimes /></button>
-            </div>
-            <div style={{ padding: '32px', overflowY: 'auto' }}>
-              {citasPendientes.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>No hay citas para facturar hoy</div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {citasPendientes.map(cita => (
-                    <div key={cita._id} onClick={() => setCitaSeleccionada(cita)} style={{
-                      padding: 20, borderRadius: 12, cursor: 'pointer', transition: 'all 0.2s',
-                      background: citaSeleccionada?._id === cita._id ? 'rgba(0, 242, 255, 0.05)' : 'rgba(255,255,255,0.01)',
-                      border: `1px solid ${citaSeleccionada?._id === cita._id ? 'var(--color-primary)' : 'rgba(255,255,255,0.03)'}`
-                    }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                        <strong style={{ color: 'white', fontSize: 14 }}>{cita.paciente?.nombre} {cita.paciente?.apellido}</strong>
-                        <span style={{ color: 'var(--color-primary)', fontWeight: 800 }}>${cita.total?.toLocaleString()}</span>
-                      </div>
-                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>SERVICIOS: {cita.estudios?.length || 0}</div>
-                    </div>
-                  ))}
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000 }}>
+          <div style={{ background: 'white', borderRadius: 12, width: '100%', maxWidth: 500, padding: 32, boxShadow: 'var(--shadow-lg)' }}>
+            <h3 style={{ margin: '0 0 24px', fontSize: 20, fontWeight: 800 }}>Admisiones Pendientes</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 350, overflowY: 'auto', marginBottom: 24 }}>
+              {citasPendientes.map(cita => (
+                <div key={cita._id} onClick={() => setCitaSeleccionada(cita)} style={{
+                  padding: 16, borderRadius: 10, cursor: 'pointer', border: `1.5px solid ${citaSeleccionada?._id === cita._id ? '#2563eb' : '#f1f5f9'}`,
+                  background: citaSeleccionada?._id === cita._id ? '#eff6ff' : 'white'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <strong style={{ fontSize: 14 }}>{cita.paciente?.nombre} {cita.paciente?.apellido}</strong>
+                    <span style={{ color: '#2563eb', fontWeight: 800 }}>${cita.total?.toLocaleString()}</span>
+                  </div>
+                  <div style={{ fontSize: 11, color: '#64748b' }}>ESTUDIOS: {cita.estudios?.length || 0}</div>
                 </div>
-              )}
+              ))}
+              {citasPendientes.length === 0 && <p style={{ textAlign: 'center', color: '#94a3b8' }}>No hay registros por cobrar</p>}
             </div>
-            <div style={{ padding: '24px 32px', background: 'rgba(255,255,255,0.01)', display: 'flex', gap: 12 }}>
-              <button onClick={crearFactura} disabled={!citaSeleccionada} style={{ flex: 1, padding: 16, borderRadius: 8, background: 'var(--color-primary)', border: 'none', color: 'var(--color-dark)', fontWeight: 800, cursor: citaSeleccionada ? 'pointer' : 'not-allowed', opacity: citaSeleccionada ? 1 : 0.5 }}>COBRAR & EMITIR</button>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={crearFactura} disabled={!citaSeleccionada} style={{ flex: 1, padding: 14, borderRadius: 8, background: '#2563eb', color: 'white', border: 'none', fontWeight: 700, cursor: citaSeleccionada ? 'pointer' : 'not-allowed', opacity: citaSeleccionada ? 1 : 0.5 }}>COBRAR SERVICIOS</button>
+              <button onClick={() => setShowModalNueva(false)} style={{ padding: 14, borderRadius: 8, background: '#f1f5f9', border: 'none', color: '#1e293b', fontWeight: 700, cursor: 'pointer' }}>CANCELAR</button>
             </div>
           </div>
         </div>

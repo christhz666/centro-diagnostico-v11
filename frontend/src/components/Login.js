@@ -40,25 +40,25 @@ const Login = ({ onLogin }) => {
                 <div className="login-header">
                     <img src="/logo-centro.png" alt="Logo" className="login-logo" />
                     <h1 className="login-title">Centro Médico</h1>
-                    <p className="login-subtitle">Gestión Clínica Ultra-Premium</p>
+                    <p className="login-subtitle">Gestión Clínica Profesional</p>
                 </div>
 
                 {error && <div className="login-error">{error}</div>}
 
                 <form className="login-form" onSubmit={handleSubmit}>
                     <div className="form-group">
-                        <label>Usuario / Email</label>
+                        <label>Acceso Usuario</label>
                         <div className="login-input-wrapper">
                             <input
                                 type="text"
                                 name="email"
                                 className="login-input"
-                                placeholder="nombre@ejemplo.com"
+                                placeholder="Identificación o correo"
                                 value={credentials.email}
                                 onChange={handleChange}
                                 required
                             />
-                            <FaUser size={14} style={{ position: 'absolute', left: 18, color: '#475569' }} />
+                            <FaUser size={14} style={{ position: 'absolute', left: 16, color: '#94a3b8' }} />
                         </div>
                     </div>
 
@@ -74,12 +74,12 @@ const Login = ({ onLogin }) => {
                                 onChange={handleChange}
                                 required
                             />
-                            <FaLock size={14} style={{ position: 'absolute', left: 18, color: '#475569' }} />
+                            <FaLock size={14} style={{ position: 'absolute', left: 16, color: '#94a3b8' }} />
                         </div>
                     </div>
 
                     <button type="submit" className="login-button" disabled={loading}>
-                        {loading ? <FaSpinner className="spin" /> : 'ACCEDER AL PANEL'}
+                        {loading ? <FaSpinner className="spin" /> : 'CONECTAR AHORA'}
                     </button>
                 </form>
             </div>
