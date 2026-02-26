@@ -11,6 +11,7 @@ import {
   FaXRay, FaBell
 } from 'react-icons/fa';
 
+import api from './services/api';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import RegistroInteligente from './components/RegistroInteligente';
@@ -470,7 +471,7 @@ function App() {
             </div>
           )}
           <div style={{ position: 'fixed', bottom: 4, right: 8, fontSize: 10, color: 'rgba(0,0,0,0.15)', pointerEvents: 'none', zIndex: 9999, fontWeight: 600 }}>
-            v1.1.0-PREMIUM
+            v1.1.1-PREMIUM
           </div>
         </div>
       </Router>
