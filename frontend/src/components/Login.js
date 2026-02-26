@@ -159,10 +159,6 @@ const Login = ({ onLogin }) => {
                 <MouseTrail />
                 {/* fondo con partículas flotantes opcional */}
                 <Particles />
-          from { transform: rotate(0deg); }
-          to   { transform: rotate(360deg); }
-        }
-        @keyframes pulse-ring {
           0%   { box-shadow: 0 0 0 0 rgba(135,206,235,0.4); }
           70%  { box-shadow: 0 0 0 20px rgba(135,206,235,0); }
           100% { box-shadow: 0 0 0 0 rgba(135,206,235,0); }
