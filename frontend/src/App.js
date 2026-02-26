@@ -189,7 +189,7 @@ function App() {
     { path: '/admin/equipos', icon: <FaCogs />, label: 'Equipos', roles: ['admin'] },
     { path: '/admin/estudios', icon: <FaClipboardList />, label: 'Catálogo Estudios', roles: ['admin'] },
     { path: '/contabilidad', icon: <FaBalanceScale />, label: 'Contabilidad', roles: ['admin'] },
-    { path: '/campana-whatsapp', icon: <FaWhatsapp />, label: 'Campañas WhatsApp', roles: ['admin', 'recepcion', 'laboratorio', 'medico'] },
+    { path: '/campana-whatsapp', icon: <FaWhatsapp />, label: 'Campañas WhatsApp', roles: ['admin'] },
     ...(isElectron ? [{ path: '/deploy', icon: <FaNetworkWired />, label: 'Deploy Agentes', roles: ['admin'] }] : [])
   ];
 
