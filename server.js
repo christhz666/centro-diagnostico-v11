@@ -20,6 +20,16 @@ const { errorHandler, notFound } = require('./middleware/errorHandler');
 const app = express();
 app.set('trust proxy', 1);
 
+// Ruta raíz para evitar 404 en /
+app.get('/', (req, res) => {
+    res.json({
+        success: true,
+        message: 'Centro Diagnóstico API',
+        version: '1.0',
+        date: new Date().toISOString()
+    });
+});
+
 const getLocalIps = () => {
     const interfaces = os.networkInterfaces();
     const ips = [];
