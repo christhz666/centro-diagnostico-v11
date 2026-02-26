@@ -40,6 +40,32 @@ const Waves = ({ color }) => (
     </svg>
 );
 
+/* ─── Efecto de puntos que siguen el mouse ───────────────────── */
+const MouseTrail = () => {
+  const [dots, setDots] = useState([]);
+  useEffect(() => {
+    const handleMove = e => {
+      const newDot = { x: e.clientX, y: e.clientY, id: Date.now() };
+      setDots(prev => [...prev.slice(-8), newDot]);
+    };
+    window.addEventListener('mousemove', handleMove);
+    const interval = setInterval(() => setDots(d => d.slice(1)), 50);
+    return () => { window.removeEventListener('mousemove', handleMove); clearInterval(interval); };
+  }, []);
+  return (
+    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+      {dots.map(d => (
+        <div key={d.id} style={{
+          position: 'absolute', left: d.x, top: d.y,
+          width: 8, height: 8, background: 'rgba(135,206,235,0.6)',
+          borderRadius: '50%', transform: 'translate(-50%, -50%)',
+          animation: 'trail 0.6s linear'
+        }} />
+      ))}
+    </div>
+  );
+};
+
 /* ─── Componente principal ─────────────────────────────────── */
 const Login = ({ onLogin }) => {
     const [username, setUsername] = useState('');
@@ -120,7 +146,7 @@ const Login = ({ onLogin }) => {
     return (
         <div style={{
             minHeight: '100vh',
-            background: `linear-gradient(145deg, ${C.dark} 0%, ${colorA} 45%, ${colorB} 100%)`,
+            background: '#ffffff', /* page white */
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -129,17 +155,10 @@ const Login = ({ onLogin }) => {
             position: 'relative',
             overflow: 'hidden',
         }}>
-
-            <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-
-        @keyframes float-particle {
-          0%, 100% { transform: translateY(0) scale(1); }
-          50%       { transform: translateY(-30px) scale(1.1); }
-        }
-        @keyframes heartbeat {
-          0%, 100% { transform: scale(1); }
-          14%       { transform: scale(1.15); }
+                {/* mouse-follow particles */}
+                <MouseTrail />
+                {/* fondo con partículas flotantes opcional */}
+                <Particles />
           28%       { transform: scale(1); }
           42%       { transform: scale(1.1); }
           56%       { transform: scale(1); }
@@ -161,25 +180,26 @@ const Login = ({ onLogin }) => {
           70%  { box-shadow: 0 0 0 20px rgba(135,206,235,0); }
           100% { box-shadow: 0 0 0 0 rgba(135,206,235,0); }
         }
+        @keyframes trail { to { transform: translate(-50%, -50%) scale(2); opacity:0; } }
         .login-input {
           width: 100%;
           padding: 15px 15px 15px 46px;
-          background: rgba(255,255,255,0.07);
-          border: 2px solid rgba(255,255,255,0.15);
+          background: rgba(255,255,255,0.6);
+          border: 2px solid rgba(255,255,255,0.8);
           border-radius: 14px;
-          color: white;
+          color: #2c3e50;
           font-size: 15px;
           font-family: inherit;
           box-sizing: border-box;
           transition: all 0.25s;
           -webkit-font-smoothing: antialiased;
         }
-        .login-input::placeholder { color: rgba(255,255,255,0.35); }
+        .login-input::placeholder { color: rgba(44,62,80,0.5); }
         .login-input:focus {
           outline: none;
           border-color: ${C.sky};
-          background: rgba(255,255,255,0.12);
-          box-shadow: 0 0 0 4px rgba(135,206,235,0.15);
+          background: rgba(255,255,255,0.8);
+          box-shadow: 0 0 0 4px rgba(135,206,235,0.1);
         }
         .login-btn {
           width: 100%;
@@ -352,19 +372,32 @@ const Login = ({ onLogin }) => {
                                     <FaHeartbeat style={{ fontSize: 34, color: C.sky, animation: 'heartbeat 1.5s ease-in-out infinite' }} />
                                 </div>
                             )}
-                            <h2 style={{ color: C.white, margin: '0 0 4px', fontSize: 20, fontWeight: 700 }}>
+                            <h2 style={{ color: C.dark, margin: '0 0 4px', fontSize: 20, fontWeight: 700 }}>
                                 {empresaConfig.nombre || 'Centro Diagnóstico'}
                             </h2>
                             <p style={{ color: 'rgba(135,206,235,0.7)', margin: 0, fontSize: 13 }}>Sistema de Gestión Médica</p>
                         </div>
                     )}
 
-                    {/* Título del formulario */}
-                    <div style={{ marginBottom: 32 }}>
-                        <h2 style={{ color: C.white, margin: '0 0 6px', fontSize: isMobile ? 24 : 28, fontWeight: 700 }}>
+                    {/* tarjeta glass con contenido */}
+                    <div style={{
+                        background: 'rgba(255,255,255,0.25)',
+                        backdropFilter: 'blur(12px)',
+                        borderRadius: 20,
+                        padding: isMobile ? '24px' : '40px',
+                        boxShadow: '0 16px 48px rgba(0,0,0,0.08)',
+                        maxWidth: 420,
+                        width: '100%',
+                        position: 'relative',
+                        zIndex: 1,
+                        animation: 'fadeInUp 0.5s ease'
+                    }}>
+                        {/* Título del formulario */}
+                        <div style={{ marginBottom: 32 }}>
+                        <h2 style={{ color: C.dark, margin: '0 0 6px', fontSize: isMobile ? 24 : 28, fontWeight: 700 }}>
                             Iniciar Sesión
                         </h2>
-                        <p style={{ color: 'rgba(255,255,255,0.45)', margin: 0, fontSize: 14 }}>
+                        <p style={{ color: 'rgba(44,62,80,0.7)', margin: 0, fontSize: 14 }}>
                             Ingresa tus credenciales de acceso
                         </p>
                     </div>
@@ -413,7 +446,7 @@ const Login = ({ onLogin }) => {
                         {/* Campo: Contraseña */}
                         <div>
                             <label style={{
-                                color: 'rgba(255,255,255,0.6)', fontSize: 13, fontWeight: 500,
+                                color: 'rgba(44,62,80,0.6)', fontSize: 13, fontWeight: 500,
                                 display: 'block', marginBottom: 8, letterSpacing: '0.3px'
                             }}>
                                 Contraseña
@@ -451,7 +484,7 @@ const Login = ({ onLogin }) => {
                                 onChange={(e) => setRememberMe(e.target.checked)}
                                 style={{ marginRight: '8px', cursor: 'pointer', opacity: 0.8, width: 14, height: 14 }}
                             />
-                            <label htmlFor="rememberMe" style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13, cursor: 'pointer' }}>
+                            <label htmlFor="rememberMe" style={{ color: 'rgba(44,62,80,0.75)', fontSize: 13, cursor: 'pointer' }}>
                                 Recuérdame en este equipo
                             </label>
                         </div>

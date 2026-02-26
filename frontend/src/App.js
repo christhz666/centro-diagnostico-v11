@@ -255,7 +255,7 @@ function App() {
           @keyframes fadeSlideIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
           @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
           .spin { animation: spin 0.8s linear infinite; }
-          .sidebar-nav-item:hover { background: rgba(255,255,255,0.1) !important; color: white !important; }
+          .sidebar-nav-item:hover { background: rgba(255,255,255,0.1) !important; color: white !important; transform: translateX(4px) scale(1.03); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
           .sidebar-nav-item:hover a, .sidebar-nav-item:hover { color: white !important; }
           .nav-label-text { opacity: ${sidebarExpanded ? 1 : 0}; max-width: ${sidebarExpanded ? '180px' : '0px'}; transition: opacity 0.25s, max-width 0.25s; overflow: hidden; white-space: nowrap; display: inline-block; }
           .app-main-content { transition: margin-left 0.3s ease; }
@@ -385,7 +385,7 @@ function App() {
             flex: 1,
             marginLeft: isMobile ? 0 : sidebarW,
             minHeight: '100vh',
-            background: '#f0f4f8',
+            background: '#ffffff', /* página blanca */
             transition: 'margin-left 0.3s ease',
           }}>
             {/* Header */}
