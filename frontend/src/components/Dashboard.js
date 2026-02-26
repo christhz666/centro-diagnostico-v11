@@ -1,157 +1,248 @@
 import React, { useState, useEffect } from 'react';
-import { FaUserMd, FaCalendarCheck, FaVial, FaMicroscope, FaArrowUp, FaSync, FaClock, FaCheckCircle, FaHospitalUser } from 'react-icons/fa';
 import api from '../services/api';
 
-const StatCard = ({ title, value, icon: Icon, color, trend, index }) => {
-    const [visible, setVisible] = useState(false);
-    useEffect(() => { const t = setTimeout(() => setVisible(true), index * 100); return () => clearTimeout(t); }, [index]);
-
+const StatCard = ({ title, value, subtext, icon, colorClass, trend, index }) => {
     return (
-        <div style={{
-            background: 'white',
-            border: '1px solid var(--glass-border)',
-            borderRadius: 20, padding: '28px',
-            color: 'var(--text-main)', position: 'relative', overflow: 'hidden',
-            boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.02)',
-            transition: 'all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1)',
-            transform: visible ? 'translateY(0)' : 'translateY(10px)',
-            opacity: visible ? 1 : 0,
-        }}
-            className="medicore-tile"
-            onMouseEnter={e => {
-                e.currentTarget.style.borderColor = 'var(--color-mint)';
-                e.currentTarget.style.boxShadow = '0 20px 40px -10px rgba(13, 148, 136, 0.08)';
-                e.currentTarget.style.transform = 'translateY(-6px)';
-            }}
-            onMouseLeave={e => {
-                e.currentTarget.style.borderColor = 'var(--glass-border)';
-                e.currentTarget.style.boxShadow = '0 10px 30px -5px rgba(0, 0, 0, 0.02)';
-                e.currentTarget.style.transform = 'translateY(0)';
-            }}
-        >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
-                <div style={{ width: 48, height: 48, borderRadius: 14, background: `${color}10`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: color }}>
-                    <Icon size={24} />
+        <div className="bg-white dark:bg-surface-dark rounded-3xl p-6 glow-border shadow-lg dark:shadow-none flex flex-col justify-between h-48 group hover:-translate-y-1 transition-transform duration-300">
+            <div className="flex justify-between items-start">
+                <div className={`h-10 w-10 rounded-lg ${colorClass} flex items-center justify-center`}>
+                    <span className="material-icons-round">{icon}</span>
                 </div>
                 {trend && (
-                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-teal)', background: 'rgba(13, 148, 136, 0.05)', padding: '4px 10px', borderRadius: 20, display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <FaArrowUp size={10} /> {trend}
-                    </div>
+                    <span className="bg-green-500/20 text-green-400 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                        <span className="material-icons-round text-[10px]">arrow_upward</span> {trend}
+                    </span>
                 )}
             </div>
-
-            <h3 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{title}</h3>
-            <div style={{ marginTop: 10, fontSize: 36, fontWeight: 800, fontFamily: 'var(--font-title)', display: 'flex', alignItems: 'baseline', gap: 8, color: 'var(--color-dark)' }}>
-                {value}
-                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-muted)' }}>hoy</span>
+            <div>
+                <p className="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">{title}</p>
+                <h3 className="text-3xl font-display font-bold text-gray-900 dark:text-white">{value}</h3>
+                <p className="text-xs text-gray-400 mt-1">{subtext}</p>
             </div>
         </div>
     );
 };
 
 const Dashboard = () => {
-    const [data, setData] = useState({ citasHoy: 0, estudiosRealizados: 0, ingresosHoy: 0, pacientesNuevos: 0 });
+    const [stats, setStats] = useState({ citasHoy: 0, estudiosRealizados: 0, ingresosHoy: 0, pacientesNuevos: 0 });
     const [citasHoy, setCitasHoy] = useState([]);
     const [loading, setLoading] = useState(true);
     const [user] = useState(JSON.parse(localStorage.getItem('user')) || {});
 
     useEffect(() => {
+        const fetchDashboardData = async () => {
+            try {
+                const d = await api.getDashboardStats();
+                setStats(d || stats);
+                const c = await api.getCitas({ fecha: new Date().toISOString().split('T')[0] });
+                setCitasHoy(Array.isArray(c) ? c.slice(0, 6) : (c.data?.slice(0, 6) || []));
+            } catch (error) {
+                console.error('Dashboard error:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
         fetchDashboardData();
-        const interval = setInterval(fetchDashboardData, 30000);
+        const interval = setInterval(fetchDashboardData, 60000);
         return () => clearInterval(interval);
     }, []);
-
-    const fetchDashboardData = async () => {
-        try {
-            const stats = await api.getDashboardStats();
-            setData(stats || data);
-            const citas = await api.getCitas({ fecha: new Date().toISOString().split('T')[0] });
-            setCitasHoy(Array.isArray(citas) ? citas.slice(0, 6) : (citas.data?.slice(0, 6) || []));
-        } catch (error) {
-            console.error('Dashboard error:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const CARDS = [
-        { title: 'Citas Hoy', value: data.citasHoy, icon: FaCalendarCheck, color: 'var(--color-teal)', trend: '+12%', index: 0 },
-        { title: 'Resultados', value: data.estudiosRealizados, icon: FaVial, color: 'var(--color-sky)', trend: '+5%', index: 1 },
-        { title: 'Pacientes', value: data.pacientesNuevos, icon: FaUserMd, color: 'var(--color-mint)', trend: '+18%', index: 2 },
-        { title: 'Sistemas', value: 'Active', icon: FaMicroscope, color: '#6366f1', index: 3 }
-    ];
 
     const hora = new Date().getHours();
     const saludo = hora < 12 ? 'Buenos días' : hora < 18 ? 'Buenas tardes' : 'Buenas noches';
 
     return (
-        <div style={{ padding: '60px 40px', maxWidth: 1400, margin: '0 auto' }}>
-            {/* ── Encabezado Futurista ── */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 56 }}>
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {/* Welcome Section */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
                 <div>
-                    <h1 style={{ margin: 0, fontSize: 36, fontWeight: 800, color: 'var(--color-dark)', fontFamily: 'var(--font-title)', letterSpacing: '-1px' }}>
-                        {saludo}, <span style={{ color: 'var(--color-teal)' }}>{user?.nombre?.split(' ')[0] || 'Doctor'}</span>
-                    </h1>
-                    <p style={{ margin: '12px 0 0', color: 'var(--text-muted)', fontSize: 16, fontWeight: 500 }}>
-                        Panel de diagnóstico inteligente • {new Date().toLocaleDateString('es-DO', { weekday: 'long', day: 'numeric', month: 'long' })}
+                    <h2 className="text-4xl md:text-5xl font-display font-bold text-gray-900 dark:text-white mb-2">
+                        {saludo}, <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-500">{user?.nombre?.split(' ')[0] || 'Doctor'}</span>
+                    </h2>
+                    <p className="text-gray-500 dark:text-gray-400 text-lg flex items-center gap-2">
+                        Panel de diagnóstico inteligente
+                        <span className="h-1 w-1 rounded-full bg-gray-500"></span>
+                        <span className="text-primary font-mono text-base uppercase">
+                            {new Date().toLocaleDateString('es-DO', { weekday: 'short', day: 'numeric', month: 'short' })}
+                        </span>
                     </p>
                 </div>
-                <button onClick={fetchDashboardData} style={{ width: 48, height: 48, borderRadius: 14, background: 'white', border: '1px solid #e2e8f0', color: 'var(--text-main)', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }} onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'} onMouseLeave={e => e.currentTarget.style.background = 'white'}>
-                    <FaSync className={loading ? 'spin' : ''} size={16} />
+                <button className="flex items-center justify-center h-12 w-12 rounded-full bg-white dark:bg-surface-dark border border-gray-200 dark:border-white/10 shadow-lg text-gray-600 dark:text-primary hover:rotate-180 transition-transform duration-500">
+                    <span className="material-icons-round">refresh</span>
                 </button>
             </div>
 
-            {/* ── Grid Estadísticas ── */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 32, marginBottom: 56 }}>
-                {CARDS.map((c, i) => <StatCard key={i} {...c} />)}
-            </div>
-
-            {/* ── Sección de Pacientes ── */}
-            <div className="glass-panel" style={{ padding: '0', borderRadius: 24, overflow: 'hidden', background: 'white', border: '1px solid var(--glass-border)', boxShadow: '0 20px 40px -15px rgba(0,0,0,0.04)' }}>
-                <div style={{ padding: '32px 40px', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, fontFamily: 'var(--font-title)', color: 'var(--color-dark)' }}>Pacientes de Hoy</h2>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-teal)', background: 'rgba(13, 148, 136, 0.08)', padding: '8px 18px', borderRadius: 30 }}>{citasHoy.length} activos</span>
-                </div>
-
-                <div style={{ padding: '16px' }}>
-                    {citasHoy.length === 0 ? (
-                        <div style={{ padding: '80px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                            <FaClock size={32} style={{ marginBottom: 20, opacity: 0.2, color: 'var(--color-teal)' }} />
-                            <p style={{ margin: 0, fontSize: 16, fontWeight: 500 }}>No hay actividad registrada para hoy</p>
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-8">
+                {/* Featured Patient Card */}
+                <div className="col-span-1 md:col-span-12 lg:col-span-5 row-span-2 bg-white dark:bg-surface-dark rounded-3xl p-6 glow-border shadow-lg dark:shadow-none flex flex-col justify-between relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/10 to-transparent rounded-bl-full pointer-events-none transition-opacity group-hover:opacity-75"></div>
+                    <div className="relative z-10">
+                        <div className="flex justify-between items-start mb-6">
+                            <span className="px-3 py-1 bg-primary/20 text-primary text-xs font-bold rounded-full uppercase tracking-wider">Último Ingreso</span>
+                            <button className="text-gray-400 hover:text-white transition-colors">
+                                <span className="material-icons-round">more_horiz</span>
+                            </button>
                         </div>
-                    ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                            {citasHoy.map((cita, i) => (
-                                <div key={i} style={{
-                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                    padding: '20px 24px', borderRadius: 14, transition: 'all 0.2s'
-                                }} onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-                                        <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(13, 148, 136, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-teal)' }}>
-                                            <FaHospitalUser size={20} />
-                                        </div>
-                                        <div>
-                                            <div style={{ color: 'var(--color-dark)', fontWeight: 700, fontSize: 16 }}>{cita.paciente?.nombre} {cita.paciente?.apellido}</div>
-                                            <div style={{ color: 'var(--text-muted)', fontSize: 14, marginTop: 4 }}>
-                                                {cita.estudios?.map(e => e.estudio?.nombre || 'General').join(', ') || 'Consulta General'}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div style={{ textAlign: 'right' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--color-teal)', fontSize: 13, fontWeight: 700 }}>
-                                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--color-mint)', boxShadow: '0 0 8px var(--color-mint)' }}></div>
-                                            {cita.estado}
-                                        </div>
-                                        <div style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 6, fontWeight: 500 }}>{cita.horaInicio || '--:--'} AM</div>
+                        {citasHoy.length > 0 ? (
+                            <div className="flex items-center gap-4 mb-8">
+                                <div className="h-20 w-20 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-primary overflow-hidden">
+                                    <span className="material-icons-round text-4xl">person</span>
+                                </div>
+                                <div>
+                                    <h3 className="text-2xl font-display font-bold text-gray-900 dark:text-white">
+                                        {citasHoy[0].paciente?.nombre} {citasHoy[0].paciente?.apellido}
+                                    </h3>
+                                    <p className="text-gray-500 dark:text-gray-400">ID: #{citasHoy[0].paciente_id}</p>
+                                    <div className="mt-2 flex gap-2">
+                                        <span className="text-xs font-mono bg-gray-100 dark:bg-white/5 px-2 py-1 rounded text-gray-500 dark:text-gray-300">
+                                            {citasHoy[0].estudios?.[0]?.estudio?.nombre || 'Consulta'}
+                                        </span>
+                                        <span className="text-xs font-mono bg-primary/10 px-2 py-1 rounded text-primary uppercase">
+                                            {citasHoy[0].estado}
+                                        </span>
                                     </div>
                                 </div>
-                            ))}
+                            </div>
+                        ) : (
+                            <div className="py-12 text-center text-gray-400">Esperando pacientes...</div>
+                        )}
+
+                        <div className="grid grid-cols-2 gap-4 mb-6">
+                            <div className="bg-gray-50 dark:bg-[#0B1121] p-4 rounded-xl border border-gray-100 dark:border-white/5">
+                                <div className="text-gray-400 text-xs uppercase mb-1">Estado General</div>
+                                <div className="text-xl font-bold text-gray-900 dark:text-white flex items-end gap-1">
+                                    Estable
+                                </div>
+                            </div>
+                            <div className="bg-gray-50 dark:bg-[#0B1121] p-4 rounded-xl border border-gray-100 dark:border-white/5">
+                                <div className="text-gray-400 text-xs uppercase mb-1">Prioridad</div>
+                                <div className="text-xl font-bold text-primary flex items-end gap-1">Normal</div>
+                            </div>
                         </div>
-                    )}
+                    </div>
+                    <div className="relative z-10 mt-auto">
+                        <button className="w-full py-4 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-black font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2">
+                            Ver Historial Completo
+                            <span className="material-icons-round text-sm">arrow_forward</span>
+                        </button>
+                    </div>
                 </div>
-                <div style={{ padding: '20px 40px', background: '#f8fafc', borderTop: '1px solid #f1f5f9', textAlign: 'center' }}>
-                    <button style={{ background: 'none', border: 'none', color: 'var(--color-teal)', fontWeight: 700, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, margin: '0 auto' }}>
-                        Ver agenda completa
+
+                {/* Stats Grid */}
+                <div className="col-span-1 md:col-span-12 lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <StatCard
+                        title="Citas Hoy"
+                        value={stats.citasHoy}
+                        subtext={`${citasHoy.length} en espera`}
+                        icon="calendar_today"
+                        colorClass="bg-blue-500/10 text-blue-500"
+                        trend="+12%"
+                    />
+                    <StatCard
+                        title="Resultados"
+                        value={stats.estudiosRealizados}
+                        subtext="Listos para revisar"
+                        icon="science"
+                        colorClass="bg-primary/10 text-primary"
+                        trend="+5%"
+                    />
+                    <StatCard
+                        title="Ingresos"
+                        value={`$${stats.ingresosHoy}`}
+                        subtext="Generados hoy"
+                        icon="payments"
+                        colorClass="bg-green-500/10 text-green-500"
+                        trend="+18%"
+                    />
+
+                    {/* System Status Card */}
+                    <div className="col-span-1 sm:col-span-2 lg:col-span-3 bg-white dark:bg-surface-dark rounded-3xl p-6 glow-border shadow-lg dark:shadow-none flex items-center justify-between relative overflow-hidden">
+                        <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-l from-primary/5 to-transparent pointer-events-none"></div>
+                        <div className="relative z-10 flex flex-col justify-center">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="h-8 w-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400">
+                                    <span className="material-icons-round text-sm">dns</span>
+                                </div>
+                                <span className="text-xs uppercase tracking-widest text-gray-500 dark:text-gray-400 font-semibold">Estado del Sistema</span>
+                            </div>
+                            <div className="flex items-baseline gap-2">
+                                <h3 className="text-3xl font-display font-bold text-gray-900 dark:text-white">Operativo</h3>
+                                <span className="text-sm text-primary font-mono">99.9% Uptime</span>
+                            </div>
+                        </div>
+                        <div className="relative flex items-center justify-center h-20 w-20">
+                            <div className="absolute h-full w-full rounded-full border border-primary/20 pulse-circle" style={{ animationDelay: '0s' }}></div>
+                            <div className="absolute h-3/4 w-3/4 rounded-full border border-primary/40 pulse-circle" style={{ animationDelay: '1s' }}></div>
+                            <div className="h-3 w-3 rounded-full bg-primary shadow-[0_0_15px_rgba(0,229,255,1)] z-10"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Patients Table Section */}
+            <div className="bg-white dark:bg-surface-dark rounded-3xl shadow-lg dark:shadow-none overflow-hidden glow-border">
+                <div className="glass-header px-6 py-5 flex items-center justify-between sticky top-0 z-20">
+                    <h3 className="text-lg font-display font-bold text-gray-900 dark:text-white">Pacientes de Hoy</h3>
+                    <div className="flex items-center gap-3">
+                        <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-semibold">{citasHoy.length} activos</span>
+                    </div>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-white/5">
+                                <th className="px-6 py-4 font-medium">Paciente</th>
+                                <th className="px-6 py-4 font-medium">Estudio</th>
+                                <th className="px-6 py-4 font-medium">Estado</th>
+                                <th className="px-6 py-4 font-medium text-right">Hora</th>
+                                <th className="px-6 py-4 font-medium text-right">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody className="text-sm divide-y divide-gray-100 dark:divide-white/5">
+                            {citasHoy.map((cita, i) => (
+                                <tr key={i} className="group hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-10 w-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-primary font-bold text-xs">
+                                                {(cita.paciente?.nombre || 'P')[0]}
+                                            </div>
+                                            <div>
+                                                <p className="font-semibold text-gray-900 dark:text-white">{cita.paciente?.nombre} {cita.paciente?.apellido}</p>
+                                                <p className="text-xs text-gray-500">ID: {cita.paciente_id}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <span className="px-2 py-1 rounded text-xs bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                                            {cita.estudios?.[0]?.estudio?.nombre || 'General'}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-2">
+                                            <span className={`h-2 w-2 rounded-full ${cita.estado === 'Completada' ? 'bg-green-500' : 'bg-primary animate-pulse'}`}></span>
+                                            <span className={`${cita.estado === 'Completada' ? 'text-green-500' : 'text-primary'} text-xs font-semibold`}>
+                                                {cita.estado}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-right text-gray-900 dark:text-white font-mono">{cita.horaInicio || '--:--'}</td>
+                                    <td className="px-6 py-4 text-right">
+                                        <button className="text-gray-400 hover:text-primary transition-colors">
+                                            <span className="material-icons-round">description</span>
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                            {citasHoy.length === 0 && (
+                                <tr>
+                                    <td colSpan="5" className="px-6 py-12 text-center text-gray-500">No hay citas para hoy</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+                <div className="px-6 py-4 border-t border-gray-100 dark:border-white/5 flex justify-center">
+                    <button className="text-sm text-gray-500 dark:text-gray-400 hover:text-primary transition-colors flex items-center gap-1">
+                        Ver todos los pacientes <span className="material-icons-round text-sm">expand_more</span>
                     </button>
                 </div>
             </div>
