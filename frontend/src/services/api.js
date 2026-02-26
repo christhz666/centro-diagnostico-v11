@@ -25,7 +25,10 @@ class ApiService {
         if (response.status === 401) {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
-            window.location.href = '/';
+            // Evitar bucle infinito de reloads si ya estamos en la raíz o login
+            if (window.location.pathname !== '/' && window.location.pathname !== '/login') {
+                window.location.href = '/';
+            }
             throw new Error('Sesion expirada');
         }
 
