@@ -6,6 +6,32 @@
     body {
         @apply antialiased text-slate-800 dark:text-slate-200 bg-background-light dark:bg-background-dark font-body;
     }
+
+    /* Global Dark Mode Overrides for Legacy Containers */
+    .dark .container,
+    .dark .main-content,
+    .dark .card,
+    .dark .panel {
+        @apply bg-surface-dark text-slate-200 border-white/5;
+    }
+
+    .dark input,
+    .dark select,
+    .dark textarea {
+        @apply bg-white/5 border-white/10 text-white placeholder-gray-500 focus:ring-primary/50;
+    }
+
+    .dark table {
+        @apply text-slate-300;
+    }
+
+    .dark th {
+        @apply bg-white/5 border-white/5 text-gray-400;
+    }
+
+    .dark td {
+        @apply border-white/5;
+    }
 }
 
 @layer components {
@@ -15,6 +41,19 @@
 
     .glow-border {
         @apply relative border border-gray-200 dark:border-white/10;
+    }
+
+    /* Custom Scrollbar for Next-Gen Look */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        @apply bg-transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        @apply bg-primary/20 rounded-full hover:bg-primary/40 transition-colors;
     }
 }
 

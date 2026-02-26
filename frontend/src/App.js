@@ -125,7 +125,10 @@ function App() {
     { path: '/admin', icon: 'settings', label: 'Panel Admin', roles: ['admin'] },
   ];
 
-  const filteredMenu = menuItems.filter(i => i.roles.includes(rol));
+  const [adminOpen, setAdminOpen] = useState(false);
+
+  const filteredMenu = menuItems.filter(i => i.roles.includes(rol) && i.path !== '/admin');
+  const isAdmin = rol === 'admin';
 
   return (
     <OfflineScreen>
@@ -136,7 +139,7 @@ function App() {
           ) : (
             <>
               {/* Header */}
-              <header className="sticky top-0 z-50 h-16 glass-header flex items-center justify-between px-4 lg:px-8">
+              <header className="sticky top-0 z-50 h-16 glass-header flex items-center justify-between px-4 lg:px-8 border-b border-gray-100 dark:border-white/5">
                 <div className="flex items-center gap-4">
                   <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 rounded-xl h-10 w-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors">
                     <span className="material-icons-round">{sidebarOpen ? 'menu_open' : 'menu'}</span>
@@ -153,8 +156,8 @@ function App() {
                   </div>
 
                   {/* Theme Toggle */}
-                  <button onClick={() => setDarkMode(!darkMode)} className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-primary transition-all">
-                    <span className="material-icons-round text-xl">{darkMode ? 'light_mode' : 'dark_mode'}</span>
+                  <button onClick={() => setDarkMode(!darkMode)} className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-primary transition-all group">
+                    <span className="material-icons-round text-xl group-hover:rotate-12 transition-transform">{darkMode ? 'light_mode' : 'dark_mode'}</span>
                   </button>
 
                   <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-primary to-blue-600 p-[1px] shadow-neon">
@@ -177,25 +180,54 @@ function App() {
                     </div>
                   </div>
 
-                  <nav className="flex-1 px-4 space-y-2 py-4">
+                  <nav className="flex-1 px-4 space-y-1 py-4 overflow-y-auto custom-scrollbar">
                     {filteredMenu.map((item, idx) => (
                       <NavLink key={idx} to={item.path} end={item.path === '/'} className={({ isActive }) => `
                         flex items-center gap-4 p-3 rounded-2xl transition-all group relative
                         ${isActive
                           ? 'bg-primary/10 text-primary shadow-inner-glow'
-                          : 'text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-primary'}
+                          : 'text-slate-400 dark:text-gray-500 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-primary'}
                       `}>
                         <span className="material-icons-round transition-transform group-hover:scale-110">{item.icon}</span>
                         <span className={`font-medium whitespace-nowrap transition-opacity duration-300 ${!sidebarOpen && 'lg:opacity-0 pointer-events-none'}`}>
                           {item.label}
                         </span>
                         {!sidebarOpen && !isMobile && (
-                          <div className="absolute left-full ml-4 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none z-50 transition-opacity">
+                          <div className="absolute left-full ml-4 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none z-50 transition-opacity whitespace-nowrap">
                             {item.label}
                           </div>
                         )}
                       </NavLink>
                     ))}
+
+                    {/* Admin Submenu Section */}
+                    {isAdmin && (
+                      <div className="pt-2">
+                        <button
+                          onClick={() => setAdminOpen(!adminOpen)}
+                          className={`w-full flex items-center justify-between p-3 rounded-2xl transition-all group relative
+                            ${adminOpen ? 'text-primary' : 'text-slate-400 dark:text-gray-500 hover:text-primary hover:bg-slate-50 dark:hover:bg-white/5'}
+                          `}
+                        >
+                          <div className="flex items-center gap-4">
+                            <span className="material-icons-round">settings</span>
+                            <span className={`font-medium whitespace-nowrap transition-opacity duration-300 ${!sidebarOpen && 'lg:opacity-0'}`}>Administración</span>
+                          </div>
+                          {sidebarOpen && (
+                            <span className={`material-icons-round text-sm transition-transform ${adminOpen ? 'rotate-180' : ''}`}>expand_more</span>
+                          )}
+                        </button>
+
+                        <div className={`overflow-hidden transition-all duration-300 ${adminOpen && sidebarOpen ? 'max-h-64 mt-1 opacity-100' : 'max-h-0 opacity-0'}`}>
+                          <div className="ml-9 space-y-1 border-l-2 border-primary/20 pl-3">
+                            <NavLink to="/admin/usuarios" className={({ isActive }) => `block p-2 text-sm rounded-xl transition-all ${isActive ? 'text-primary font-bold bg-primary/5' : 'text-slate-400 dark:text-gray-500 hover:text-primary'}`}>Usuarios</NavLink>
+                            <NavLink to="/admin/equipos" className={({ isActive }) => `block p-2 text-sm rounded-xl transition-all ${isActive ? 'text-primary font-bold bg-primary/5' : 'text-slate-400 dark:text-gray-500 hover:text-primary'}`}>Equipos</NavLink>
+                            <NavLink to="/admin/estudios" className={({ isActive }) => `block p-2 text-sm rounded-xl transition-all ${isActive ? 'text-primary font-bold bg-primary/5' : 'text-slate-400 dark:text-gray-500 hover:text-primary'}`}>Catálogo</NavLink>
+                            <NavLink to="/admin" className={({ isActive }) => `block p-2 text-sm rounded-xl transition-all ${isActive ? 'text-primary font-bold bg-primary/5' : 'text-slate-400 dark:text-gray-500 hover:text-primary'}`}>Configuración</NavLink>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </nav>
 
                   <div className="p-4 border-t border-gray-100 dark:border-white/5">

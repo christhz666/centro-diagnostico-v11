@@ -29,19 +29,21 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
     const [user] = useState(JSON.parse(localStorage.getItem('user')) || {});
 
+    const fetchDashboardData = async () => {
+        setLoading(true);
+        try {
+            const d = await api.getDashboardStats();
+            setStats(d || stats);
+            const c = await api.getCitas({ fecha: new Date().toISOString().split('T')[0] });
+            setCitasHoy(Array.isArray(c) ? c.slice(0, 6) : (c.data?.slice(0, 6) || []));
+        } catch (error) {
+            console.error('Dashboard error:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchDashboardData = async () => {
-            try {
-                const d = await api.getDashboardStats();
-                setStats(d || stats);
-                const c = await api.getCitas({ fecha: new Date().toISOString().split('T')[0] });
-                setCitasHoy(Array.isArray(c) ? c.slice(0, 6) : (c.data?.slice(0, 6) || []));
-            } catch (error) {
-                console.error('Dashboard error:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchDashboardData();
         const interval = setInterval(fetchDashboardData, 60000);
         return () => clearInterval(interval);
@@ -66,7 +68,10 @@ const Dashboard = () => {
                         </span>
                     </p>
                 </div>
-                <button className="flex items-center justify-center h-12 w-12 rounded-full bg-white dark:bg-surface-dark border border-gray-200 dark:border-white/10 shadow-lg text-gray-600 dark:text-primary hover:rotate-180 transition-transform duration-500">
+                <button
+                    onClick={fetchDashboardData}
+                    className={`flex items-center justify-center h-12 w-12 rounded-full bg-white dark:bg-surface-dark border border-gray-200 dark:border-white/10 shadow-lg text-gray-600 dark:text-primary transition-transform duration-500 hover:scale-110 active:scale-95 ${loading ? 'animate-spin' : ''}`}
+                >
                     <span className="material-icons-round">refresh</span>
                 </button>
             </div>
@@ -120,7 +125,10 @@ const Dashboard = () => {
                         </div>
                     </div>
                     <div className="relative z-10 mt-auto">
-                        <button className="w-full py-4 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-black font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2">
+                        <button
+                            onClick={() => window.location.href = `/consulta?id=${citasHoy[0]?.paciente_id}`}
+                            className="w-full py-4 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-black font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2"
+                        >
                             Ver Historial Completo
                             <span className="material-icons-round text-sm">arrow_forward</span>
                         </button>
@@ -226,7 +234,10 @@ const Dashboard = () => {
                                     </td>
                                     <td className="px-6 py-4 text-right text-gray-900 dark:text-white font-mono">{cita.horaInicio || '--:--'}</td>
                                     <td className="px-6 py-4 text-right">
-                                        <button className="text-gray-400 hover:text-primary transition-colors">
+                                        <button
+                                            onClick={() => window.location.href = `/resultados?paciente=${cita.paciente_id}`}
+                                            className="text-gray-400 hover:text-primary transition-colors"
+                                        >
                                             <span className="material-icons-round">description</span>
                                         </button>
                                     </td>
@@ -241,7 +252,10 @@ const Dashboard = () => {
                     </table>
                 </div>
                 <div className="px-6 py-4 border-t border-gray-100 dark:border-white/5 flex justify-center">
-                    <button className="text-sm text-gray-500 dark:text-gray-400 hover:text-primary transition-colors flex items-center gap-1">
+                    <button
+                        onClick={() => window.location.href = '/consulta'}
+                        className="text-sm text-gray-500 dark:text-gray-400 hover:text-primary transition-colors flex items-center gap-1"
+                    >
                         Ver todos los pacientes <span className="material-icons-round text-sm">expand_more</span>
                     </button>
                 </div>
