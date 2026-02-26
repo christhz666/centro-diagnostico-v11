@@ -159,10 +159,6 @@ const Login = ({ onLogin }) => {
                 <MouseTrail />
                 {/* fondo con partículas flotantes opcional */}
                 <Particles />
-          from { opacity: 0; transform: translateX(-30px); }
-          to   { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes spin {
           from { transform: rotate(0deg); }
           to   { transform: rotate(360deg); }
         }
