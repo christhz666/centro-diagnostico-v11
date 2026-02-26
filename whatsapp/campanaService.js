@@ -1,3 +1,14 @@
+// Permite actualizar credenciales de WhatsApp en caliente (memoria)
+function setWhatsAppCredentials(req, res) {
+    const { mode, accountSid, authToken, from, phoneNumberId, accessToken } = req.body;
+    if (mode) process.env.WHATSAPP_MODE = mode;
+    if (accountSid) process.env.TWILIO_ACCOUNT_SID = accountSid;
+    if (authToken) process.env.TWILIO_AUTH_TOKEN = authToken;
+    if (from) process.env.TWILIO_WHATSAPP_FROM = from;
+    if (phoneNumberId) process.env.META_PHONE_NUMBER_ID = phoneNumberId;
+    if (accessToken) process.env.META_ACCESS_TOKEN = accessToken;
+    res.json({ success: true, message: 'Credenciales de WhatsApp actualizadas en memoria.' });
+}
 /**
  * Servicio de Campañas WhatsApp
  * Para usar con la API de WhatsApp Business o Twilio WhatsApp
