@@ -44,6 +44,7 @@ function App() {
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches));
   const [runTour, setRunTour] = useState(false);
   const [empresaConfig, setEmpresaConfig] = useState({});
+  const [adminOpen, setAdminOpen] = useState(false);
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -125,7 +126,7 @@ function App() {
     { path: '/admin', icon: 'settings', label: 'Panel Admin', roles: ['admin'] },
   ];
 
-  const [adminOpen, setAdminOpen] = useState(false);
+
 
   const filteredMenu = menuItems.filter(i => i.roles.includes(rol) && i.path !== '/admin');
   const isAdmin = rol === 'admin';
