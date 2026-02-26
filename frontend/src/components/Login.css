@@ -78,6 +78,24 @@ body {
   }
 }
 
+@keyframes blob {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+}
+
 @keyframes slideBg {
   0% {
     background-position: 0% 50%;
@@ -108,13 +126,24 @@ body {
 
 .glow-corner {
   position: absolute;
-  width: 400px;
-  height: 400px;
-  filter: blur(100px);
+  width: 500px;
+  height: 500px;
+  filter: blur(120px);
   border-radius: 50%;
-  opacity: 0.4;
+  opacity: 0.5;
   pointer-events: none;
   z-index: -1;
+  animation: blob 15s infinite alternate ease-in-out;
+}
+
+.bg-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.3;
+  pointer-events: none;
+  z-index: -1;
+  animation: blob 20s infinite alternate ease-in-out;
 }
 
 /* --- Login Form Styles --- */

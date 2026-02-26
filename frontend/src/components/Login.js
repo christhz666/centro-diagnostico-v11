@@ -8,9 +8,16 @@ const BackgroundEffects = () => {
     return (
         <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', zIndex: -1, background: '#050505' }}>
             <div className="shimmer-bg" />
+
+            {/* Animated Orbs */}
+            <div className="bg-orb" style={{ width: 600, height: 600, top: '-20%', left: '-10%', background: 'rgba(59, 130, 246, 0.4)' }} />
+            <div className="bg-orb" style={{ width: 500, height: 500, bottom: '-10%', right: '5%', background: 'rgba(147, 51, 234, 0.3)', animationDelay: '-5s' }} />
+            <div className="bg-orb" style={{ width: 400, height: 400, top: '40%', right: '-10%', background: 'rgba(59, 130, 246, 0.2)', animationDelay: '-10s' }} />
+
             <div className="glow-corner" style={{ top: '-10%', left: '-10%', background: 'rgba(59, 130, 246, 0.4)' }} />
             <div className="glow-corner" style={{ bottom: '-10%', right: '-10%', background: 'rgba(147, 51, 234, 0.3)' }} />
-            {[...Array(20)].map((_, i) => (
+
+            {[...Array(30)].map((_, i) => (
                 <div key={i} className="particle" style={{
                     width: Math.random() * 3 + 1 + 'px',
                     height: Math.random() * 3 + 1 + 'px',
