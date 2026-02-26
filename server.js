@@ -144,7 +144,8 @@ app.use('/api/equipos', require('./routes/equipoRoutes'));
 app.use('/api/barcodes', require('./routes/poolBarcodes'));
 app.use('/api/contabilidad', require('./routes/contabilidad'));
 app.use('/api/configuracion', require('./routes/configuracion'));
-app.use('/api/deploy', require('./routes/deploy'));
+const deployRoutes = require('./routes/deploy');
+app.use('/api/deploy', deployRoutes);
 app.use('/api/downloads', require('./routes/downloads')); // No requiere autenticación
 app.use('/api/whatsapp', require('./routes/whatsapp'));
 app.use('/api/imagenologia', require('./routes/imagenologia'));
