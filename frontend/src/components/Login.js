@@ -147,7 +147,7 @@ const Login = ({ onLogin }) => {
     return (
         <div style={{
             minHeight: '100vh',
-            background: '#ffffff', /* page white */
+            background: '#ffffff',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -156,113 +156,28 @@ const Login = ({ onLogin }) => {
             position: 'relative',
             overflow: 'hidden',
         }}>
-                {/* mouse-follow particles */}
-                <MouseTrail />
-                {/* fondo con partículas flotantes opcional */}
-                <Particles />
-
-            {/* ════ CONTENEDOR ════ */}
-            <div style={{
-                display: 'flex',
-                width: '100%',
-                maxWidth: isMobile ? '420px' : '880px',
-                minHeight: isMobile ? 'auto' : '560px',
-                borderRadius: isMobile ? '24px' : '28px',
-                overflow: 'hidden',
-                boxShadow: '0 30px 80px rgba(0,0,0,0.5)',
-                animation: 'fadeInUp 0.6s ease',
-                position: 'relative',
-                zIndex: 10,
-            }}>
-
-                {/* ─── PANEL IZQUIERDO (solo desktop) ─── */}
-                {!isMobile && (
-                    <div style={{
-                        flex: '0 0 45%',
-                        background: `linear-gradient(160deg, rgba(26,58,92,0.95) 0%, rgba(13,33,55,0.98) 100%)`,
-                        backdropFilter: 'blur(20px)',
-                        padding: '60px 40px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'space-between',
-                        borderRight: `1px solid ${C.border}`,
-                        position: 'relative',
-                        overflow: 'hidden',
-                    }}>
-                        <Waves />
-
-                        {/* Logo y nombre */}
-                        <div style={{ textAlign: 'center' }}>
-                            {empresaConfig.logo_login ? (
-                                <img
-                                    src={empresaConfig.logo_login}
-                                    alt={empresaConfig.nombre}
-                                    style={{
-                                        maxWidth: '280px', maxHeight: '120px', objectFit: 'contain', marginBottom: 20,
-                                        filter: 'brightness(1.1) drop-shadow(0 4px 12px rgba(0,0,0,0.3))'
-                                    }}
-                                    onError={e => { e.target.style.display = 'none'; }}
-                                />
-                            ) : (
-                                <div style={{
-                                    width: 88, height: 88,
-                                    background: 'rgba(135,206,235,0.12)',
-                                    border: `2px solid ${C.sky}`,
-                                    borderRadius: '50%',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    margin: '0 auto 20px',
-                                    animation: 'pulse-ring 2.5s ease-out infinite',
-                                }}>
-                                    <FaHeartbeat style={{
-                                        fontSize: 42, color: C.sky,
-                                        animation: 'heartbeat 1.5s ease-in-out infinite',
-                                    }} />
-                                </div>
-                            )}
-
-                            <h1 style={{ color: C.white, margin: '0 0 6px', fontSize: 20, fontWeight: 700, lineHeight: 1.3 }}>
-                                {empresaConfig.nombre || 'Centro Diagnóstico'}
-                            </h1>
-                            <p style={{ color: 'rgba(135,206,235,0.8)', margin: 0, fontSize: 13 }}>
-                                Sistema de Gestión Médica
-                            </p>
-                        </div>
-
-                        {/* Features */}
-                        <div style={{ marginTop: 30 }}>
-                            {[
-                                { e: '🔬', t: 'Resultados de Laboratorio', d: 'Gestión completa de estudios' },
-                                { e: '🩻', t: 'Imagenología Digital', d: 'Visor DICOM integrado' },
-                                { e: '📄', t: 'Facturación Automática', d: 'NCF y portal de paciente' },
-                            ].map((f, i) => (
-                                <div key={i} className="feature-item" style={{ animationDelay: `${0.3 + i * 0.1}s` }}>
-                                    <span style={{ fontSize: 24, flexShrink: 0 }}>{f.e}</span>
-                                    <div>
-                                        <div style={{ color: C.white, fontWeight: 600, fontSize: 13 }}>{f.t}</div>
-                                        <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, marginTop: 1 }}>{f.d}</div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Version */}
-                        <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: 11, textAlign: 'center', margin: 0 }}>
-                            v8.0 · {new Date().getFullYear()}
-                        </p>
-                    </div>
-                )}
-
-                {/* ─── PANEL DERECHO (formulario) ─── */}
-                <div style={{
-                    flex: 1,
-                    background: `linear-gradient(160deg, rgba(15,41,64,0.97) 0%, rgba(26,58,92,0.98) 100%)`,
-                    backdropFilter: 'blur(20px)',
-                    padding: isMobile ? '40px 28px' : '60px 48px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    position: 'relative',
-                }}>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <input
+                    className="login-input"
+                    type="text"
+                    placeholder="Usuario"
+                    value={username}
+                    onChange={e => setUsername(e.target.value)}
+                    required
+                />
+                <input
+                    className="login-input"
+                    type="password"
+                    placeholder="Contraseña"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    required
+                />
+                <button type="submit" className="login-btn" style={{ marginTop: 8 }}>
+                    {loading ? 'Verificando...' : 'Ingresar'}
+                </button>
+            </form>
+        </div>
 
                     {/* Encabezado móvil */}
                     {isMobile && (
