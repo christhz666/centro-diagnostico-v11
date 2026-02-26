@@ -471,7 +471,7 @@ function App() {
             </div>
           )}
           <div style={{ position: 'fixed', bottom: 4, right: 8, fontSize: 10, color: 'rgba(0,0,0,0.15)', pointerEvents: 'none', zIndex: 9999, fontWeight: 600 }}>
-            v1.1.4-PREMIUM
+            v1.1.5-PREMIUM
           </div>
         </div>
       </Router>

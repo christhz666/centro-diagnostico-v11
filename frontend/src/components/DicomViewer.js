@@ -105,6 +105,8 @@ const DicomViewer = ({ imagenes = [], ajustesIniciales = {}, onCambioAjustes = n
     const [err, setErr] = useState('');
     const [loading, setLoading] = useState(false);
 
+    const readyRef = useRef(false);
+
     /* ── Habilitar Cornerstone cuando el elemento tiene tamaño ── */
     useEffect(() => {
         const ok = initCS();
@@ -115,39 +117,44 @@ const DicomViewer = ({ imagenes = [], ajustesIniciales = {}, onCambioAjustes = n
 
         // Esperar a que el elemento tenga dimensiones reales
         const tryEnable = () => {
+            if (readyRef.current) return;
             if (el.offsetWidth < 10 || el.offsetHeight < 10) return; // aún sin tamaño
             try {
                 cornerstone.enable(el);
                 registerTools();
                 setReady(true);
+                readyRef.current = true;
+                console.log("DicomViewer: Visor habilitado (ready)");
             } catch (e) {
+                console.error("DicomViewer Error:", e);
                 setErr('No se pudo inicializar el visor: ' + e.message);
             }
         };
 
-        // Intentar inmediatamente la habilitación
+        // Manejar tanto el "ready" inicial como los cambios de tamaño posteriores (ej: ocultar reporte)
+        const ro = new ResizeObserver(() => {
+            if (!readyRef.current) {
+                tryEnable();
+            } else {
+                try {
+                    cornerstone.resize(el, true);
+                    cornerstone.updateImage(el);
+                } catch (e) { console.warn("ResizeObserver fail:", e); }
+            }
+        });
+
+        ro.observe(el);
         tryEnable();
 
         return () => {
-            try { cornerstone.disable(el); } catch (_) { }
+            ro.disconnect();
+            if (readyRef.current) {
+                try { cornerstone.disable(el); } catch (_) { }
+                readyRef.current = false;
+                setReady(false);
+            }
         };
     }, []); // eslint-disable-line
-
-    /* ── Notificar a Cornerstone cuando cambia el tamaño del contenedor ── */
-    useEffect(() => {
-        const el = containerRef.current;
-        if (!el || !ready) return;
-
-        const ro = new ResizeObserver(() => {
-            try {
-                cornerstone.resize(el, true);
-                // Forzar un redibujado para evitar áreas negras
-                cornerstone.updateImage(el);
-            } catch (_) { }
-        });
-        ro.observe(el);
-        return () => ro.disconnect();
-    }, [ready]);
 
     /* ── Cargar imagen cuando cambia índice ──────────────────── */
     useEffect(() => {
@@ -165,6 +172,7 @@ const DicomViewer = ({ imagenes = [], ajustesIniciales = {}, onCambioAjustes = n
         // Intentar como DICOM primero, luego como imagen web
         const ids = [
             'wadouri:' + fullUrl,
+            'dicomweb:' + fullUrl,
             'webImageLoader:' + fullUrl,
         ];
         for (const imageId of ids) {

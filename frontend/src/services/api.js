@@ -1,5 +1,5 @@
 const API_URL = '/api';
-const VERSION = '1.1.0-PREMIUM';
+const VERSION = '1.1.5-PREMIUM';
 
 class ApiService {
     getToken() { return localStorage.getItem('token') || sessionStorage.getItem('token'); }
