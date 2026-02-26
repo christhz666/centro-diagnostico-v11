@@ -216,29 +216,11 @@ function App() {
   return (
     <OfflineScreen>
       <Router>
-        {!user || !token ? (
-          <Login onLogin={handleLogin} empresaConfig={empresaConfig} />
-        ) : (
-          <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)' }}>
+        <div style={{ minHeight: '100vh', background: 'var(--color-bg)', display: 'flex', flexDirection: 'column' }}>
 
-            <Joyride
-              steps={tourSteps}
-              run={runTour}
-              continuous={true}
-              showProgress={true}
-              showSkipButton={true}
-              callback={handleTourCallback}
-              styles={{
-                options: {
-                  primaryColor: '#2563eb',
-                  zIndex: 10000,
-                }
-              }}
-              locale={{ last: 'Finalizar', next: 'Siguiente', skip: 'Saltar Tour', back: 'Atrás' }}
-            />
-
-            <style>{`
+          <style>{`
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
             @keyframes heartbeat { 0%,100%{transform:scale(1)} 14%{transform:scale(1.2)} 28%{transform:scale(1)} 42%{transform:scale(1.1)} }
             @keyframes fadeSlideIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
             @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
@@ -251,185 +233,206 @@ function App() {
             ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius:4px; }
           `}</style>
 
-            {/* ─── Overlay móvil ─── */}
-            {isMobile && sidebarMobileOpen && (
-              <div onClick={() => { setSidebarMobileOpen(false); setAdminMenuOpen(false); }} style={{
-                position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)',
-                zIndex: 999, backdropFilter: 'blur(2px)'
-              }} />
-            )}
+          {!user || !token ? (
+            <Login onLogin={handleLogin} empresaConfig={empresaConfig} />
+          ) : (
+            <div style={{ display: 'flex', flex: 1 }}>
+              <Joyride
+                steps={tourSteps}
+                run={runTour}
+                continuous={true}
+                showProgress={true}
+                showSkipButton={true}
+                callback={handleTourCallback}
+                styles={{
+                  options: {
+                    primaryColor: '#2563eb',
+                    zIndex: 10000,
+                  }
+                }}
+                locale={{ last: 'Finalizar', next: 'Siguiente', skip: 'Saltar Tour', back: 'Atrás' }}
+              />
 
-            {/* ══════════ SIDEBAR ══════════ */}
-            <aside
-              onMouseEnter={!isMobile ? onSidebarEnter : undefined}
-              onMouseLeave={!isMobile ? onSidebarLeave : undefined}
-              className="sidebar-v2"
-              style={{
-                width: isMobile ? (sidebarMobileOpen ? SIDEBAR_W : 0) : sidebarW,
-                left: isMobile && !sidebarMobileOpen ? '-100%' : 0
-              }}
-            >
-              {/* Logo / nombre empresa */}
-              <div style={{
-                padding: '24px 16px', borderBottom: '1px solid var(--glass-border)',
-                display: 'flex', alignItems: 'center', gap: 12, minHeight: 72, flexShrink: 0,
-              }}>
-                {logoUrl
-                  ? <img src={logoUrl} alt={empresaNombre} style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'contain', flexShrink: 0 }} />
-                  : <div style={{ width: 36, height: 36, background: 'rgba(37,99,235,0.05)', border: '1.5px solid rgba(37,99,235,0.2)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <FaHeartbeat style={{ color: '#2563eb', fontSize: 18, animation: 'heartbeat 1.5s ease-in-out infinite' }} />
+              {/* ─── Overlay móvil ─── */}
+              {isMobile && sidebarMobileOpen && (
+                <div onClick={() => { setSidebarMobileOpen(false); setAdminMenuOpen(false); }} style={{
+                  position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)',
+                  zIndex: 999, backdropFilter: 'blur(2px)'
+                }} />
+              )}
+
+              {/* ══════════ SIDEBAR ══════════ */}
+              <aside
+                onMouseEnter={!isMobile ? onSidebarEnter : undefined}
+                onMouseLeave={!isMobile ? onSidebarLeave : undefined}
+                className="sidebar-v2"
+                style={{
+                  width: isMobile ? (sidebarMobileOpen ? SIDEBAR_W : 0) : sidebarW,
+                  left: isMobile && !sidebarMobileOpen ? '-100%' : 0
+                }}
+              >
+                {/* Logo / nombre empresa */}
+                <div style={{
+                  padding: '24px 16px', borderBottom: '1px solid var(--glass-border)',
+                  display: 'flex', alignItems: 'center', gap: 12, minHeight: 72, flexShrink: 0,
+                }}>
+                  {logoUrl
+                    ? <img src={logoUrl} alt={empresaNombre} style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'contain', flexShrink: 0 }} />
+                    : <div style={{ width: 36, height: 36, background: 'rgba(37,99,235,0.05)', border: '1.5px solid rgba(37,99,235,0.2)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <FaHeartbeat style={{ color: '#2563eb', fontSize: 18, animation: 'heartbeat 1.5s ease-in-out infinite' }} />
+                    </div>
+                  }
+                  <div className="nav-label-text" style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ color: 'var(--color-dark)', fontWeight: 800, fontSize: 15, lineHeight: 1.2 }}>{empresaNombre}</div>
+                    <div style={{ color: 'var(--text-muted)', fontSize: 11, fontWeight: 600, marginTop: 2 }}>PLATAFORMA MÉDICA</div>
                   </div>
-                }
-                <div className="nav-label-text" style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ color: 'var(--color-dark)', fontWeight: 800, fontSize: 15, lineHeight: 1.2 }}>{empresaNombre}</div>
-                  <div style={{ color: 'var(--text-muted)', fontSize: 11, fontWeight: 600, marginTop: 2 }}>PLATAFORMA MÉDICA</div>
                 </div>
-              </div>
 
-              {/* Menú principal */}
-              <nav style={{ flex: 1, padding: '20px 0', overflowY: 'auto', overflowX: 'hidden' }}>
-                {filteredMenu.map((item, i) => (
-                  <NavLink key={i} to={item.path} end={item.path === '/'}
-                    className={({ isActive }) => `nav-link-v2 ${isActive ? 'active' : ''} tour-step-${item.path.replace(/\//g, '') || 'home'}`}
-                    onClick={() => { if (isMobile) setSidebarMobileOpen(false); }}
-                  >
-                    <span style={{ fontSize: 18, flexShrink: 0 }}>{item.icon}</span>
-                    <span className="nav-label-text">{item.label}</span>
-                  </NavLink>
-                ))}
-
-                {showAdminMenu && (
-                  <>
-                    <div style={{ margin: '8px 16px', borderTop: '1px solid var(--glass-border)' }} />
-                    <div
-                      onClick={() => setAdminMenuOpen(!adminMenuOpen)}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px',
-                        color: 'var(--text-muted)', cursor: 'pointer', transition: 'all 0.2s',
-                        fontSize: 14, fontWeight: 600, margin: '4px 12px', borderRadius: 8
-                      }}
-                      onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                {/* Menú principal */}
+                <nav style={{ flex: 1, padding: '20px 0', overflowY: 'auto', overflowX: 'hidden' }}>
+                  {filteredMenu.map((item, i) => (
+                    <NavLink key={i} to={item.path} end={item.path === '/'}
+                      className={({ isActive }) => `nav-link-v2 ${isActive ? 'active' : ''} tour-step-${item.path.replace(/\//g, '') || 'home'}`}
+                      onClick={() => { if (isMobile) setSidebarMobileOpen(false); }}
                     >
-                      <span style={{ fontSize: 18, flexShrink: 0 }}><FaCogs /></span>
-                      <span className="nav-label-text" style={{ flex: 1 }}>Configuración</span>
-                      <span className="nav-label-text" style={{ fontSize: 11, maxWidth: 16 }}>
-                        {adminMenuOpen ? <FaChevronDown /> : <FaChevronRight />}
+                      <span style={{ fontSize: 18, flexShrink: 0 }}>{item.icon}</span>
+                      <span className="nav-label-text">{item.label}</span>
+                    </NavLink>
+                  ))}
+
+                  {showAdminMenu && (
+                    <>
+                      <div style={{ margin: '8px 16px', borderTop: '1px solid var(--glass-border)' }} />
+                      <div
+                        onClick={() => setAdminMenuOpen(!adminMenuOpen)}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px',
+                          color: 'var(--text-muted)', cursor: 'pointer', transition: 'all 0.2s',
+                          fontSize: 14, fontWeight: 600, margin: '4px 12px', borderRadius: 8
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <span style={{ fontSize: 18, flexShrink: 0 }}><FaCogs /></span>
+                        <span className="nav-label-text" style={{ flex: 1 }}>Configuración</span>
+                        <span className="nav-label-text" style={{ fontSize: 11, maxWidth: 16 }}>
+                          {adminMenuOpen ? <FaChevronDown /> : <FaChevronRight />}
+                        </span>
+                      </div>
+                      {adminMenuOpen && filteredAdminSub.map((item, i) => (
+                        <NavLink key={`a${i}`} to={item.path} style={adminNavLinkStyle}
+                          onClick={() => { if (isMobile) setSidebarMobileOpen(false); }}
+                        >
+                          <span style={{ fontSize: 15, flexShrink: 0 }}>{item.icon}</span>
+                          <span className="nav-label-text">{item.label}</span>
+                        </NavLink>
+                      ))}
+                    </>
+                  )}
+                </nav>
+
+                {/* Footer del sidebar */}
+                <div style={{ padding: '20px 16px', borderTop: '1px solid var(--glass-border)', flexShrink: 0 }}>
+                  {/* Info usuario */}
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 12, padding: '12px', marginBottom: 16,
+                    background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0'
+                  }}>
+                    <div style={{
+                      width: 34, height: 34, borderRadius: 8, background: ROL_COLORS[rol] || '#3498db',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800,
+                      fontSize: 14, flexShrink: 0
+                    }}>
+                      {(user.nombre || 'U')[0].toUpperCase()}
+                    </div>
+                    <div className="nav-label-text" style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ color: 'var(--color-dark)', fontSize: 13, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.nombre}</div>
+                      <div style={{ color: 'var(--color-primary)', fontSize: 10, fontWeight: 800, textTransform: 'uppercase' }}>{rol}</div>
+                    </div>
+                  </div>
+
+                  <button onClick={handleLogout} style={{
+                    width: '100%', padding: '12px', background: '#fef2f2',
+                    border: '1px solid #fecaca', borderRadius: 10, color: '#ef4444',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                    fontSize: 13, fontWeight: 700, fontFamily: 'inherit', transition: 'all 0.2s',
+                  }}
+                    onMouseEnter={e => { e.currentTarget.style.background = '#fee2e2'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = '#fef2f2'; }}
+                  >
+                    <FaSignOutAlt style={{ fontSize: 16 }} />
+                    <span className="nav-label-text">Finalizar Sesión</span>
+                  </button>
+                </div>
+              </aside>
+
+              {/* ══════════ MAIN ══════════ */}
+              <main className="app-main-content" style={{
+                flex: 1,
+                marginLeft: isMobile ? 0 : sidebarW,
+                minHeight: '100vh',
+                background: 'var(--color-bg)',
+                transition: 'margin-left 0.3s ease',
+              }}>
+                {/* Header */}
+                <header className="header-v2" style={{ background: 'white !important' }}>
+                  {/* Botón menú (móvil o siempre visible) */}
+                  <button
+                    className="sidebar-colapsador"
+                    onClick={() => isMobile ? setSidebarMobileOpen(!sidebarMobileOpen) : setSidebarHovered(!sidebarHovered)}
+                    style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', fontSize: 18, cursor: 'pointer', color: 'var(--color-dark)', width: 42, height: 42, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+                  >
+                    {(isMobile ? sidebarMobileOpen : sidebarHovered) ? <FaTimes /> : <FaBars />}
+                  </button>
+
+                  {/* Breadcrumb / título página */}
+                  <div style={{ flex: 1, paddingLeft: 16 }}>
+                    <PageTitle />
+                  </div>
+
+                  {/* Info usuario derecha */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ color: '#888', fontSize: 14 }}>
+                        Hola, <strong style={{ color: '#1b262c' }}>{user.nombre}</strong>
+                      </span>
+                      <span style={{
+                        background: ROL_COLORS[rol] || '#3498db',
+                        color: 'white', padding: '3px 10px',
+                        borderRadius: 20, fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px'
+                      }}>
+                        {rol}
                       </span>
                     </div>
-                    {adminMenuOpen && filteredAdminSub.map((item, i) => (
-                      <NavLink key={`a${i}`} to={item.path} style={adminNavLinkStyle}
-                        onClick={() => { if (isMobile) setSidebarMobileOpen(false); }}
-                      >
-                        <span style={{ fontSize: 15, flexShrink: 0 }}>{item.icon}</span>
-                        <span className="nav-label-text">{item.label}</span>
-                      </NavLink>
-                    ))}
-                  </>
-                )}
-              </nav>
-
-              {/* Footer del sidebar */}
-              <div style={{ padding: '20px 16px', borderTop: '1px solid var(--glass-border)', flexShrink: 0 }}>
-                {/* Info usuario */}
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: 12, padding: '12px', marginBottom: 16,
-                  background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0'
-                }}>
-                  <div style={{
-                    width: 34, height: 34, borderRadius: 8, background: ROL_COLORS[rol] || '#3498db',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800,
-                    fontSize: 14, flexShrink: 0
-                  }}>
-                    {(user.nombre || 'U')[0].toUpperCase()}
                   </div>
-                  <div className="nav-label-text" style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ color: 'var(--color-dark)', fontSize: 13, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.nombre}</div>
-                    <div style={{ color: 'var(--color-primary)', fontSize: 10, fontWeight: 800, textTransform: 'uppercase' }}>{rol}</div>
-                  </div>
+                </header>
+
+                {/* Contenido de las rutas */}
+                <div style={{ padding: '0' }}>
+                  <Routes>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/registro" element={<RegistroInteligente />} />
+                    <Route path="/consulta" element={<ConsultaRapida />} />
+                    <Route path="/facturas" element={<Facturas />} />
+                    <Route path="/medico" element={<PortalMedico />} />
+                    <Route path="/admin" element={<AdminPanel />} />
+                    <Route path="/admin/usuarios" element={<AdminUsuarios />} />
+                    <Route path="/admin/equipos" element={<AdminEquipos />} />
+                    <Route path="/admin/estudios" element={<GestionEstudios />} />
+                    <Route path="/contabilidad" element={<Contabilidad />} />
+                    <Route path="/resultados" element={<Resultados />} />
+                    <Route path="/imagenologia" element={<Imagenologia />} />
+                    <Route path="/deploy" element={<DeployAgentes />} />
+                    <Route path="/descargar-app" element={<DescargarApp />} />
+                    <Route path="/campana-whatsapp" element={<CampanaWhatsApp />} />
+                    <Route path="/login" element={<Navigate to="/" />} />
+                    <Route path="*" element={<Navigate to="/" />} />
+                  </Routes>
                 </div>
-
-                <button onClick={handleLogout} style={{
-                  width: '100%', padding: '12px', background: '#fef2f2',
-                  border: '1px solid #fecaca', borderRadius: 10, color: '#ef4444',
-                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                  fontSize: 13, fontWeight: 700, fontFamily: 'inherit', transition: 'all 0.2s',
-                }}
-                  onMouseEnter={e => { e.currentTarget.style.background = '#fee2e2'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = '#fef2f2'; }}
-                >
-                  <FaSignOutAlt style={{ fontSize: 16 }} />
-                  <span className="nav-label-text">Finalizar Sesión</span>
-                </button>
-              </div>
-            </aside>
-
-            {/* ══════════ MAIN ══════════ */}
-            <main className="app-main-content" style={{
-              flex: 1,
-              marginLeft: isMobile ? 0 : sidebarW,
-              minHeight: '100vh',
-              background: 'var(--color-bg)',
-              transition: 'margin-left 0.3s ease',
-            }}>
-              {/* Header */}
-              <header className="header-v2" style={{ background: 'white !important' }}>
-                {/* Botón menú (móvil o siempre visible) */}
-                <button
-                  className="sidebar-colapsador"
-                  onClick={() => isMobile ? setSidebarMobileOpen(!sidebarMobileOpen) : setSidebarHovered(!sidebarHovered)}
-                  style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', fontSize: 18, cursor: 'pointer', color: 'var(--color-dark)', width: 42, height: 42, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
-                >
-                  {(isMobile ? sidebarMobileOpen : sidebarHovered) ? <FaTimes /> : <FaBars />}
-                </button>
-
-                {/* Breadcrumb / título página */}
-                <div style={{ flex: 1, paddingLeft: 16 }}>
-                  <PageTitle />
-                </div>
-
-                {/* Info usuario derecha */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ color: '#888', fontSize: 14 }}>
-                      Hola, <strong style={{ color: '#1b262c' }}>{user.nombre}</strong>
-                    </span>
-                    <span style={{
-                      background: ROL_COLORS[rol] || '#3498db',
-                      color: 'white', padding: '3px 10px',
-                      borderRadius: 20, fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px'
-                    }}>
-                      {rol}
-                    </span>
-                  </div>
-                </div>
-              </header>
-
-              {/* Contenido de las rutas */}
-              <div style={{ padding: '0' }}>
-                <Routes>
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/registro" element={<RegistroInteligente />} />
-                  <Route path="/consulta" element={<ConsultaRapida />} />
-                  <Route path="/facturas" element={<Facturas />} />
-                  <Route path="/medico" element={<PortalMedico />} />
-                  <Route path="/admin" element={<AdminPanel />} />
-                  <Route path="/admin/usuarios" element={<AdminUsuarios />} />
-                  <Route path="/admin/equipos" element={<AdminEquipos />} />
-                  <Route path="/admin/estudios" element={<GestionEstudios />} />
-                  <Route path="/contabilidad" element={<Contabilidad />} />
-                  <Route path="/resultados" element={<Resultados />} />
-                  <Route path="/imagenologia" element={<Imagenologia />} />
-                  <Route path="/deploy" element={<DeployAgentes />} />
-                  <Route path="/descargar-app" element={<DescargarApp />} />
-                  <Route path="/campana-whatsapp" element={<CampanaWhatsApp />} />
-                  <Route path="/login" element={<Navigate to="/" />} />
-                  <Route path="*" element={<Navigate to="/" />} />
-                </Routes>
-              </div>
-            </main>
-          </div>
-        )}
+              </main>
+            </div>
+          )}
+        </div>
       </Router>
     </OfflineScreen >
   );
