@@ -1,37 +1,38 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
 
 :root {
-  /* Corporate Precision Blue - High Contrast Premium Palette */
+  /* MediCore Futuristic - Teal/Mint Premium Palette */
   --color-dark: #0f172a;
-  /* Deep Navy */
-  --color-navy: #1e293b;
-  /* Slate Navy */
-  --color-primary: #3b82f6;
-  /* Electric Blue */
-  --color-primary-glow: rgba(59, 130, 246, 0.15);
-  --color-accent: #8b5cf6;
-  --color-accent-glow: rgba(139, 92, 246, 0.1);
+  --color-teal: #0d9488;
+  /* Deep Teal Primary */
+  --color-mint: #2dd4bf;
+  /* Mint Accent */
+  --color-primary: var(--color-teal);
+  --color-primary-glow: rgba(13, 148, 136, 0.1);
+  --color-accent: var(--color-mint);
+  --color-accent-glow: rgba(45, 212, 191, 0.1);
   --color-sky: #0ea5e9;
-  --color-bg: #f1f5f9;
-  /* Light Mist Background */
+  --color-bg: #f8fafc;
+  /* Ultra Clean background */
   --color-card: #ffffff;
   --color-white: #ffffff;
-  --color-danger: #ef4444;
+  --color-danger: #f43f5e;
   --text-main: #1e293b;
   --text-muted: #64748b;
 
   --sidebar-w: 260px;
   --sidebar-sm: 80px;
   --header-h: 70px;
-  --radius: 12px;
-  --radius-lg: 16px;
+  --radius: 14px;
+  --radius-lg: 20px;
 
-  --glass-bg: rgba(255, 255, 255, 0.9);
-  --glass-border: rgba(15, 23, 42, 0.1);
-  --glass-blur: blur(16px);
+  /* Glassmorphism Tokens */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(13, 148, 136, 0.08);
+  --glass-blur: blur(12px);
 
-  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -2px rgba(0, 0, 0, 0.02);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --font-body: 'Inter', sans-serif;
   --font-title: 'Outfit', sans-serif;
@@ -80,61 +81,73 @@ h6 {
   position: relative;
 }
 
-/* Sidebar principal - Corporate Precision Blue */
+/* Sidebar principal - MediCore Futuristic */
 .sidebar-v2 {
   position: fixed;
   top: 0;
   left: 0;
   height: 100vh;
-  background: var(--color-dark) !important;
-  /* Solid Navy */
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  background: #ffffff !important;
+  border-right: 1px solid var(--glass-border);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1000;
-  color: white;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.02);
 }
 
 .sidebar-v2 .sidebar-header {
   padding: 24px 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--glass-border);
 }
 
 .sidebar-v2 .nav-link-v2 {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 20px;
-  color: rgba(255, 255, 255, 0.6) !important;
+  padding: 12px 24px;
+  color: var(--text-muted) !important;
   text-decoration: none;
   transition: all 0.2s;
-  border-radius: 8px;
-  margin: 4px 12px;
+  position: relative;
   font-weight: 500;
   font-size: 14px;
 }
 
 .sidebar-v2 .nav-link-v2:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: white !important;
+  background: rgba(13, 148, 136, 0.03);
+  color: var(--color-teal) !important;
 }
 
 .sidebar-v2 .nav-link-v2.active {
-  background: var(--color-primary-glow);
-  color: white !important;
+  background: rgba(13, 148, 136, 0.05);
+  color: var(--color-teal) !important;
   font-weight: 700;
 }
 
-/* Header V2 - Precision Clean */
+.sidebar-v2 .nav-link-v2.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 15%;
+  height: 70%;
+  width: 4px;
+  background: var(--color-teal);
+  border-radius: 0 4px 4px 0;
+  box-shadow: 0 0 10px rgba(13, 148, 136, 0.3);
+}
+
+/* Header V2 - Glassmorphism Precision */
 .header-v2 {
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 900;
   height: var(--header-h);
-  background: var(--color-white) !important;
-  border-bottom: 1.5px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--glass-border);
   display: flex;
   align-items: center;
   justify-content: space-between;

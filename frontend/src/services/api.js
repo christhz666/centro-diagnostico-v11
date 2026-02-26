@@ -1,17 +1,27 @@
 const API_URL = '/api';
+const VERSION = '1.0.8-ULTRA-RESILIENT';
 
 class ApiService {
     getToken() { return localStorage.getItem('token'); }
 
     getHeaders() {
         const headers = { 'Content-Type': 'application/json' };
-        const token = this.getToken();
-        if (token) headers['Authorization'] = 'Bearer ' + token;
+        try {
+            let token = this.getToken();
+            if (token && token !== 'undefined' && token !== 'null' && typeof token === 'string') {
+                headers['Authorization'] = 'Bearer ' + token.trim();
+            }
 
-        // Inyectar sucursalId si existe
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        if (user.sucursal) {
-            headers['x-sucursal-id'] = user.sucursal;
+            // Inyectar sucursalId si existe
+            const userStr = localStorage.getItem('user');
+            if (userStr && userStr !== 'undefined' && userStr !== 'null') {
+                const user = JSON.parse(userStr);
+                if (user && user.sucursal) {
+                    headers['x-sucursal-id'] = user.sucursal;
+                }
+            }
+        } catch (e) {
+            console.error(`[API ${VERSION}] Headers Error:`, e);
         }
 
         return headers;
@@ -19,15 +29,36 @@ class ApiService {
 
     async request(endpoint, options = {}) {
         const url = API_URL + endpoint;
-        const config = { headers: this.getHeaders(), ...options };
-        const response = await fetch(url, config);
+        const headers = this.getHeaders();
+        const config = { headers, ...options };
+
+        console.log(`[API ${VERSION}] Request: ${endpoint}`, {
+            method: options.method || 'GET',
+            hasAuth: !!headers['Authorization'],
+            tokenLength: headers['Authorization'] ? headers['Authorization'].length : 0
+        });
+
+        let response;
+        try {
+            response = await fetch(url, config);
+        } catch (fetchError) {
+            console.error(`[API ${VERSION}] Network Error for ${endpoint}:`, fetchError);
+            throw new Error('Error de conexión a la red');
+        }
 
         if (response.status === 401) {
+            let detail = 'Desconocido';
+            try {
+                const errData = await response.json();
+                detail = errData.message || errData.mensaje || JSON.stringify(errData);
+            } catch (e) { detail = 'No se pudo leer el cuerpo del error 401'; }
+
+            console.error(`[API ${VERSION}] 401 UNAUTHORIZED for ${endpoint}:`, { detail });
+
             localStorage.removeItem('token');
             localStorage.removeItem('user');
-            // Notificar al App.js para limpiar estado React
-            window.dispatchEvent(new CustomEvent('session-expired'));
-            throw new Error('Sesion expirada');
+            window.dispatchEvent(new CustomEvent('session-expired', { detail: { reason: detail } }));
+            throw new Error(`Sesión expirada: ${detail}`);
         }
 
         let raw;
@@ -80,35 +111,47 @@ class ApiService {
 
     // AUTH
     async login(credentials) {
+        console.log(`[API ${VERSION}] Attempting login...`);
         const body = {
             username: credentials.username || credentials.email,
             email: credentials.username || credentials.email,
             password: credentials.password
         };
-        const response = await fetch(API_URL + '/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        });
 
-        const data = await response.json();
+        try {
+            const response = await fetch(API_URL + '/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
 
-        if (!response.ok) {
-            const errorMsg = data.message || data.error || data.mensaje || `Error ${response.status}`;
-            const error = new Error(errorMsg);
-            error.status = response.status;
-            throw error;
+            const data = await response.json();
+
+            if (!response.ok) {
+                const errorMsg = data.message || data.error || data.mensaje || `Error ${response.status}`;
+                throw new Error(errorMsg);
+            }
+
+            const token = data.token || data.access_token || data.data?.token || data.data?.access_token;
+            const user = data.usuario || data.user || data.data?.usuario || data.data?.user;
+
+            if (token && typeof token === 'string' && token !== 'undefined') {
+                this.forceLogin(user, token);
+                return { ...data, user, token };
+            } else {
+                console.error(`[API ${VERSION}] Login failed: Valid token not found in response`, data);
+                throw new Error('Token no válido en la respuesta del servidor');
+            }
+        } catch (err) {
+            console.error(`[API ${VERSION}] Login Catch:`, err);
+            throw err;
         }
+    }
 
-        const token = data.token || data.access_token;
-        const usuario = data.usuario || data.user;
-        if (token) {
-            localStorage.setItem('token', token);
-            localStorage.setItem('user', JSON.stringify(usuario));
-            data.access_token = token;
-            data.usuario = usuario;
-        }
-        return data;
+    forceLogin(user, token) {
+        console.log(`[API ${VERSION}] Force Sync Session...`);
+        if (token) localStorage.setItem('token', token);
+        if (user) localStorage.setItem('user', JSON.stringify(user));
     }
 
     logout() {
@@ -128,18 +171,13 @@ class ApiService {
 
     // DASHBOARD
     async getDashboardStats() {
-        const raw = await fetch(API_URL + '/dashboard/stats', { headers: this.getHeaders() });
-        const data = await raw.json();
-        return data.data || data;
+        return this.request('/dashboard/stats');
     }
 
     async getCitasHoy() {
-        const raw = await fetch(API_URL + '/citas/hoy', { headers: this.getHeaders() });
-        const data = await raw.json();
-        if (data.success && Array.isArray(data.data)) return data.data;
+        const data = await this.request('/citas/hoy');
         if (Array.isArray(data)) return data;
-        if (data.citas) return data.citas;
-        return data.data || [];
+        return data.data || data.citas || [];
     }
 
     async getCitasGrafica() { return this.request('/dashboard/citas-grafica'); }

@@ -20,12 +20,20 @@ const Login = ({ onLogin }) => {
         setLoading(true);
         try {
             const response = await api.login(credentials);
-            localStorage.setItem('token', response.token);
-            localStorage.setItem('user', JSON.stringify(response.user));
-            onLogin(response.user);
-            navigate('/dashboard');
+            const user = response.user || response.usuario;
+            const token = response.token || response.access_token;
+
+            if (user && token) {
+                onLogin(user, token);
+                navigate('/');
+            } else {
+                console.error('[Login] Missing data:', { user, token });
+                throw new Error('Respuesta de sesión incompleta del servidor.');
+            }
         } catch (err) {
-            setError(err.response?.data?.mensaje || 'Error de conexión con el servidor');
+            console.error('Login error detail:', err);
+            const msg = err.message || (err.response?.data?.mensaje) || 'Error de conexión con el servidor';
+            setError(msg);
         } finally {
             setLoading(false);
         }

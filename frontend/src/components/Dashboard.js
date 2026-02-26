@@ -9,33 +9,41 @@ const StatCard = ({ title, value, icon: Icon, color, trend, index }) => {
     return (
         <div style={{
             background: 'white',
-            border: '1.5px solid var(--glass-border)',
-            borderRadius: 16, padding: '24px',
+            border: '1px solid var(--glass-border)',
+            borderRadius: 20, padding: '28px',
             color: 'var(--text-main)', position: 'relative', overflow: 'hidden',
-            boxShadow: 'var(--shadow)',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            transform: visible ? 'translateY(0)' : 'translateY(15px)',
+            boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.02)',
+            transition: 'all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1)',
+            transform: visible ? 'translateY(0)' : 'translateY(10px)',
             opacity: visible ? 1 : 0,
         }}
-            className="clinical-tile"
-            onMouseEnter={e => { e.currentTarget.style.borderColor = color; e.currentTarget.style.boxShadow = 'var(--shadow-lg)'; e.currentTarget.style.transform = 'translateY(-4px)'; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--glass-border)'; e.currentTarget.style.boxShadow = 'var(--shadow)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+            className="medicore-tile"
+            onMouseEnter={e => {
+                e.currentTarget.style.borderColor = 'var(--color-mint)';
+                e.currentTarget.style.boxShadow = '0 20px 40px -10px rgba(13, 148, 136, 0.08)';
+                e.currentTarget.style.transform = 'translateY(-6px)';
+            }}
+            onMouseLeave={e => {
+                e.currentTarget.style.borderColor = 'var(--glass-border)';
+                e.currentTarget.style.boxShadow = '0 10px 30px -5px rgba(0, 0, 0, 0.02)';
+                e.currentTarget.style.transform = 'translateY(0)';
+            }}
         >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
-                <div style={{ width: 44, height: 44, borderRadius: 10, background: `${color}10`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: color }}>
-                    <Icon size={22} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+                <div style={{ width: 48, height: 48, borderRadius: 14, background: `${color}10`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: color }}>
+                    <Icon size={24} />
                 </div>
                 {trend && (
-                    <div style={{ fontSize: 12, fontWeight: 700, color: '#10b981', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-teal)', background: 'rgba(13, 148, 136, 0.05)', padding: '4px 10px', borderRadius: 20, display: 'flex', alignItems: 'center', gap: 4 }}>
                         <FaArrowUp size={10} /> {trend}
                     </div>
                 )}
             </div>
 
-            <h3 style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{title}</h3>
-            <div style={{ marginTop: 8, fontSize: 32, fontWeight: 800, fontFamily: 'var(--font-title)', display: 'flex', alignItems: 'baseline', gap: 8, color: 'var(--color-dark)' }}>
+            <h3 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{title}</h3>
+            <div style={{ marginTop: 10, fontSize: 36, fontWeight: 800, fontFamily: 'var(--font-title)', display: 'flex', alignItems: 'baseline', gap: 8, color: 'var(--color-dark)' }}>
                 {value}
-                <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-muted)' }}>hoy</span>
+                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-muted)' }}>hoy</span>
             </div>
         </div>
     );
@@ -67,81 +75,84 @@ const Dashboard = () => {
     };
 
     const CARDS = [
-        { title: 'Citas Hoy', value: data.citasHoy, icon: FaCalendarCheck, color: '#2563eb', trend: '+12%', index: 0 },
-        { title: 'Análisis Realizados', value: data.estudiosRealizados, icon: FaVial, color: '#4f46e5', trend: '+5%', index: 1 },
-        { title: 'Nuevos Pacientes', value: data.pacientesNuevos, icon: FaUserMd, color: '#0891b2', trend: '+18%', index: 2 },
-        { title: 'Equipos Activos', value: '14', icon: FaMicroscope, color: '#f59e0b', index: 3 }
+        { title: 'Citas Hoy', value: data.citasHoy, icon: FaCalendarCheck, color: 'var(--color-teal)', trend: '+12%', index: 0 },
+        { title: 'Resultados', value: data.estudiosRealizados, icon: FaVial, color: 'var(--color-sky)', trend: '+5%', index: 1 },
+        { title: 'Pacientes', value: data.pacientesNuevos, icon: FaUserMd, color: 'var(--color-mint)', trend: '+18%', index: 2 },
+        { title: 'Sistemas', value: 'Active', icon: FaMicroscope, color: '#6366f1', index: 3 }
     ];
 
     const hora = new Date().getHours();
     const saludo = hora < 12 ? 'Buenos días' : hora < 18 ? 'Buenas tardes' : 'Buenas noches';
 
     return (
-        <div style={{ padding: '40px', maxWidth: 1400, margin: '0 auto' }}>
-            {/* ── Encabezado Moderno ── */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 44 }}>
+        <div style={{ padding: '60px 40px', maxWidth: 1400, margin: '0 auto' }}>
+            {/* ── Encabezado Futurista ── */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 56 }}>
                 <div>
-                    <h1 style={{ margin: 0, fontSize: 32, fontWeight: 800, color: 'var(--color-dark)', fontFamily: 'var(--font-title)', letterSpacing: '-0.5px' }}>
-                        {saludo}, <span style={{ color: 'var(--color-primary)' }}>{user?.nombre?.split(' ')[0] || 'Usuario'}</span>
+                    <h1 style={{ margin: 0, fontSize: 36, fontWeight: 800, color: 'var(--color-dark)', fontFamily: 'var(--font-title)', letterSpacing: '-1px' }}>
+                        {saludo}, <span style={{ color: 'var(--color-teal)' }}>{user?.nombre?.split(' ')[0] || 'Doctor'}</span>
                     </h1>
-                    <p style={{ margin: '8px 0 0', color: 'var(--text-muted)', fontSize: 16, fontWeight: 500 }}>
-                        {new Date().toLocaleDateString('es-DO', { weekday: 'long', day: 'numeric', month: 'long' })}
+                    <p style={{ margin: '12px 0 0', color: 'var(--text-muted)', fontSize: 16, fontWeight: 500 }}>
+                        Panel de diagnóstico inteligente • {new Date().toLocaleDateString('es-DO', { weekday: 'long', day: 'numeric', month: 'long' })}
                     </p>
                 </div>
-                <button onClick={fetchDashboardData} style={{ width: 44, height: 44, borderRadius: 10, background: 'white', border: '1px solid #e2e8f0', color: 'var(--text-main)', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'} onMouseLeave={e => e.currentTarget.style.background = 'white'}>
-                    <FaSync className={loading ? 'spin' : ''} size={14} />
+                <button onClick={fetchDashboardData} style={{ width: 48, height: 48, borderRadius: 14, background: 'white', border: '1px solid #e2e8f0', color: 'var(--text-main)', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }} onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'} onMouseLeave={e => e.currentTarget.style.background = 'white'}>
+                    <FaSync className={loading ? 'spin' : ''} size={16} />
                 </button>
             </div>
 
             {/* ── Grid Estadísticas ── */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24, marginBottom: 48 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 32, marginBottom: 56 }}>
                 {CARDS.map((c, i) => <StatCard key={i} {...c} />)}
             </div>
 
             {/* ── Sección de Pacientes ── */}
-            <div className="glass-panel" style={{ padding: '0', borderRadius: 16, overflow: 'hidden', background: 'white', border: '1px solid var(--glass-border)', boxShadow: 'var(--shadow)' }}>
-                <div style={{ padding: '24px 32px', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: 'var(--color-dark)' }}>Próximas Citas</h2>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-primary)', background: 'var(--color-primary-glow)', padding: '6px 14px', borderRadius: 20 }}>{citasHoy.length} hoy</span>
+            <div className="glass-panel" style={{ padding: '0', borderRadius: 24, overflow: 'hidden', background: 'white', border: '1px solid var(--glass-border)', boxShadow: '0 20px 40px -15px rgba(0,0,0,0.04)' }}>
+                <div style={{ padding: '32px 40px', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, fontFamily: 'var(--font-title)', color: 'var(--color-dark)' }}>Pacientes de Hoy</h2>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-teal)', background: 'rgba(13, 148, 136, 0.08)', padding: '8px 18px', borderRadius: 30 }}>{citasHoy.length} activos</span>
                 </div>
 
-                <div style={{ padding: '12px' }}>
+                <div style={{ padding: '16px' }}>
                     {citasHoy.length === 0 ? (
-                        <div style={{ padding: '60px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                            <FaClock size={24} style={{ marginBottom: 16, opacity: 0.3 }} />
-                            <p style={{ margin: 0, fontSize: 14 }}>No hay pacientes registrados para hoy</p>
+                        <div style={{ padding: '80px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                            <FaClock size={32} style={{ marginBottom: 20, opacity: 0.2, color: 'var(--color-teal)' }} />
+                            <p style={{ margin: 0, fontSize: 16, fontWeight: 500 }}>No hay actividad registrada para hoy</p>
                         </div>
                     ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                             {citasHoy.map((cita, i) => (
                                 <div key={i} style={{
                                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                    padding: '16px 20px', borderRadius: 8, transition: 'all 0.2s'
+                                    padding: '20px 24px', borderRadius: 14, transition: 'all 0.2s'
                                 }} onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                                        <div style={{ width: 40, height: 40, borderRadius: 8, background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563eb' }}>
-                                            <FaHospitalUser size={18} />
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+                                        <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(13, 148, 136, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-teal)' }}>
+                                            <FaHospitalUser size={20} />
                                         </div>
                                         <div>
-                                            <div style={{ color: 'var(--color-dark)', fontWeight: 700, fontSize: 15 }}>{cita.paciente?.nombre} {cita.paciente?.apellido}</div>
-                                            <div style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 2 }}>
+                                            <div style={{ color: 'var(--color-dark)', fontWeight: 700, fontSize: 16 }}>{cita.paciente?.nombre} {cita.paciente?.apellido}</div>
+                                            <div style={{ color: 'var(--text-muted)', fontSize: 14, marginTop: 4 }}>
                                                 {cita.estudios?.map(e => e.estudio?.nombre || 'General').join(', ') || 'Consulta General'}
                                             </div>
                                         </div>
                                     </div>
                                     <div style={{ textAlign: 'right' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#10b981', fontSize: 12, fontWeight: 700 }}>
-                                            <FaCheckCircle size={14} /> {cita.estado}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--color-teal)', fontSize: 13, fontWeight: 700 }}>
+                                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--color-mint)', boxShadow: '0 0 8px var(--color-mint)' }}></div>
+                                            {cita.estado}
                                         </div>
-                                        <div style={{ color: 'var(--text-muted)', fontSize: 12, marginTop: 4 }}>{cita.horaInicio || '--:--'} AM</div>
+                                        <div style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 6, fontWeight: 500 }}>{cita.horaInicio || '--:--'} AM</div>
                                     </div>
                                 </div>
                             ))}
                         </div>
                     )}
                 </div>
-                <div style={{ padding: '16px 32px', background: '#f8fafc', borderTop: '1px solid #f1f5f9', textAlign: 'center' }}>
-                    <button style={{ background: 'none', border: 'none', color: '#2563eb', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Ver toda la agenda</button>
+                <div style={{ padding: '20px 40px', background: '#f8fafc', borderTop: '1px solid #f1f5f9', textAlign: 'center' }}>
+                    <button style={{ background: 'none', border: 'none', color: 'var(--color-teal)', fontWeight: 700, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, margin: '0 auto' }}>
+                        Ver agenda completa
+                    </button>
                 </div>
             </div>
         </div>

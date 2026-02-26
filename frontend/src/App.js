@@ -105,15 +105,25 @@ function App() {
   useEffect(() => {
     const savedToken = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
-    if (savedToken && savedUser) {
+    if (savedToken && savedToken !== 'undefined' && savedUser && savedUser !== 'undefined') {
       try {
-        setToken(savedToken);
-        setUser(JSON.parse(savedUser));
-        if (!localStorage.getItem('tourCompleted')) {
-          setTimeout(() => setRunTour(true), 1500);
+        const parsedUser = JSON.parse(savedUser);
+        if (parsedUser && typeof parsedUser === 'object') {
+          console.log('[App] Recovering session for:', parsedUser.nombre);
+          setToken(savedToken);
+          setUser(parsedUser);
+          if (!localStorage.getItem('tourCompleted')) {
+            setTimeout(() => setRunTour(true), 1500);
+          }
+        } else {
+          throw new Error('Invalid user object');
         }
       }
-      catch { localStorage.removeItem('token'); localStorage.removeItem('user'); }
+      catch (e) {
+        console.error('Session recovery failed:', e);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
     }
     setLoading(false);
   }, []);
@@ -127,7 +137,9 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const handleSessionExpired = () => {
+    const handleSessionExpired = (e) => {
+      const reason = e.detail?.reason || 'Sin detalles';
+      console.warn(`[App] Session expired event received. Reason: ${reason}`);
       setUser(null);
       setToken(null);
       localStorage.removeItem('user');
@@ -244,8 +256,8 @@ function App() {
             ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius:4px; }
           `}</style>
 
-          {!user || !token ? (
-            <Login onLogin={handleLogin} empresaConfig={empresaConfig} />
+          {!user ? (
+            <Login onLogin={handleLogin} />
           ) : (
             <div style={{ display: 'flex', flex: 1 }}>
               <Joyride
@@ -284,7 +296,7 @@ function App() {
               >
                 {/* Logo / nombre empresa */}
                 <div style={{
-                  padding: '24px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)',
+                  padding: '24px 16px', borderBottom: '1px solid var(--glass-border)',
                   display: 'flex', alignItems: 'center', gap: 12, minHeight: 72, flexShrink: 0,
                 }}>
                   {logoUrl
@@ -294,8 +306,8 @@ function App() {
                     </div>
                   }
                   <div className="nav-label-text" style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ color: 'white', fontWeight: 800, fontSize: 15, lineHeight: 1.2 }}>{empresaNombre}</div>
-                    <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11, fontWeight: 600, marginTop: 2 }}>PLATAFORMA MÉDICA</div>
+                    <div style={{ color: 'var(--color-dark)', fontWeight: 800, fontSize: 15, lineHeight: 1.2 }}>{empresaNombre}</div>
+                    <div style={{ color: 'var(--text-muted)', fontSize: 11, fontWeight: 600, marginTop: 2 }}>PLATAFORMA MÉDICA</div>
                   </div>
                 </div>
 
@@ -347,7 +359,7 @@ function App() {
                   {/* Info usuario */}
                   <div style={{
                     display: 'flex', alignItems: 'center', gap: 12, padding: '12px', marginBottom: 16,
-                    background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)'
+                    background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0'
                   }}>
                     <div style={{
                       width: 34, height: 34, borderRadius: 8, background: ROL_COLORS[rol] || '#3498db',
@@ -357,19 +369,19 @@ function App() {
                       {(user.nombre || 'U')[0].toUpperCase()}
                     </div>
                     <div className="nav-label-text" style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ color: 'white', fontSize: 13, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.nombre}</div>
+                      <div style={{ color: 'var(--color-dark)', fontSize: 13, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.nombre}</div>
                       <div style={{ color: 'var(--color-primary)', fontSize: 10, fontWeight: 800, textTransform: 'uppercase' }}>{rol}</div>
                     </div>
                   </div>
 
                   <button onClick={handleLogout} style={{
-                    width: '100%', padding: '12px', background: 'rgba(239,68,68,0.1)',
-                    border: '1px solid rgba(239,68,68,0.2)', borderRadius: 10, color: '#f87171',
+                    width: '100%', padding: '12px', background: '#fef2f2',
+                    border: '1px solid #fecaca', borderRadius: 10, color: '#ef4444',
                     cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                     fontSize: 13, fontWeight: 700, fontFamily: 'inherit', transition: 'all 0.2s',
                   }}
-                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.15)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; }}
+                    onMouseEnter={e => { e.currentTarget.style.background = '#fee2e2'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = '#fef2f2'; }}
                   >
                     <FaSignOutAlt style={{ fontSize: 16 }} />
                     <span className="nav-label-text">Finalizar Sesión</span>
@@ -422,6 +434,7 @@ function App() {
                 <div style={{ padding: '0' }}>
                   <Routes>
                     <Route path="/" element={<Dashboard />} />
+                    <Route path="/dashboard" element={<Navigate to="/" />} />
                     <Route path="/registro" element={<RegistroInteligente />} />
                     <Route path="/consulta" element={<ConsultaRapida />} />
                     <Route path="/facturas" element={<Facturas />} />
@@ -443,6 +456,9 @@ function App() {
               </main>
             </div>
           )}
+          <div style={{ position: 'fixed', bottom: 4, right: 8, fontSize: 10, color: '#ccc', pointerEvents: 'none', zIndex: 9999 }}>
+            v1.0.8-ULTRA-RESILIENT
+          </div>
         </div>
       </Router>
     </OfflineScreen >
