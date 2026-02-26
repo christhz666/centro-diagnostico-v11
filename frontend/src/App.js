@@ -200,29 +200,17 @@ function App() {
   /* ── Estilos del sidebar ─── */
   const sidebarW = sidebarExpanded ? SIDEBAR_W : SIDEBAR_MINI;
 
-  const navLinkStyle = ({ isActive }) => ({
-    display: 'flex', alignItems: 'center', gap: 14,
-    padding: '13px 20px',
-    color: isActive ? '#ffffff' : 'rgba(255,255,255,0.65)',
-    textDecoration: 'none',
-    background: isActive ? 'rgba(135,206,235,0.18)' : 'transparent',
-    borderLeft: isActive ? '3px solid #87CEEB' : '3px solid transparent',
-    fontWeight: isActive ? 600 : 400,
-    transition: 'all 0.2s',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    fontSize: 14,
-  });
 
   const adminNavLinkStyle = ({ isActive }) => ({
     display: 'flex', alignItems: 'center', gap: 12,
-    padding: '11px 20px 11px 36px',
-    color: isActive ? '#ffffff' : 'rgba(255,255,255,0.6)',
+    padding: '11px 20px 11px 40px',
+    color: isActive ? '#ffffff' : 'rgba(255,255,255,0.4)',
     textDecoration: 'none',
-    background: isActive ? 'rgba(135,206,235,0.14)' : 'transparent',
-    borderLeft: isActive ? '3px solid #87CEEB' : '3px solid transparent',
+    background: isActive ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
     fontSize: 13, transition: 'all 0.2s',
     whiteSpace: 'nowrap', overflow: 'hidden',
+    margin: '2px 12px',
+    borderRadius: '10px'
   });
 
   const empresaNombre = empresaConfig.nombre || 'Mi Esperanza';
@@ -275,15 +263,10 @@ function App() {
           <aside
             onMouseEnter={!isMobile ? onSidebarEnter : undefined}
             onMouseLeave={!isMobile ? onSidebarLeave : undefined}
+            className="sidebar-v2"
             style={{
-              position: 'fixed', top: 0, left: 0, height: '100vh',
               width: isMobile ? (sidebarMobileOpen ? SIDEBAR_W : 0) : sidebarW,
-              background: 'linear-gradient(180deg, #0d1f2d 0%, #0f4c75 60%, #1a3a5c 100%)',
-              transition: 'width 0.3s ease',
-              zIndex: 1000,
-              overflowX: 'hidden', overflowY: 'auto',
-              boxShadow: sidebarExpanded ? '4px 0 24px rgba(0,0,0,0.3)' : '2px 0 8px rgba(0,0,0,0.15)',
-              display: 'flex', flexDirection: 'column',
+              left: isMobile && !sidebarMobileOpen ? '-100%' : (isMobile ? 0 : 16)
             }}
           >
             {/* Logo / nombre empresa */}
@@ -304,10 +287,10 @@ function App() {
             </div>
 
             {/* Menú principal */}
-            <nav style={{ flex: 1, padding: '8px 0' }}>
+            <nav style={{ flex: 1, padding: '16px 0', overflowY: 'auto', overflowX: 'hidden' }}>
               {filteredMenu.map((item, i) => (
-                <NavLink key={i} to={item.path} end={item.path === '/'} style={navLinkStyle}
-                  className={`tour-step-${item.path.replace(/\//g, '') || 'home'}`}
+                <NavLink key={i} to={item.path} end={item.path === '/'}
+                  className={({ isActive }) => `nav-link-v2 ${isActive ? 'active' : ''} tour-step-${item.path.replace(/\//g, '') || 'home'}`}
                   onClick={() => { if (isMobile) setSidebarMobileOpen(false); }}
                 >
                   <span style={{ fontSize: 18, flexShrink: 0 }}>{item.icon}</span>
@@ -346,33 +329,34 @@ function App() {
             </nav>
 
             {/* Footer del sidebar */}
-            <div style={{ padding: '12px 10px', borderTop: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
+            <div style={{ padding: '20px 12px', borderTop: '1px solid var(--glass-border)', flexShrink: 0 }}>
               {/* Info usuario */}
               <div style={{
-                display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', marginBottom: 6,
-                background: 'rgba(255,255,255,0.05)', borderRadius: 10, overflow: 'hidden'
+                display: 'flex', alignItems: 'center', gap: 12, padding: '12px', marginBottom: 12,
+                background: 'rgba(255,255,255,0.03)', borderRadius: 14, overflow: 'hidden',
+                border: '1px solid rgba(255,255,255,0.05)'
               }}>
                 <div style={{
-                  width: 32, height: 32, borderRadius: '50%', background: ROL_COLORS[rol] || '#3498db',
+                  width: 36, height: 36, borderRadius: 10, background: ROL_COLORS[rol] || '#3498db',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700,
-                  fontSize: 14, flexShrink: 0
+                  fontSize: 16, flexShrink: 0, boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
                 }}>
                   {(user.nombre || 'U')[0].toUpperCase()}
                 </div>
                 <div className="nav-label-text" style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ color: 'white', fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.nombre}</div>
-                  <div style={{ color: 'rgba(135,206,235,0.7)', fontSize: 11, textTransform: 'uppercase' }}>{rol}</div>
+                  <div style={{ color: 'var(--color-primary)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{rol}</div>
                 </div>
               </div>
 
               <button onClick={handleLogout} style={{
-                width: '100%', padding: '10px', background: 'rgba(231,76,60,0.15)',
-                border: '1px solid rgba(231,76,60,0.4)', borderRadius: 8, color: '#ff6b6b',
-                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                fontSize: 13, fontFamily: 'inherit', transition: 'all 0.2s',
+                width: '100%', padding: '12px', background: 'rgba(239,68,68,0.1)',
+                border: '1px solid rgba(239,68,68,0.2)', borderRadius: 12, color: '#ef4444',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                fontSize: 13, fontWeight: 600, fontFamily: 'inherit', transition: 'all 0.2s',
               }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(231,76,60,0.3)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(231,76,60,0.15)'; }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.2)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; e.currentTarget.style.transform = 'translateY(0)'; }}
               >
                 <FaSignOutAlt style={{ fontSize: 16 }} />
                 <span className="nav-label-text">Cerrar Sesión</span>
@@ -389,20 +373,12 @@ function App() {
             transition: 'margin-left 0.3s ease',
           }}>
             {/* Header */}
-            <header style={{
-              position: 'sticky', top: 0, zIndex: 100,
-              background: 'white',
-              borderBottom: '1px solid rgba(0,0,0,0.06)',
-              boxShadow: '0 1px 8px rgba(0,0,0,0.06)',
-              padding: '0 20px',
-              height: 60,
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            }}>
+            <header className="header-v2">
               {/* Botón menú (móvil o siempre visible) */}
               <button
                 className="sidebar-colapsador"
                 onClick={() => isMobile ? setSidebarMobileOpen(!sidebarMobileOpen) : setSidebarHovered(!sidebarHovered)}
-                style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#1b262c', padding: 8, borderRadius: 8, display: 'flex', alignItems: 'center' }}
+                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', fontSize: 18, cursor: 'pointer', color: 'white', width: 42, height: 42, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
               >
                 {(isMobile ? sidebarMobileOpen : sidebarHovered) ? <FaTimes /> : <FaBars />}
               </button>

@@ -7,6 +7,7 @@ import './Login.css';
 const BackgroundEffects = () => {
     return (
         <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', zIndex: -1, background: '#050505' }}>
+            <div className="mesh-gradient" />
             <div className="shimmer-bg" />
 
             {/* Animated Orbs */}
@@ -219,7 +220,7 @@ const Login = ({ onLogin, empresaConfig: initialConfig }) => {
 
                     <button type="submit" disabled={loading} className="login-btn">
                         {loading ? (
-                            <><FaSpinner style={{ animation: 'spin 1s linear infinite' }} /> Validando...</>
+                            <><FaSpinner style={{ animation: 'spin 1s linear infinite', color: '#fff' }} /> Validando...</>
                         ) : (
                             'Acceder al Portal'
                         )}

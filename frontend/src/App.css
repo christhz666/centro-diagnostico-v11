@@ -1,25 +1,35 @@
-/* ============================================================
-   APP.CSS — Centro Diagnóstico Mi Esperanza
-   Sistema de diseño responsive completo
-   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
 
-/* ── Variables globales ─────────────────────────────────── */
 :root {
-  --color-dark: #1b262c;
-  --color-primary: #0f4c75;
-  --color-accent: #1b6ca8;
-  --color-sky: #87CEEB;
-  --color-bg: #f0f4f8;
+  /* Vibrant Premium Palette */
+  --color-dark: #09090b;
+  --color-primary: #3b82f6;
+  --color-primary-glow: rgba(59, 130, 246, 0.5);
+  --color-accent: #8b5cf6;
+  --color-accent-glow: rgba(139, 92, 246, 0.4);
+  --color-sky: #0ea5e9;
+  --color-bg: #050505;
+  --color-card: rgba(255, 255, 255, 0.03);
   --color-white: #ffffff;
-  --color-danger: #e74c3c;
-  --sidebar-w: 250px;
-  --sidebar-sm: 70px;
-  --header-h: 60px;
-  --radius: 12px;
-  --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.15);
-  --transition: all 0.25s ease;
-  --font: 'Inter', 'Segoe UI', Arial, sans-serif;
+  --color-danger: #ef4444;
+  --text-main: #f4f4f5;
+  --text-muted: #a1a1aa;
+
+  --sidebar-w: 260px;
+  --sidebar-sm: 80px;
+  --header-h: 70px;
+  --radius: 16px;
+  --radius-lg: 24px;
+
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-blur: blur(20px);
+
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.6);
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --font-body: 'Inter', sans-serif;
+  --font-title: 'Outfit', sans-serif;
 }
 
 /* ── Reset & base ─────────────────────────────────────────── */
@@ -36,11 +46,24 @@ html {
 
 body {
   margin: 0;
-  font-family: var(--font);
+  font-family: var(--font-body);
   background: var(--color-bg);
-  color: #2d3748;
+  color: var(--text-main);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-attachment: fixed;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-title);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-white);
 }
 
 /* ── Tipografía responsiva ────────────────────────────────── */
@@ -152,6 +175,28 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
+/* ── Glassmorphism Utils ────────────────────────────────── */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.glass-sidebar {
+  background: rgba(9, 9, 11, 0.8) !important;
+  backdrop-filter: blur(30px);
+  border-right: 1px solid var(--glass-border);
+}
+
+.glass-header {
+  background: rgba(9, 9, 11, 0.75) !important;
+  backdrop-filter: blur(15px);
+  border-bottom: 1px solid var(--glass-border) !important;
+}
+
 /* ══════════════════════════════════════════════════════════
    LAYOUT PRINCIPAL
    ══════════════════════════════════════════════════════════ */
@@ -161,24 +206,68 @@ textarea:focus-visible {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.7);
   z-index: 999;
-  backdrop-filter: blur(2px);
+  backdrop-filter: blur(8px);
 }
 
-/* Sidebar principal */
-.app-sidebar {
+/* Sidebar principal V2 */
+.sidebar-v2 {
   position: fixed;
-  top: 0;
-  left: 0;
-  height: 100vh;
-  background: linear-gradient(180deg, var(--color-dark) 0%, var(--color-primary) 100%);
-  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2);
-  overscroll-behavior: contain;
-  overflow-y: auto;
-  overflow-x: hidden;
-  transition: width 0.3s ease, transform 0.3s ease;
+  top: 16px;
+  left: 16px;
+  height: calc(100vh - 32px);
+  background: rgba(9, 9, 11, 0.8) !important;
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1000;
+  box-shadow: var(--shadow-lg);
+}
+
+.sidebar-v2 .sidebar-header {
+  padding: 24px 20px;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.sidebar-v2 .nav-link-v2 {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 24px;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: var(--transition);
+  position: relative;
+  border-radius: 12px;
+  margin: 4px 12px;
+}
+
+.sidebar-v2 .nav-link-v2:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--color-white);
+  transform: translateX(4px);
+}
+
+.sidebar-v2 .nav-link-v2.active {
+  background: var(--color-primary-glow);
+  color: var(--color-white);
+}
+
+.sidebar-v2 .nav-link-v2.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 20%;
+  height: 60%;
+  width: 4px;
+  background: var(--color-primary);
+  border-radius: 0 4px 4px 0;
 }
 
 /* Ocultar scrollbar del sidebar */
@@ -204,14 +293,24 @@ textarea:focus-visible {
   background: var(--color-bg);
 }
 
-/* Header */
-.app-header {
+/* Header V2 */
+.header-v2 {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: var(--color-white);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.06);
+  height: var(--header-h);
+  background: rgba(5, 5, 5, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  margin-left: 20px;
+  margin-right: 20px;
+  margin-top: 10px;
+  border-radius: var(--radius);
 }
 
 /* Área de contenido interior */
