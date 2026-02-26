@@ -71,7 +71,7 @@ app.use(helmet({
 // Rate limiting - prevenir ataques de fuerza bruta
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutos
-    max: Number(process.env.RATE_LIMIT_MAX || 500),
+    max: Number(process.env.RATE_LIMIT_MAX || 2500),
     message: {
         success: false,
         message: 'Demasiadas peticiones desde esta IP. Intente en 15 minutos.'
@@ -82,7 +82,7 @@ app.use('/api/', limiter);
 // Rate limit estricto para login (previene fuerza bruta)
 const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: Number(process.env.RATE_LIMIT_LOGIN_MAX || 20),
+    max: Number(process.env.RATE_LIMIT_LOGIN_MAX || 100),
     message: {
         success: false,
         message: 'Demasiados intentos de login. Intente en 15 minutos.'
