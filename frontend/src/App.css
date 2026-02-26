@@ -1,33 +1,37 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
 
 :root {
-  /* Vibrant Premium Palette */
-  --color-dark: #09090b;
-  --color-primary: #3b82f6;
-  --color-primary-glow: rgba(59, 130, 246, 0.5);
-  --color-accent: #8b5cf6;
-  --color-accent-glow: rgba(139, 92, 246, 0.4);
+  /* Ultra-Premium Crystal Medical Palette */
+  --color-dark: #07080c;
+  --color-primary: #00f2ff;
+  /* Electric Cyan */
+  --color-primary-glow: rgba(0, 242, 255, 0.3);
+  --color-accent: #7c4dff;
+  /* Deep Indigo */
+  --color-accent-glow: rgba(124, 77, 255, 0.2);
   --color-sky: #0ea5e9;
-  --color-bg: #050505;
-  --color-card: rgba(255, 255, 255, 0.03);
+  --color-bg: #0a0b10;
+  /* Deep Charcoal Navy */
+  --color-card: rgba(255, 255, 255, 0.02);
   --color-white: #ffffff;
-  --color-danger: #ef4444;
-  --text-main: #f4f4f5;
-  --text-muted: #a1a1aa;
+  --color-danger: #ff4d4d;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
 
   --sidebar-w: 260px;
   --sidebar-sm: 80px;
   --header-h: 70px;
-  --radius: 16px;
-  --radius-lg: 24px;
+  --radius: 12px;
+  /* Sharper / Precise */
+  --radius-lg: 18px;
 
-  --glass-bg: rgba(255, 255, 255, 0.03);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-blur: blur(20px);
+  --glass-bg: rgba(255, 255, 255, 0.012);
+  --glass-border: rgba(255, 255, 255, 0.04);
+  --glass-blur: blur(24px);
 
-  --shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.6);
-  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.7);
+  --transition: all 0.25s cubic-bezier(0.23, 1, 0.32, 1);
   --font-body: 'Inter', sans-serif;
   --font-title: 'Outfit', sans-serif;
 }
@@ -183,51 +187,40 @@ textarea:focus-visible {
   border: 1px solid var(--glass-border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
 }
 
-.glass-sidebar {
-  background: rgba(9, 9, 11, 0.8) !important;
-  backdrop-filter: blur(30px);
-  border-right: 1px solid var(--glass-border);
+.glass-panel::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.08);
+  /* Crystal "inner" edge */
 }
 
-.glass-header {
-  background: rgba(9, 9, 11, 0.75) !important;
-  backdrop-filter: blur(15px);
-  border-bottom: 1px solid var(--glass-border) !important;
-}
-
-/* ══════════════════════════════════════════════════════════
-   LAYOUT PRINCIPAL
-   ══════════════════════════════════════════════════════════ */
-
-/* Overlay del sidebar en móvil */
-.sidebar-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.7);
-  z-index: 999;
-  backdrop-filter: blur(8px);
-}
-
-/* Sidebar principal V2 */
+/* Sidebar principal Ultra-Premium */
 .sidebar-v2 {
   position: fixed;
-  top: 16px;
-  left: 16px;
-  height: calc(100vh - 32px);
-  background: rgba(9, 9, 11, 0.8) !important;
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
-  border: 1px solid var(--glass-border);
+  top: 14px;
+  left: 14px;
+  height: calc(100vh - 28px);
+  background: rgba(10, 11, 16, 0.85) !important;
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width 0.35s cubic-bezier(0.23, 1, 0.32, 1);
   z-index: 1000;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
 }
 
 .sidebar-v2 .sidebar-header {
@@ -238,79 +231,47 @@ textarea:focus-visible {
 .sidebar-v2 .nav-link-v2 {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 14px 24px;
+  gap: 14px;
+  padding: 12px 18px;
   color: var(--text-muted);
   text-decoration: none;
   transition: var(--transition);
   position: relative;
-  border-radius: 12px;
-  margin: 4px 12px;
+  border-radius: 10px;
+  margin: 4px 14px;
+  font-weight: 500;
+  font-size: 14px;
 }
 
 .sidebar-v2 .nav-link-v2:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.03);
   color: var(--color-white);
-  transform: translateX(4px);
 }
 
 .sidebar-v2 .nav-link-v2.active {
-  background: var(--color-primary-glow);
-  color: var(--color-white);
+  background: linear-gradient(90deg, var(--color-primary-glow), transparent);
+  color: var(--color-primary);
+  border-left: 2px solid var(--color-primary);
+  border-radius: 0 10px 10px 0;
 }
 
-.sidebar-v2 .nav-link-v2.active::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 20%;
-  height: 60%;
-  width: 4px;
-  background: var(--color-primary);
-  border-radius: 0 4px 4px 0;
-}
-
-/* Ocultar scrollbar del sidebar */
-.app-sidebar::-webkit-scrollbar {
-  width: 3px;
-}
-
-.app-sidebar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-}
-
-/* Labels del sidebar (ocultos cuando está colapsado) */
-.sidebar-label {
-  white-space: nowrap;
-  overflow: hidden;
-  transition: opacity 0.2s, max-width 0.3s;
-}
-
-/* Área de contenido principal */
-.app-main {
-  transition: margin-left 0.3s ease;
-  min-height: 100vh;
-  background: var(--color-bg);
-}
-
-/* Header V2 */
+/* Header V2 - Ultra-Clean */
 .header-v2 {
   position: sticky;
-  top: 0;
+  top: 14px;
   z-index: 100;
-  height: var(--header-h);
-  background: rgba(5, 5, 5, 0.75);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--glass-border);
+  height: 64px;
+  background: rgba(10, 11, 16, 0.7) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 32px;
-  margin-left: 20px;
-  margin-right: 20px;
-  margin-top: 10px;
+  padding: 0 24px;
+  margin: 14px 14px 0 14px;
   border-radius: var(--radius);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 /* Área de contenido interior */
