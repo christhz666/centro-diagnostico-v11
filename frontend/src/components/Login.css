@@ -3,34 +3,34 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f1f5f9;
-  /* Soft Professional Light Plate */
+  background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+  /* Sophisticated Professional Light Gradient */
   position: relative;
   overflow: hidden;
   font-family: 'Inter', sans-serif;
 }
 
-/* Light Clinical Background Aura */
+/* Light Clinical Background Aura - Enhanced Visibility */
 .login-aura {
   position: absolute;
-  top: -20%;
-  right: -10%;
-  width: 70%;
-  height: 70%;
-  background: radial-gradient(circle, rgba(37, 99, 235, 0.08) 0%, transparent 70%);
-  filter: blur(100px);
+  top: -10%;
+  right: -5%;
+  width: 60%;
+  height: 60%;
+  background: radial-gradient(circle, rgba(16, 98, 254, 0.12) 0%, transparent 70%);
+  filter: blur(80px);
   z-index: 0;
   pointer-events: none;
 }
 
 .login-aura-2 {
   position: absolute;
-  bottom: -20%;
-  left: -10%;
-  width: 60%;
-  height: 60%;
-  background: radial-gradient(circle, rgba(79, 70, 229, 0.05) 0%, transparent 70%);
-  filter: blur(100px);
+  bottom: -10%;
+  left: -5%;
+  width: 50%;
+  height: 50%;
+  background: radial-gradient(circle, rgba(79, 70, 229, 0.08) 0%, transparent 70%);
+  filter: blur(80px);
   z-index: 0;
   pointer-events: none;
 }
@@ -40,9 +40,9 @@
   max-width: 440px;
   padding: 56px;
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 20px;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.15), 0 12px 20px -8px rgba(15, 23, 42, 0.05);
   z-index: 10;
   position: relative;
 }

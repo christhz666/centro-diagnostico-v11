@@ -9,17 +9,17 @@ const StatCard = ({ title, value, icon: Icon, color, trend, index }) => {
     return (
         <div style={{
             background: 'white',
-            border: '1px solid #e2e8f0',
-            borderRadius: 12, padding: '24px',
+            border: '1.5px solid var(--glass-border)',
+            borderRadius: 16, padding: '24px',
             color: 'var(--text-main)', position: 'relative', overflow: 'hidden',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05)',
+            boxShadow: 'var(--shadow)',
             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             transform: visible ? 'translateY(0)' : 'translateY(15px)',
             opacity: visible ? 1 : 0,
         }}
             className="clinical-tile"
-            onMouseEnter={e => { e.currentTarget.style.borderColor = color; e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)'; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05)'; }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = color; e.currentTarget.style.boxShadow = 'var(--shadow-lg)'; e.currentTarget.style.transform = 'translateY(-4px)'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--glass-border)'; e.currentTarget.style.boxShadow = 'var(--shadow)'; e.currentTarget.style.transform = 'translateY(0)'; }}
         >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
                 <div style={{ width: 44, height: 44, borderRadius: 10, background: `${color}10`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: color }}>
@@ -99,10 +99,10 @@ const Dashboard = () => {
             </div>
 
             {/* ── Sección de Pacientes ── */}
-            <div className="glass-panel" style={{ padding: '0', borderRadius: 12, overflow: 'hidden', background: 'white', border: '1px solid #e2e8f0' }}>
-                <div style={{ padding: '24px 32px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="glass-panel" style={{ padding: '0', borderRadius: 16, overflow: 'hidden', background: 'white', border: '1px solid var(--glass-border)', boxShadow: 'var(--shadow)' }}>
+                <div style={{ padding: '24px 32px', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: 'var(--color-dark)' }}>Próximas Citas</h2>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', background: '#f8fafc', padding: '4px 12px', borderRadius: 20 }}>{citasHoy.length} hoy</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-primary)', background: 'var(--color-primary-glow)', padding: '6px 14px', borderRadius: 20 }}>{citasHoy.length} hoy</span>
                 </div>
 
                 <div style={{ padding: '12px' }}>
