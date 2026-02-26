@@ -103,8 +103,9 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const savedToken = localStorage.getItem('token');
-    const savedUser = localStorage.getItem('user');
+    const savedToken = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const savedUser = localStorage.getItem('user') || sessionStorage.getItem('user');
+
     if (savedToken && savedToken !== 'undefined' && savedUser && savedUser !== 'undefined') {
       try {
         const parsedUser = JSON.parse(savedUser);
@@ -123,6 +124,8 @@ function App() {
         console.error('Session recovery failed:', e);
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('user');
       }
     }
     setLoading(false);
@@ -144,21 +147,31 @@ function App() {
       setToken(null);
       localStorage.removeItem('user');
       localStorage.removeItem('token');
+      sessionStorage.removeItem('user');
+      sessionStorage.removeItem('token');
     };
     window.addEventListener('session-expired', handleSessionExpired);
     return () => window.removeEventListener('session-expired', handleSessionExpired);
   }, []);
 
-  const handleLogin = (u, t) => {
-    localStorage.setItem('token', t);
-    localStorage.setItem('user', JSON.stringify(u));
+  const handleLogin = (u, t, persist = true) => {
+    // Sincronizar vía API Service
+    api.forceLogin(u, t, persist);
+
     setToken(t);
     setUser(u);
     if (!localStorage.getItem('tourCompleted')) {
       setTimeout(() => setRunTour(true), 1200);
     }
   };
-  const handleLogout = () => { localStorage.removeItem('token'); localStorage.removeItem('user'); setUser(null); setToken(null); };
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
+    setUser(null);
+    setToken(null);
+  };
 
   /* Hover delay (suaviza el colapso) */
   const onSidebarEnter = () => { clearTimeout(hoverTimeout.current); setSidebarHovered(true); };
@@ -456,8 +469,8 @@ function App() {
               </main>
             </div>
           )}
-          <div style={{ position: 'fixed', bottom: 4, right: 8, fontSize: 10, color: '#ccc', pointerEvents: 'none', zIndex: 9999 }}>
-            v1.0.8-ULTRA-RESILIENT
+          <div style={{ position: 'fixed', bottom: 4, right: 8, fontSize: 10, color: 'rgba(0,0,0,0.15)', pointerEvents: 'none', zIndex: 9999, fontWeight: 600 }}>
+            v1.1.0-PREMIUM
           </div>
         </div>
       </Router>

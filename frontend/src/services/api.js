@@ -1,8 +1,8 @@
 const API_URL = '/api';
-const VERSION = '1.0.8-ULTRA-RESILIENT';
+const VERSION = '1.1.0-PREMIUM';
 
 class ApiService {
-    getToken() { return localStorage.getItem('token'); }
+    getToken() { return localStorage.getItem('token') || sessionStorage.getItem('token'); }
 
     getHeaders() {
         const headers = { 'Content-Type': 'application/json' };
@@ -13,7 +13,7 @@ class ApiService {
             }
 
             // Inyectar sucursalId si existe
-            const userStr = localStorage.getItem('user');
+            const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
             if (userStr && userStr !== 'undefined' && userStr !== 'null') {
                 const user = JSON.parse(userStr);
                 if (user && user.sucursal) {
@@ -148,10 +148,20 @@ class ApiService {
         }
     }
 
-    forceLogin(user, token) {
-        console.log(`[API ${VERSION}] Force Sync Session...`);
-        if (token) localStorage.setItem('token', token);
-        if (user) localStorage.setItem('user', JSON.stringify(user));
+    forceLogin(user, token, persist = true) {
+        console.log(`[API ${VERSION}] Sync Session (persist: ${persist})...`);
+        const storage = persist ? localStorage : sessionStorage;
+        if (token) storage.setItem('token', token);
+        if (user) storage.setItem('user', JSON.stringify(user));
+
+        // Si no se persiste, limpiar el otro storage para evitar conflictos
+        if (!persist) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+        } else {
+            sessionStorage.removeItem('token');
+            sessionStorage.removeItem('user');
+        }
     }
 
     logout() {
