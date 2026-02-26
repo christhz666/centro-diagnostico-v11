@@ -159,11 +159,6 @@ const Login = ({ onLogin }) => {
                 <MouseTrail />
                 {/* fondo con partículas flotantes opcional */}
                 <Particles />
-          28%       { transform: scale(1); }
-          42%       { transform: scale(1.1); }
-          56%       { transform: scale(1); }
-        }
-        @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(24px); }
           to   { opacity: 1; transform: translateY(0); }
         }
