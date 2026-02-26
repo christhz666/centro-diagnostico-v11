@@ -455,7 +455,7 @@ const Imagenologia = () => {
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
 
         {/* Visor DICOM */}
-        <div style={{ flex: 1, overflow: 'hidden' }}>
+        <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
           <DicomViewer
             imagenes={imagenes}
             ajustesIniciales={ajustes || {}}

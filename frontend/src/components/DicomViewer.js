@@ -18,7 +18,17 @@ function initCS() {
     try {
         cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
         cornerstoneWADOImageLoader.external.dicomParser = dicomParser;
-        cornerstoneWADOImageLoader.configure({ useWebWorkers: false });
+
+        // CONFIGURACIÓN DE SEGURIDAD: Añadir Token Bearer a las peticiones de imágenes
+        const getToken = () => localStorage.getItem('token') || sessionStorage.getItem('token');
+
+        cornerstoneWADOImageLoader.configure({
+            useWebWorkers: false,
+            beforeSend: function (xhr) {
+                const token = getToken();
+                if (token) xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+            }
+        });
 
         cornerstoneTools.external.cornerstone = cornerstone;
         cornerstoneTools.external.cornerstoneMath = cornerstoneMath;
@@ -28,7 +38,7 @@ function initCS() {
         csInit = true;
         return true;
     } catch (e) {
-        console.error('Cornerstone init:', e);
+        console.error('Cornerstone init error:', e);
         return false;
     }
 }
@@ -188,9 +198,12 @@ const DicomViewer = ({ imagenes = [], ajustesIniciales = {}, onCambioAjustes = n
                 activateTool(tool);
                 setLoading(false);
                 return;
-            } catch (_) { }
+            } catch (err) {
+                console.warn(`DicomViewer: Failed to load ${imageId} with loader ${imageId.split(':')[0]}`, err);
+            }
         }
         setErr('No se pudo cargar la imagen. Verifique que el archivo es DICOM o imagen válida.');
+        console.error('DicomViewer: All image loaders failed for', fullUrl);
         setLoading(false);
     }, [ready, invert, rot, flipH, flipV, tool, ajustesIniciales]); // eslint-disable-line
 
