@@ -19,11 +19,12 @@ const protect = async (req, res, next) => {
 
     try {
         // Verificar token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const secret = process.env.JWT_SECRET || 'fallback_secret_for_emergency_only_change_in_env';
+        const decoded = jwt.verify(token, secret);
 
         // Buscar usuario
         const user = await User.findById(decoded.id).select('-password');
-        
+
         if (!user) {
             return res.status(401).json({
                 success: false,

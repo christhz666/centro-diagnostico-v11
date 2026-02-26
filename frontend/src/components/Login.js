@@ -41,8 +41,6 @@ const Login = ({ onLogin, empresaConfig: initialConfig }) => {
     const [showPass, setShowPass] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
     const [empresaConfig, setEmpresaConfig] = useState(initialConfig || {});
-    const [sucursales, setSucursales] = useState([]);
-    const [selectedSucursal, setSelectedSucursal] = useState('');
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
     useEffect(() => {
@@ -54,16 +52,6 @@ const Login = ({ onLogin, empresaConfig: initialConfig }) => {
         } else {
             setEmpresaConfig(initialConfig);
         }
-
-        api.request('/sucursales')
-            .then(res => {
-                const lista = res?.data || res;
-                setSucursales(Array.isArray(lista) ? lista : []);
-                if (Array.isArray(lista) && lista.length > 0) {
-                    setSelectedSucursal(lista[0]._id || lista[0].id);
-                }
-            })
-            .catch(() => { });
 
         const savedUsername = localStorage.getItem('savedUsername');
         const savedPassword = localStorage.getItem('savedPassword');
@@ -90,7 +78,7 @@ const Login = ({ onLogin, empresaConfig: initialConfig }) => {
         setError('');
         setLoading(true);
         try {
-            const data = await api.login({ username, password, sucursal: selectedSucursal });
+            const data = await api.login({ username, password });
             console.log('Login: Respuesta recibida:', data ? 'OK' : 'VACÍA');
 
             if (data && data.access_token) {
@@ -181,26 +169,6 @@ const Login = ({ onLogin, empresaConfig: initialConfig }) => {
                         </div>
                     </div>
 
-                    {sucursales.length > 0 && (
-                        <div className="input-group">
-                            <label className="input-label">Sucursal / Sede</label>
-                            <div className="input-wrapper">
-                                <FaHeartbeat className="input-icon" />
-                                <select
-                                    className="login-input login-select"
-                                    value={selectedSucursal}
-                                    onChange={e => setSelectedSucursal(e.target.value)}
-                                    required
-                                >
-                                    {sucursales.map(s => (
-                                        <option key={s._id || s.id} value={s._id || s.id}>
-                                            {s.nombre}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-                    )}
 
                     <div className="input-group">
                         <label className="input-label">Contraseña</label>

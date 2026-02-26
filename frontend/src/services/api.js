@@ -85,8 +85,7 @@ class ApiService {
         const body = {
             username: credentials.username || credentials.email,
             email: credentials.username || credentials.email,
-            password: credentials.password,
-            sucursal: credentials.sucursal
+            password: credentials.password
         };
         const response = await fetch(API_URL + '/auth/login', {
             method: 'POST',

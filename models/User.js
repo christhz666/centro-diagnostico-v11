@@ -113,9 +113,10 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
 userSchema.methods.generateToken = function () {
     // Aceptar JWT_EXPIRES_IN o JWT_EXPIRE (ambas variantes del .env)
     const expiresIn = process.env.JWT_EXPIRES_IN || process.env.JWT_EXPIRE || '24h';
+    const secret = process.env.JWT_SECRET || 'fallback_secret_for_emergency_only_change_in_env';
     return jwt.sign(
         { id: this._id, role: this.role },
-        process.env.JWT_SECRET,
+        secret,
         { expiresIn }
     );
 };
