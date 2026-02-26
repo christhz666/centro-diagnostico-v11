@@ -90,7 +90,16 @@ class ApiService {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body)
         });
+
         const data = await response.json();
+
+        if (!response.ok) {
+            const errorMsg = data.message || data.error || data.mensaje || `Error ${response.status}`;
+            const error = new Error(errorMsg);
+            error.status = response.status;
+            throw error;
+        }
+
         const token = data.token || data.access_token;
         const usuario = data.usuario || data.user;
         if (token) {

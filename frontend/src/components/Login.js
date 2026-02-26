@@ -33,23 +33,27 @@ const BackgroundEffects = () => {
 };
 
 /* ─── Main Component ───────────────────────────────────────── */
-const Login = ({ onLogin }) => {
+const Login = ({ onLogin, empresaConfig: initialConfig }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [showPass, setShowPass] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
-    const [empresaConfig, setEmpresaConfig] = useState({});
+    const [empresaConfig, setEmpresaConfig] = useState(initialConfig || {});
     const [sucursales, setSucursales] = useState([]);
     const [selectedSucursal, setSelectedSucursal] = useState('');
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
     useEffect(() => {
-        fetch('/api/configuracion/empresa')
-            .then(r => r.json())
-            .then(d => setEmpresaConfig(d || {}))
-            .catch(() => { });
+        if (!initialConfig || Object.keys(initialConfig).length === 0) {
+            fetch('/api/configuracion/empresa')
+                .then(r => r.json())
+                .then(d => setEmpresaConfig(d || {}))
+                .catch(() => { });
+        } else {
+            setEmpresaConfig(initialConfig);
+        }
 
         api.request('/sucursales')
             .then(res => {
@@ -115,7 +119,11 @@ const Login = ({ onLogin }) => {
             }
         } catch (err) {
             console.error('Login: Error inesperado:', err);
-            setError(err.message || 'Error de conexión con el servidor');
+            if (err.status === 429) {
+                setError('Demasiadas solicitudes. Espera un momento y vuelve a intentarlo.');
+            } else {
+                setError(err.message || 'Credenciales incorrectas o error de conexión');
+            }
         } finally {
             setLoading(false);
         }

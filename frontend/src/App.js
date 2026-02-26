@@ -160,7 +160,7 @@ function App() {
     );
   }
 
-  if (!user || !token) return <Login onLogin={handleLogin} />;
+  if (!user || !token) return <Login onLogin={handleLogin} empresaConfig={empresaConfig} />;
 
   const isElectron = window.isElectron === true;
   const rol = user.role || user.rol || 'recepcion';
