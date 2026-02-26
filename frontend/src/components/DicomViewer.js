@@ -115,10 +115,14 @@ const DicomViewer = ({ imagenes = [], ajustesIniciales = {}, onCambioAjustes = n
             }
         };
 
-        // Intentar inmediatamente y con ResizeObserver si el tamaño no está listo
+        // Intentar inmediatamente y con ResizeObserver si el tamaño cambia
         tryEnable();
         const ro = new ResizeObserver(() => {
-            if (!ready) tryEnable();
+            if (!ready) {
+                tryEnable();
+            } else {
+                try { cornerstone.resize(el, true); } catch (_) { }
+            }
         });
         ro.observe(el);
 

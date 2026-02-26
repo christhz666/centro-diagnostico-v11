@@ -159,7 +159,7 @@ const Imagenologia = () => {
     finally { setGuardando(false); }
   };
 
-  const handleCambioAjustesVisor = (nuevosAjustes) => {
+  const handleCambioAjustesVisor = useCallback((nuevosAjustes) => {
     setAjustes(nuevosAjustes);
     // Auto-guardado silencioso con Debounce (evitar spam al arrastrar WW/WL/Zoom)
     if (canEdit && estudioActual) {
@@ -168,7 +168,7 @@ const Imagenologia = () => {
         guardarReporte(reporte, nuevosAjustes);
       }, 1500); // Guardar 1.5s después de dejar de mover
     }
-  };
+  }, [canEdit, estudioActual, reporte]); // eslint-disable-line
 
   const finalizarReporte = async () => {
     if (!estudioActual || !canEdit) return;
