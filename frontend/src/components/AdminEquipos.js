@@ -4,7 +4,7 @@ import {
   FaFlask, FaSync, FaPlus, FaEdit, FaTrash, FaPowerOff, FaPlay,
   FaStop, FaNetworkWired, FaUsb, FaFolder, FaBroadcastTower,
   FaCheckCircle, FaExclamationTriangle, FaTimesCircle, FaClock,
-  FaChevronDown, FaChevronRight, FaDatabase, FaRedoAlt
+  FaDatabase, FaRedoAlt
 } from 'react-icons/fa';
 
 const ESTADO_ICONO = {
@@ -90,17 +90,17 @@ const AdminEquipos = () => {
     } catch { /* No critical */ }
   }, []);
 
-  useEffect(() => { cargarEquipos(); cargarResultadosRecientes(); cargarRisConfig(); }, [cargarEquipos, cargarResultadosRecientes]);
-
-  const cargarRisConfig = async () => {
-    try {
-      const resp = await axios.get('/api/configuracion/', { headers });
+  useEffect(() => {
+    cargarEquipos();
+    cargarResultadosRecientes();
+    // Load RIS config
+    axios.get('/api/configuracion/', { headers }).then(resp => {
       const cfg = resp.data?.configuracion || resp.data || {};
       if (cfg.ris_config) {
         try { setRisConfig(JSON.parse(cfg.ris_config)); } catch { }
       }
-    } catch { /* No critical */ }
-  };
+    }).catch(() => { });
+  }, [cargarEquipos, cargarResultadosRecientes]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const guardarRisConfig = async () => {
     setGuardandoRis(true);

@@ -1,15 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, NavLink, useLocation } from 'react-router-dom';
 import Joyride, { STATUS } from 'react-joyride';
 import './App.css';
 
-import {
-  FaHeartbeat, FaChartPie, FaPlusCircle, FaFileInvoiceDollar,
-  FaUserMd, FaCogs, FaSignOutAlt, FaBars, FaTimes, FaUsers,
-  FaFlask, FaClipboardList, FaBarcode, FaChevronDown, FaChevronRight,
-  FaBalanceScale, FaPalette, FaNetworkWired, FaDownload, FaWhatsapp,
-  FaXRay, FaBell
-} from 'react-icons/fa';
+import { FaHeartbeat } from 'react-icons/fa';
 
 import api from './services/api';
 import Login from './components/Login';
@@ -26,24 +20,18 @@ import AdminEquipos from './components/AdminEquipos';
 import Contabilidad from './components/Contabilidad';
 import DeployAgentes from './components/DeployAgentes';
 import DescargarApp from './components/DescargarApp';
-import PortalPaciente from './components/PortalPaciente';
 import CampanaWhatsApp from './components/CampanaWhatsApp';
 import Imagenologia from './components/Imagenologia';
 import OfflineScreen from './components/OfflineScreen';
 
-/* ── Sidebar expandido por hover ─────────────────────────────── */
-const SIDEBAR_W = 240;
-const SIDEBAR_MINI = 64;
-
 function App() {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
+  const [, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 1024);
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches));
   const [runTour, setRunTour] = useState(false);
-  const [empresaConfig, setEmpresaConfig] = useState({});
   const [adminOpen, setAdminOpen] = useState(false);
 
   useEffect(() => {
@@ -80,14 +68,6 @@ function App() {
       }
     }
     setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    fetch('/api/configuracion/empresa', { headers: token ? { Authorization: `Bearer ${token}` } : {} })
-      .then(r => r.json())
-      .then(d => { if (d && typeof d === 'object') setEmpresaConfig(d); })
-      .catch(() => { });
   }, []);
 
   const handleLogin = (u, t, persist = true) => {

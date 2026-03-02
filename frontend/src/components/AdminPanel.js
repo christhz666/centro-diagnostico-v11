@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   FaPalette, FaSave, FaSpinner, FaBuilding, FaImage,
-  FaUpload, FaCheck, FaTimes, FaEye, FaTrash, FaCogs
+  FaUpload, FaCheck, FaEye, FaTrash, FaCogs
 } from 'react-icons/fa';
 import api from '../services/api';
 import AdminSucursales from './AdminSucursales';
