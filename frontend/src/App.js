@@ -33,6 +33,20 @@ function App() {
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches));
   const [runTour, setRunTour] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
+  const [empresaConfig, setEmpresaConfig] = useState({});
+
+  // Load empresa config (public endpoint, no auth needed)
+  useEffect(() => {
+    fetch('/api/configuracion/empresa')
+      .then(r => r.json())
+      .then(data => {
+        setEmpresaConfig(data || {});
+        // Update page title if empresa_nombre is set
+        const nombre = data?.nombre || data?.empresa_nombre;
+        if (nombre) document.title = nombre;
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -139,7 +153,7 @@ function App() {
       <Router>
         <div className={`min-h-screen flex flex-col transition-colors duration-300 bg-background-light dark:bg-background-dark`}>
           {!user ? (
-            <Login onLogin={handleLogin} />
+            <Login onLogin={handleLogin} empresaConfig={empresaConfig} />
           ) : (
             <>
               <Joyride
@@ -189,9 +203,13 @@ function App() {
                   ${isMobile && !sidebarOpen ? '-translate-x-full' : 'translate-x-0'}
                 `}>
                   <div className="p-6 flex items-center justify-center">
-                    <div className={`h-12 w-12 bg-primary rounded-2xl flex items-center justify-center shadow-neon transition-all ${!sidebarOpen && 'scale-90'}`}>
-                      <span className="material-icons-round text-slate-900">medical_services</span>
-                    </div>
+                    {empresaConfig.logo_sidebar ? (
+                      <img src={empresaConfig.logo_sidebar} alt="Logo" className={`max-h-12 max-w-[160px] object-contain transition-all ${!sidebarOpen && 'scale-90 max-w-[40px]'}`} />
+                    ) : (
+                      <div className={`h-12 w-12 bg-primary rounded-2xl flex items-center justify-center shadow-neon transition-all ${!sidebarOpen && 'scale-90'}`}>
+                        <span className="material-icons-round text-slate-900">medical_services</span>
+                      </div>
+                    )}
                   </div>
 
                   <nav className="flex-1 px-4 space-y-1 py-4 overflow-y-auto custom-scrollbar">

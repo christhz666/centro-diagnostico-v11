@@ -15,7 +15,7 @@
   --color-accent-glow: rgba(6, 182, 212, 0.1);
 
   --color-sky: #38bdf8;
-  --color-bg: #f8fafc;
+  --color-bg: #f0f2f5;
   --color-card: #ffffff;
   --color-white: #ffffff;
   --color-danger: #f43f5e;
@@ -794,4 +794,102 @@ button,
   .clickable-row:active {
     background: rgba(135, 206, 235, 0.1);
   }
+}
+
+/* ══════════════════════════════════════════════════════════
+   DARK MODE — Override inline styles
+   ══════════════════════════════════════════════════════════ */
+
+/* Force dark backgrounds on elements with inline background: white */
+html.dark div[style*="background: white"],
+html.dark div[style*="background:'white'"],
+html.dark div[style*="background: '#fff"],
+html.dark div[style*="background: rgb(255"],
+html.dark div[style*="background:#fff"] {
+  background: #0F172A !important;
+  color: #e2e8f0 !important;
+  border-color: rgba(255,255,255,0.08) !important;
+}
+
+html.dark div[style*="background: '#f0f4f8'"],
+html.dark div[style*="background: '#f8f9ff'"],
+html.dark div[style*="background: '#fafbfd'"],
+html.dark div[style*="background: '#f8f9fa'"] {
+  background: rgba(255,255,255,0.03) !important;
+}
+
+/* Text colors in dark mode */
+html.dark span[style*="color: '#1b262c'"],
+html.dark span[style*="color: '#555'"],
+html.dark span[style*="color: '#333'"],
+html.dark span[style*="color: '#374151'"],
+html.dark div[style*="color: '#1b262c'"],
+html.dark div[style*="color: '#555'"],
+html.dark div[style*="color: '#333'"],
+html.dark p[style*="color: '#555'"],
+html.dark p[style*="color: '#666'"],
+html.dark p[style*="color: '#888'"],
+html.dark p[style*="color: '#999'"],
+html.dark p[style*="color: '#aaa'"] {
+  color: #94a3b8 !important;
+}
+
+html.dark h1[style*="color: '#1b262c'"],
+html.dark h2[style*="color: '#1b262c'"],
+html.dark h3[style*="color: '#1b262c'"],
+html.dark h4[style*="color: '#555'"] {
+  color: #f1f5f9 !important;
+}
+
+/* Tables in dark mode */
+html.dark table {
+  background: #0F172A !important;
+}
+
+html.dark tr[style*="background: '#f8f9ff'"],
+html.dark tr[style*="background: #f8f9ff"],
+html.dark thead tr {
+  background: rgba(255,255,255,0.03) !important;
+}
+
+html.dark tbody tr:hover {
+  background: rgba(0,229,255,0.04) !important;
+}
+
+html.dark tr[style*="borderBottom"] td,
+html.dark td[style*="border"] {
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+/* Inputs/selects in dark mode */
+html.dark input[style],
+html.dark select[style],
+html.dark textarea[style] {
+  background: rgba(255,255,255,0.05) !important;
+  border-color: rgba(255,255,255,0.1) !important;
+  color: #e2e8f0 !important;
+}
+
+/* Modals in dark mode */
+html.dark .modal-content,
+html.dark div[style*="background: 'white'"][style*="borderRadius: 20"],
+html.dark div[style*="background: 'white'"][style*="borderRadius: 15"] {
+  background: #1e293b !important;
+  color: #e2e8f0 !important;
+}
+
+/* Badges / special colored backgrounds - keep as is */
+
+/* Light mode readability improvements */
+html:not(.dark) body {
+  color: #1e293b;
+}
+
+html:not(.dark) h1,
+html:not(.dark) h2,
+html:not(.dark) h3,
+html:not(.dark) h4,
+html:not(.dark) h5,
+html:not(.dark) h6 {
+  color: #0f172a;
 }

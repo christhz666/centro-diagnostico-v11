@@ -72,7 +72,11 @@ router.get('/worklist/:tipo', async (req, res) => {
 
     // Buscar estudios que clasifiquen como Rayos X / Imagenología
     const estudiosRX = await Estudio.find({
-      categoria: { $in: ['Imagenología', 'Rayos X', 'CR', 'Sonografía'] }
+      $or: [
+        { categoria: { $in: ['Imagenología', 'Rayos X', 'CR', 'Sonografía', 'Tomografía', 'Mamografía', 'Ecografía', 'RX'] } },
+        { categoria: { $regex: /imagen|rayo|radio|rx|sonograf|tomograf|mamograf/i } },
+        { nombre: { $regex: /\brayo|radiograf|\brx\b|sonograf|tomograf|mamograf/i } }
+      ]
     }).select('_id');
     const estudiosIds = estudiosRX.map(e => e._id);
 

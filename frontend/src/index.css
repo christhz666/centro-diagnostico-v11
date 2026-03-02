@@ -32,6 +32,32 @@
     .dark td {
         @apply border-white/5;
     }
+
+    /* ── Extended Dark Mode: override inline white backgrounds ── */
+    .dark div[style*="background: 'white'"],
+    .dark div[style*="background: white"],
+    .dark div[style*="background:'white'"] {
+        background: #0F172A !important;
+        color: #e2e8f0 !important;
+        border-color: rgba(255,255,255,0.08) !important;
+    }
+
+    .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+        color: #f1f5f9 !important;
+    }
+
+    .dark p {
+        color: #cbd5e1;
+    }
+
+    .dark label {
+        color: #94a3b8 !important;
+    }
+
+    .dark code {
+        background: rgba(255,255,255,0.08) !important;
+        color: #e2e8f0 !important;
+    }
 }
 
 @layer components {
