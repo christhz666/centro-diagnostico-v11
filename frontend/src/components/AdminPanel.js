@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   FaPalette, FaSave, FaSpinner, FaBuilding, FaImage,
-  FaUpload, FaCheck, FaTimes, FaEye, FaTrash, FaCogs
+  FaUpload, FaCheck, FaEye, FaTrash, FaCogs
 } from 'react-icons/fa';
 import api from '../services/api';
 import AdminSucursales from './AdminSucursales';
@@ -122,12 +122,8 @@ function LogoUploader({ label, descripcion, fieldKey, value, onChange }) {
 /* ── Sección contenedor ─────────────────────────────────────── */
 function Seccion({ titulo, icono, children }) {
   return (
-    <div style={{
-      background: 'white', borderRadius: 16, padding: '22px 24px',
-      boxShadow: '0 2px 12px rgba(0,0,0,0.07)', marginBottom: 20,
-      border: '1px solid #f0f0f0',
-    }}>
-      <h3 style={{ margin: '0 0 20px', color: '#1b262c', fontSize: 16, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 10 }}>
+    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md dark:shadow-none mb-5 border border-gray-100 dark:border-gray-700">
+      <h3 className="mb-5 text-gray-900 dark:text-white text-base font-bold flex items-center gap-2.5">
         <span style={{ fontSize: 18 }}>{icono}</span> {titulo}
       </h3>
       {children}
@@ -139,13 +135,11 @@ function Seccion({ titulo, icono, children }) {
 function Campo({ label, fieldKey, value, onChange, type = 'text', placeholder = '' }) {
   return (
     <div style={{ marginBottom: 16 }}>
-      <label style={{ display: 'block', fontWeight: 600, color: '#374151', marginBottom: 5, fontSize: 13 }}>{label}</label>
+      <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-1 text-sm">{label}</label>
       <input
         type={type} value={value || ''} placeholder={placeholder}
         onChange={e => onChange(fieldKey, e.target.value)}
-        style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, boxSizing: 'border-box', outline: 'none', transition: 'border 0.2s', fontFamily: 'inherit' }}
-        onFocus={e => e.target.style.borderColor = '#3498db'}
-        onBlur={e => e.target.style.borderColor = '#e5e7eb'}
+        className="w-full px-3.5 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-400 outline-none transition-colors"
       />
     </div>
   );
@@ -214,10 +208,10 @@ const AdminPanel = () => {
       {/* Header */}
       <div style={{ marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: '#1b262c', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <h1 className="text-gray-900 dark:text-white" style={{ margin: 0, fontSize: 24, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 10 }}>
             <FaPalette style={{ color: '#3498db' }} /> Personalización
           </h1>
-          <p style={{ margin: '5px 0 0', color: '#888', fontSize: 14 }}>Configure la apariencia y datos de su empresa</p>
+          <p className="text-gray-500 dark:text-gray-400" style={{ margin: '5px 0 0', fontSize: 14 }}>Configure la apariencia y datos de su empresa</p>
         </div>
       </div>
 

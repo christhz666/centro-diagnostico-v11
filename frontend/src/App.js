@@ -1,15 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, NavLink, useLocation } from 'react-router-dom';
 import Joyride, { STATUS } from 'react-joyride';
 import './App.css';
 
-import {
-  FaHeartbeat, FaChartPie, FaPlusCircle, FaFileInvoiceDollar,
-  FaUserMd, FaCogs, FaSignOutAlt, FaBars, FaTimes, FaUsers,
-  FaFlask, FaClipboardList, FaBarcode, FaChevronDown, FaChevronRight,
-  FaBalanceScale, FaPalette, FaNetworkWired, FaDownload, FaWhatsapp,
-  FaXRay, FaBell
-} from 'react-icons/fa';
+import { FaHeartbeat } from 'react-icons/fa';
 
 import api from './services/api';
 import Login from './components/Login';
@@ -26,24 +20,18 @@ import AdminEquipos from './components/AdminEquipos';
 import Contabilidad from './components/Contabilidad';
 import DeployAgentes from './components/DeployAgentes';
 import DescargarApp from './components/DescargarApp';
-import PortalPaciente from './components/PortalPaciente';
 import CampanaWhatsApp from './components/CampanaWhatsApp';
 import Imagenologia from './components/Imagenologia';
 import OfflineScreen from './components/OfflineScreen';
 
-/* ── Sidebar expandido por hover ─────────────────────────────── */
-const SIDEBAR_W = 240;
-const SIDEBAR_MINI = 64;
-
 function App() {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
+  const [, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 1024);
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches));
   const [runTour, setRunTour] = useState(false);
-  const [empresaConfig, setEmpresaConfig] = useState({});
   const [adminOpen, setAdminOpen] = useState(false);
 
   useEffect(() => {
@@ -82,18 +70,15 @@ function App() {
     setLoading(false);
   }, []);
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    fetch('/api/configuracion/empresa', { headers: token ? { Authorization: `Bearer ${token}` } : {} })
-      .then(r => r.json())
-      .then(d => { if (d && typeof d === 'object') setEmpresaConfig(d); })
-      .catch(() => { });
-  }, []);
-
   const handleLogin = (u, t, persist = true) => {
     api.forceLogin(u, t, persist);
     setToken(t);
     setUser(u);
+    // Show guided tour on first login
+    const tourKey = `tour_done_${u?.email || u?.username || 'user'}`;
+    if (!localStorage.getItem(tourKey)) {
+      setTimeout(() => setRunTour(true), 1500);
+    }
   };
 
   const handleLogout = () => {
@@ -131,6 +116,24 @@ function App() {
   const filteredMenu = menuItems.filter(i => i.roles.includes(rol) && i.path !== '/admin');
   const isAdmin = rol === 'admin';
 
+  const tourSteps = [
+    { target: 'nav', content: '📋 Menú de navegación: Accede a todas las secciones del sistema desde aquí.', placement: 'right', disableBeacon: true },
+    { target: '[href="/"]', content: '📊 Dashboard: Vista general con estadísticas de pacientes, citas e ingresos del día.', placement: 'right' },
+    { target: '[href="/registro"]', content: '➕ Registro: Ingresa nuevos pacientes y asigna estudios médicos.', placement: 'right' },
+    { target: '[href="/consulta"]', content: '🔍 Consulta: Busca pacientes por nombre o cédula rápidamente.', placement: 'right' },
+    { target: '[href="/resultados"]', content: '🔬 Resultados: Revisa, edita y valida los resultados de laboratorio.', placement: 'right' },
+    { target: '[href="/imagenologia"]', content: '🖼️ Imagenología: Visor de imágenes DICOM con herramientas de ajuste (brillo, contraste, zoom, rotación).', placement: 'right' },
+  ];
+
+  const handleTourCallback = (data) => {
+    const { status } = data;
+    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
+      setRunTour(false);
+      const tourKey = `tour_done_${user?.email || user?.username || 'user'}`;
+      localStorage.setItem(tourKey, 'true');
+    }
+  };
+
   return (
     <OfflineScreen>
       <Router>
@@ -139,6 +142,16 @@ function App() {
             <Login onLogin={handleLogin} />
           ) : (
             <>
+              <Joyride
+                steps={tourSteps}
+                run={runTour}
+                continuous
+                showSkipButton
+                showProgress
+                callback={handleTourCallback}
+                locale={{ back: 'Atrás', close: 'Cerrar', last: 'Finalizar', next: 'Siguiente', skip: 'Saltar tour' }}
+                styles={{ options: { primaryColor: '#2563eb', zIndex: 10000 } }}
+              />
               {/* Header */}
               <header className="sticky top-0 z-50 h-16 glass-header flex items-center justify-between px-4 lg:px-8 border-b border-gray-100 dark:border-white/5">
                 <div className="flex items-center gap-4">
@@ -219,12 +232,15 @@ function App() {
                           )}
                         </button>
 
-                        <div className={`overflow-hidden transition-all duration-300 ${adminOpen && sidebarOpen ? 'max-h-64 mt-1 opacity-100' : 'max-h-0 opacity-0'}`}>
+                        <div className={`overflow-hidden transition-all duration-300 ${adminOpen && sidebarOpen ? 'max-h-96 mt-1 opacity-100' : 'max-h-0 opacity-0'}`}>
                           <div className="ml-9 space-y-1 border-l-2 border-primary/20 pl-3">
                             <NavLink to="/admin/usuarios" className={({ isActive }) => `block p-2 text-sm rounded-xl transition-all ${isActive ? 'text-primary font-bold bg-primary/5' : 'text-slate-400 dark:text-gray-500 hover:text-primary'}`}>Usuarios</NavLink>
                             <NavLink to="/admin/equipos" className={({ isActive }) => `block p-2 text-sm rounded-xl transition-all ${isActive ? 'text-primary font-bold bg-primary/5' : 'text-slate-400 dark:text-gray-500 hover:text-primary'}`}>Equipos</NavLink>
                             <NavLink to="/admin/estudios" className={({ isActive }) => `block p-2 text-sm rounded-xl transition-all ${isActive ? 'text-primary font-bold bg-primary/5' : 'text-slate-400 dark:text-gray-500 hover:text-primary'}`}>Catálogo</NavLink>
                             <NavLink to="/admin" className={({ isActive }) => `block p-2 text-sm rounded-xl transition-all ${isActive ? 'text-primary font-bold bg-primary/5' : 'text-slate-400 dark:text-gray-500 hover:text-primary'}`}>Configuración</NavLink>
+                            <NavLink to="/contabilidad" className={({ isActive }) => `block p-2 text-sm rounded-xl transition-all ${isActive ? 'text-primary font-bold bg-primary/5' : 'text-slate-400 dark:text-gray-500 hover:text-primary'}`}>Contabilidad</NavLink>
+                            <NavLink to="/campana-whatsapp" className={({ isActive }) => `block p-2 text-sm rounded-xl transition-all ${isActive ? 'text-primary font-bold bg-primary/5' : 'text-slate-400 dark:text-gray-500 hover:text-primary'}`}>WhatsApp</NavLink>
+                            <NavLink to="/descargar-app" className={({ isActive }) => `block p-2 text-sm rounded-xl transition-all ${isActive ? 'text-primary font-bold bg-primary/5' : 'text-slate-400 dark:text-gray-500 hover:text-primary'}`}>Descargas</NavLink>
                           </div>
                         </div>
                       </div>
@@ -295,7 +311,7 @@ function PageTitle() {
     '/deploy': 'Deploy Agentes',
   };
   const title = titles[loc.pathname] || 'Sistema';
-  return <span style={{ fontWeight: 600, color: '#1b262c', fontSize: 16 }}>{title}</span>;
+  return <span className="font-semibold text-gray-900 dark:text-white" style={{ fontSize: 16 }}>{title}</span>;
 }
 
 export default App;

@@ -33,7 +33,14 @@ const Dashboard = () => {
         setLoading(true);
         try {
             const d = await api.getDashboardStats();
-            setStats(d || stats);
+            if (d) {
+                setStats({
+                    citasHoy: d.citas?.hoy ?? d.citasHoy ?? 0,
+                    estudiosRealizados: d.resultados?.completadosMes ?? d.estudiosRealizados ?? 0,
+                    ingresosHoy: d.facturacion?.hoy?.total ?? d.ingresosHoy ?? 0,
+                    pacientesNuevos: d.pacientes?.nuevosMes ?? d.pacientesNuevos ?? 0
+                });
+            }
             const c = await api.getCitas({ fecha: new Date().toISOString().split('T')[0] });
             setCitasHoy(Array.isArray(c) ? c.slice(0, 6) : (c.data?.slice(0, 6) || []));
         } catch (error) {

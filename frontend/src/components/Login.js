@@ -3,8 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
 const Login = ({ onLogin }) => {
-    const [credentials, setCredentials] = useState({ email: '', password: '' });
-    const [rememberMe, setRememberMe] = useState(true);
+    const [credentials, setCredentials] = useState(() => {
+        const savedEmail = localStorage.getItem('rememberedEmail') || '';
+        return { email: savedEmail, password: '' };
+    });
+    const [rememberMe, setRememberMe] = useState(() => !!localStorage.getItem('rememberedEmail'));
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
@@ -22,6 +25,11 @@ const Login = ({ onLogin }) => {
             const user = response.user || response.usuario;
             const token = response.token || response.access_token;
             if (user && token) {
+                if (rememberMe) {
+                    localStorage.setItem('rememberedEmail', credentials.email);
+                } else {
+                    localStorage.removeItem('rememberedEmail');
+                }
                 onLogin(user, token, rememberMe);
                 navigate('/');
             } else {
