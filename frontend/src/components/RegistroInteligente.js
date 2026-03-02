@@ -48,8 +48,8 @@ const RegistroInteligente = () => {
   };
 
   const crearPaciente = async () => {
-    if (!nuevoPaciente.nombre || !nuevoPaciente.apellido || (!nuevoPaciente.esMenor && !nuevoPaciente.cedula) || !nuevoPaciente.telefono || !nuevoPaciente.fechaNacimiento) {
-      alert('Complete los campos obligatorios (*)');
+    if (!nuevoPaciente.nombre || !nuevoPaciente.apellido || !nuevoPaciente.telefono || !nuevoPaciente.fechaNacimiento) {
+      alert('Complete los campos obligatorios (Nombre, Apellido, Teléfono, F. Nacimiento)');
       return;
     }
     try {
@@ -141,7 +141,7 @@ const RegistroInteligente = () => {
   const reiniciar = () => {
     setPaso(1); setBusqueda(''); setPacientes([]); setPacienteSeleccionado(null); setEstudiosSeleccionados([]);
     setFacturaGenerada(null); setMostrarFactura(false); setDescuento(0); setMontoPagado(0);
-    setNuevoPaciente({ nombre: '', apellido: '', cedula: '', telefono: '', email: '', fechaNacimiento: '', sexo: 'M', nacionalidad: 'Dominicano', tipoSangre: '', seguroNombre: '', seguroNumeroAfiliado: '' });
+    setNuevoPaciente({ nombre: '', apellido: '', cedula: '', esMenor: false, telefono: '', email: '', fechaNacimiento: '', sexo: 'M', nacionalidad: 'Dominicano', tipoSangre: '', seguroNombre: '', seguroNumeroAfiliado: '' });
   };
 
   if (mostrarFactura && facturaGenerada) return (
@@ -229,9 +229,46 @@ const RegistroInteligente = () => {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
               <div><label className="clinical-label">Nombre *</label><input className="clinical-input" value={nuevoPaciente.nombre} onChange={e => setNuevoPaciente({ ...nuevoPaciente, nombre: e.target.value })} /></div>
               <div><label className="clinical-label">Apellido *</label><input className="clinical-input" value={nuevoPaciente.apellido} onChange={e => setNuevoPaciente({ ...nuevoPaciente, apellido: e.target.value })} /></div>
-              <div style={{ gridColumn: 'span 2' }}><label className="clinical-label">Cédula / ID *</label><input className="clinical-input" placeholder="000-0000000-0" value={nuevoPaciente.cedula} onChange={e => setNuevoPaciente({ ...nuevoPaciente, cedula: e.target.value })} /></div>
+              <div><label className="clinical-label">F. Nacimiento *</label><input type="date" className="clinical-input" value={nuevoPaciente.fechaNacimiento} onChange={e => {
+                const val = e.target.value;
+                const updates = { ...nuevoPaciente, fechaNacimiento: val };
+                if (val) {
+                  const hoy = new Date(); const nac = new Date(val);
+                  let edad = hoy.getFullYear() - nac.getFullYear();
+                  const m = hoy.getMonth() - nac.getMonth();
+                  if (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) edad--;
+                  if (edad < 18) { updates.esMenor = true; updates.cedula = 'MENOR DE EDAD'; }
+                  else { updates.esMenor = false; if (updates.cedula === 'MENOR DE EDAD') updates.cedula = ''; }
+                }
+                setNuevoPaciente(updates);
+              }} /></div>
+              <div><label className="clinical-label">Sexo *</label>
+                <select className="clinical-input" value={nuevoPaciente.sexo} onChange={e => setNuevoPaciente({ ...nuevoPaciente, sexo: e.target.value })}>
+                  <option value="M">Masculino</option><option value="F">Femenino</option>
+                </select>
+              </div>
+              <div style={{ gridColumn: 'span 2' }}><label className="clinical-label">Cédula / ID {nuevoPaciente.esMenor ? '' : ''}</label><input className="clinical-input" placeholder={nuevoPaciente.esMenor ? 'Menor de edad' : '000-0000000-0'} value={nuevoPaciente.cedula} disabled={nuevoPaciente.esMenor} onChange={e => setNuevoPaciente({ ...nuevoPaciente, cedula: e.target.value })} />
+                {nuevoPaciente.esMenor && <span style={{ fontSize: 11, color: '#f59e0b', fontWeight: 600, marginTop: 4, display: 'block' }}>⚠ Paciente menor de edad — Cédula no requerida</span>}
+              </div>
               <div><label className="clinical-label">Teléfono *</label><input className="clinical-input" placeholder="809-000-0000" value={nuevoPaciente.telefono} onChange={e => setNuevoPaciente({ ...nuevoPaciente, telefono: e.target.value })} /></div>
-              <div><label className="clinical-label">F. Nacimiento</label><input type="date" className="clinical-input" value={nuevoPaciente.fechaNacimiento} onChange={e => setNuevoPaciente({ ...nuevoPaciente, fechaNacimiento: e.target.value })} /></div>
+              <div><label className="clinical-label">Email</label><input type="email" className="clinical-input" placeholder="correo@ejemplo.com" value={nuevoPaciente.email} onChange={e => setNuevoPaciente({ ...nuevoPaciente, email: e.target.value })} /></div>
+              <div><label className="clinical-label">Nacionalidad</label>
+                <select className="clinical-input" value={nuevoPaciente.nacionalidad} onChange={e => setNuevoPaciente({ ...nuevoPaciente, nacionalidad: e.target.value })}>
+                  <option value="Dominicano">Dominicano</option><option value="Haitiano">Haitiano</option><option value="Otro">Otro</option>
+                </select>
+              </div>
+              <div><label className="clinical-label">Tipo de Sangre</label>
+                <select className="clinical-input" value={nuevoPaciente.tipoSangre} onChange={e => setNuevoPaciente({ ...nuevoPaciente, tipoSangre: e.target.value })}>
+                  <option value="">Desconocido</option><option value="A+">A+</option><option value="A-">A-</option><option value="B+">B+</option><option value="B-">B-</option><option value="AB+">AB+</option><option value="AB-">AB-</option><option value="O+">O+</option><option value="O-">O-</option>
+                </select>
+              </div>
+              <div style={{ gridColumn: 'span 2', borderTop: '1px solid #e2e8f0', paddingTop: 16, marginTop: 4 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}><FaShieldAlt style={{ color: '#2563eb' }} /><span style={{ fontWeight: 700, fontSize: 13, color: '#1e293b' }}>Seguro Médico</span></div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <div><label className="clinical-label">Nombre del Seguro</label><input className="clinical-input" placeholder="ARS, SENASA, etc." value={nuevoPaciente.seguroNombre} onChange={e => setNuevoPaciente({ ...nuevoPaciente, seguroNombre: e.target.value })} /></div>
+                  <div><label className="clinical-label">No. Afiliado</label><input className="clinical-input" placeholder="Número de afiliado" value={nuevoPaciente.seguroNumeroAfiliado} onChange={e => setNuevoPaciente({ ...nuevoPaciente, seguroNumeroAfiliado: e.target.value })} /></div>
+                </div>
+              </div>
             </div>
             <button onClick={crearPaciente} style={{ width: '100%', marginTop: 28, padding: 16, background: '#2563eb', border: 'none', borderRadius: 10, color: 'white', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>CONTINUAR <FaArrowRight style={{ marginLeft: 8 }} /></button>
           </div>

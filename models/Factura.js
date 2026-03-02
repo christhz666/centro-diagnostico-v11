@@ -122,19 +122,31 @@ facturaSchema.pre('validate', async function (next) {
             this.codigoBarras = `${Date.now().toString().slice(-6)}${randomStr}`;
         }
 
-        // Generar Codigo LIS (4-5 dígitos empezando en 1000)
+        // Generar Codigo LIS usando el mismo número de factura
+        if (!this.codigoLIS && this.numero) {
+            // Extraer parte numérica del número de factura para usar como LIS ID
+            const match = this.numero.match(/(\d+)/);
+            if (match) {
+                this.codigoLIS = parseInt(match[1], 10);
+            }
+        }
         if (!this.codigoLIS) {
-            // Buscamos el codigoLIS más alto para incrementar
+            // Fallback: usar secuencia incremental
             const ultimaFacturaLIS = await mongoose.model('Factura').findOne({ codigoLIS: { $exists: true } }).sort({ codigoLIS: -1 });
             if (ultimaFacturaLIS && ultimaFacturaLIS.codigoLIS) {
                 this.codigoLIS = ultimaFacturaLIS.codigoLIS + 1;
-                // Reiniciar si pasa de 99999 (opcional, aunque 5 dígitos es hasta 99999)
                 if (this.codigoLIS > 99999) {
                     this.codigoLIS = 1000;
                 }
             } else {
-                this.codigoLIS = 1000; // Empieza en 1000
+                this.codigoLIS = 1000;
             }
+        }
+
+        // Guardar ID numérico para referencia
+        if (!this.registroIdNumerico && this.numero) {
+            const match = this.numero.match(/(\d+)/);
+            if (match) this.registroIdNumerico = match[1];
         }
 
         // Generar código QR único por factura
@@ -148,19 +160,13 @@ facturaSchema.pre('validate', async function (next) {
             const Paciente = mongoose.model('Paciente');
             const pac = await Paciente.findById(this.paciente);
             if (pac) {
-                // Username: primerNombre + primeros4 de cédula
-                const primerNombre = (pac.nombre || '').split(' ')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
-                const cedula = (pac.cedula || '').replace(/[^0-9]/g, '');
-                this.pacienteUsername = `${primerNombre}${cedula.substring(0, 4)}`;
+                // Username: nombre del paciente (sin espacios, minúsculas)
+                const nombre = (pac.nombre || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+                this.pacienteUsername = nombre || 'paciente';
 
-                // Password en texto plano (para imprimir en factura)
-                let rawPassword;
-                if (pac.fechaNacimiento) {
-                    const anio = new Date(pac.fechaNacimiento).getFullYear();
-                    rawPassword = `${cedula.slice(-4)}${anio}`;
-                } else {
-                    rawPassword = cedula.slice(-6) || 'clave123';
-                }
+                // Password: apellido del paciente (sin espacios, minúsculas)
+                const apellido = (pac.apellido || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+                const rawPassword = apellido || 'clave123';
 
                 // Guardar texto plano para impresión ANTES de hashear
                 this._plainPassword = rawPassword;
