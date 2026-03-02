@@ -57,10 +57,10 @@ function LogoUploader({ label, descripcion, fieldKey, value, onChange }) {
 
   return (
     <div style={{ marginBottom: 20 }}>
-      <label style={{ display: 'block', fontWeight: 700, color: '#1b262c', marginBottom: 4, fontSize: 14 }}>
+      <label className="block font-bold text-gray-900 dark:text-gray-200 mb-1 text-sm">
         {label}
       </label>
-      <p style={{ margin: '0 0 10px', fontSize: 12, color: '#888' }}>{descripcion}</p>
+      <p className="text-gray-500 dark:text-gray-400" style={{ margin: '0 0 10px', fontSize: 12 }}>{descripcion}</p>
 
       {/* Área de drop */}
       <div
@@ -68,14 +68,9 @@ function LogoUploader({ label, descripcion, fieldKey, value, onChange }) {
         onDragLeave={() => setDrag(false)}
         onDrop={handleDrop}
         onClick={() => inputRef.current?.click()}
+        className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-5 text-center cursor-pointer bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 transition-all"
         style={{
-          border: `2px dashed ${drag ? '#3498db' : '#dde3ed'}`,
-          borderRadius: 12,
-          padding: '20px 16px',
-          textAlign: 'center',
-          cursor: 'pointer',
-          background: drag ? '#f0f8ff' : '#fafbfd',
-          transition: 'all 0.2s',
+          borderColor: drag ? '#3498db' : undefined,
           minHeight: 90,
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16,
           flexWrap: 'wrap',
@@ -97,9 +92,9 @@ function LogoUploader({ label, descripcion, fieldKey, value, onChange }) {
             </div>
           </>
         ) : (
-          <div style={{ color: '#aaa' }}>
+          <div className="text-gray-400 dark:text-gray-500">
             <FaUpload style={{ fontSize: 28, marginBottom: 8, display: 'block', margin: '0 auto 8px' }} />
-            <div style={{ fontSize: 13, fontWeight: 600, color: '#555' }}>Haga clic o arrastre una imagen</div>
+            <div className="text-gray-600 dark:text-gray-300" style={{ fontSize: 13, fontWeight: 600 }}>Haga clic o arrastre una imagen</div>
             <div style={{ fontSize: 11, marginTop: 4 }}>PNG, JPG, SVG, WebP — Máx. 5MB</div>
           </div>
         )}
@@ -113,7 +108,7 @@ function LogoUploader({ label, descripcion, fieldKey, value, onChange }) {
         placeholder="O pegue una URL de imagen: https://..."
         value={preview.startsWith('data:') ? '' : preview}
         onChange={e => { setPreview(e.target.value); onChange(fieldKey, e.target.value); }}
-        style={{ width: '100%', marginTop: 8, padding: '8px 12px', borderRadius: 8, border: '1px solid #dde3ed', fontSize: 13, boxSizing: 'border-box', color: '#555' }}
+        className="w-full mt-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 text-sm bg-white dark:bg-white/5 text-gray-700 dark:text-gray-200"
       />
     </div>
   );
@@ -216,15 +211,23 @@ const AdminPanel = () => {
       </div>
 
       {/* Tabs Menu */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 20, borderBottom: '2px solid #eee' }}>
+      <div className="flex gap-2.5 mb-5 border-b-2 border-gray-200 dark:border-gray-700">
         <button
           onClick={() => setActiveTab('general')}
-          style={{ padding: '10px 20px', background: activeTab === 'general' ? '#3498db' : 'transparent', color: activeTab === 'general' ? '#fff' : '#666', border: 'none', borderTopLeftRadius: 8, borderTopRightRadius: 8, cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 8 }}>
+          className={`px-5 py-2.5 border-none rounded-t-lg cursor-pointer font-bold flex items-center gap-2 transition-colors ${
+            activeTab === 'general'
+              ? 'bg-blue-500 text-white'
+              : 'bg-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+          }`}>
           <FaCogs /> Configuración General
         </button>
         <button
           onClick={() => setActiveTab('sucursales')}
-          style={{ padding: '10px 20px', background: activeTab === 'sucursales' ? '#3498db' : 'transparent', color: activeTab === 'sucursales' ? '#fff' : '#666', border: 'none', borderTopLeftRadius: 8, borderTopRightRadius: 8, cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 8 }}>
+          className={`px-5 py-2.5 border-none rounded-t-lg cursor-pointer font-bold flex items-center gap-2 transition-colors ${
+            activeTab === 'sucursales'
+              ? 'bg-blue-500 text-white'
+              : 'bg-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+          }`}>
           <FaBuilding /> Gestión de Sucursales
         </button>
       </div>
@@ -246,7 +249,7 @@ const AdminPanel = () => {
 
           {/* ── Logos ── */}
           <Seccion titulo="Logos del Sistema" icono={<FaImage style={{ color: '#8e44ad' }} />}>
-            <p style={{ margin: '0 0 20px', fontSize: 13, color: '#666', background: '#f8f9ff', padding: '10px 14px', borderRadius: 8, borderLeft: '3px solid #3498db' }}>
+            <p className="bg-blue-50 dark:bg-white/5 text-gray-600 dark:text-gray-300 border-l-4 border-blue-500" style={{ margin: '0 0 20px', fontSize: 13, padding: '10px 14px', borderRadius: 8 }}>
               <strong>Recomendación:</strong> Use imágenes PNG con fondo transparente. Los logos se guardan directamente en la base de datos, no se requiere servidor adicional.
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '0 24px' }}>
@@ -289,9 +292,9 @@ const AdminPanel = () => {
                 { label: 'Color Secundario', key: 'color_secundario', defecto: '#1b262c', desc: 'Sidebar, encabezados' },
                 { label: 'Color de Acento', key: 'color_acento', defecto: '#87CEEB', desc: 'Ítem activo del menú' },
               ].map(({ label, key, defecto, desc }) => (
-                <div key={key} style={{ background: '#fafbfd', border: '1.5px solid #e5e7eb', borderRadius: 12, padding: 16 }}>
-                  <label style={{ display: 'block', fontWeight: 600, color: '#374151', fontSize: 13, marginBottom: 4 }}>{label}</label>
-                  <p style={{ margin: '0 0 10px', fontSize: 11, color: '#aaa' }}>{desc}</p>
+                <div key={key} className="bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-gray-600 rounded-xl p-4">
+                  <label className="block font-semibold text-gray-700 dark:text-gray-300 text-sm mb-1">{label}</label>
+                  <p className="text-gray-400 dark:text-gray-500" style={{ margin: '0 0 10px', fontSize: 11 }}>{desc}</p>
                   <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                     <input type="color" value={config[key] || defecto}
                       onChange={e => set(key, e.target.value)}
@@ -323,8 +326,8 @@ const AdminPanel = () => {
 
           {/* Preview de logos guardados */}
           {(config.logo_login || config.logo_factura || config.logo_resultados) && (
-            <div style={{ marginTop: 20, background: '#f8f9ff', borderRadius: 14, padding: 20, border: '1px solid #e8eaf6' }}>
-              <h4 style={{ margin: '0 0 14px', color: '#555', fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <div className="mt-5 bg-blue-50 dark:bg-white/5 rounded-xl p-5 border border-blue-100 dark:border-gray-700">
+              <h4 className="text-gray-500 dark:text-gray-400" style={{ margin: '0 0 14px', fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 <FaEye style={{ marginRight: 6 }} /> Vista previa de logos configurados
               </h4>
               <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', alignItems: 'center' }}>

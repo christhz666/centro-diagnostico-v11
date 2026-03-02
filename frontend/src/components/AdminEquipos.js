@@ -53,7 +53,8 @@ const AdminEquipos = () => {
   });
   const [risConfig, setRisConfig] = useState({
     risIn: { ip: '', puerto: '', habilitado: false, nombre: 'RIS-IN' },
-    pacs: { ip: '', puerto: '', aeTitle: '', habilitado: false, nombre: 'PACS' }
+    pacs: { ip: '', puerto: '', aeTitle: '', habilitado: false, nombre: 'PACS' },
+    orthanc: { ip: '', puerto: '8042', usuario: 'admin', password: 'admin', aeTitle: 'CS7_KONICA', habilitado: false, nombre: 'Orthanc' }
   });
   const [guardandoRis, setGuardandoRis] = useState(false);
 
@@ -355,64 +356,105 @@ const AdminEquipos = () => {
       )}
 
       {/* ── Configuración RIS / Worklist / PACS ──────────────── */}
-      <div style={{ background: 'white', borderRadius: 16, padding: '24px 28px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', border: '1px solid #f0f0f0', marginBottom: 28 }}>
-        <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 700, color: '#1b262c', display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div className="bg-white dark:bg-surface-dark rounded-2xl p-6 shadow-md dark:shadow-none mb-7 border border-gray-100 dark:border-gray-700">
+        <h3 className="text-gray-900 dark:text-white" style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
           <FaBroadcastTower style={{ color: '#e67e22' }} /> Configuración RIS / Worklist / PACS
         </h3>
-        <p style={{ margin: '0 0 20px', fontSize: 13, color: '#888' }}>Configure la conexión para enviar worklists a equipos de rayos X y recibir imágenes DICOM.</p>
+        <p className="text-gray-500 dark:text-gray-400" style={{ margin: '0 0 20px', fontSize: 13 }}>Configure la conexión para enviar worklists a equipos de rayos X y recibir imágenes DICOM.</p>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
           {/* RIS-IN Module */}
-          <div style={{ background: '#fef9f0', borderRadius: 14, padding: 20, border: '1.5px solid #f5e6c8' }}>
+          <div className="bg-orange-50 dark:bg-white/5 rounded-xl p-5 border border-orange-200 dark:border-gray-600">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-              <h4 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#d35400', display: 'flex', alignItems: 'center', gap: 8 }}><FaNetworkWired /> RIS-IN (Worklist)</h4>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12 }}>
+              <h4 className="text-orange-600 dark:text-orange-400" style={{ margin: 0, fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}><FaNetworkWired /> RIS-IN (Worklist)</h4>
+              <label className="text-gray-600 dark:text-gray-300" style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12 }}>
                 <input type="checkbox" checked={risConfig.risIn.habilitado} onChange={e => setRisConfig({ ...risConfig, risIn: { ...risConfig.risIn, habilitado: e.target.checked } })} />
                 Habilitado
               </label>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 10 }}>
               <div>
-                <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 3 }}>Dirección IP</label>
+                <label className="text-gray-500 dark:text-gray-400" style={{ fontSize: 11, display: 'block', marginBottom: 3 }}>Dirección IP</label>
                 <input value={risConfig.risIn.ip} placeholder="192.168.1.50" onChange={e => setRisConfig({ ...risConfig, risIn: { ...risConfig.risIn, ip: e.target.value } })}
-                  style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 13, boxSizing: 'border-box' }} />
+                  className="w-full px-2.5 py-2 rounded-lg border border-gray-200 dark:border-gray-600 text-sm bg-white dark:bg-white/5 text-gray-900 dark:text-white" />
               </div>
               <div>
-                <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 3 }}>Puerto</label>
+                <label className="text-gray-500 dark:text-gray-400" style={{ fontSize: 11, display: 'block', marginBottom: 3 }}>Puerto</label>
                 <input type="number" value={risConfig.risIn.puerto} placeholder="104" onChange={e => setRisConfig({ ...risConfig, risIn: { ...risConfig.risIn, puerto: e.target.value } })}
-                  style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 13, boxSizing: 'border-box' }} />
+                  className="w-full px-2.5 py-2 rounded-lg border border-gray-200 dark:border-gray-600 text-sm bg-white dark:bg-white/5 text-gray-900 dark:text-white" />
               </div>
             </div>
-            <p style={{ margin: '10px 0 0', fontSize: 11, color: '#999' }}>Módulo que envía la worklist al equipo de Rayos X vía DICOM MWL.</p>
+            <p className="text-gray-400 dark:text-gray-500" style={{ margin: '10px 0 0', fontSize: 11 }}>Módulo que envía la worklist al equipo de Rayos X vía DICOM MWL. Solo envía estudios de imagenología.</p>
           </div>
 
           {/* PACS Module */}
-          <div style={{ background: '#f0f4ff', borderRadius: 14, padding: 20, border: '1.5px solid #c8d8f5' }}>
+          <div className="bg-blue-50 dark:bg-white/5 rounded-xl p-5 border border-blue-200 dark:border-gray-600">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-              <h4 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#2563eb', display: 'flex', alignItems: 'center', gap: 8 }}><FaDatabase /> PACS (Imágenes)</h4>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12 }}>
+              <h4 className="text-blue-600 dark:text-blue-400" style={{ margin: 0, fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}><FaDatabase /> PACS (Imágenes)</h4>
+              <label className="text-gray-600 dark:text-gray-300" style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12 }}>
                 <input type="checkbox" checked={risConfig.pacs.habilitado} onChange={e => setRisConfig({ ...risConfig, pacs: { ...risConfig.pacs, habilitado: e.target.checked } })} />
                 Habilitado
               </label>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 10, marginBottom: 10 }}>
               <div>
-                <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 3 }}>Dirección IP</label>
+                <label className="text-gray-500 dark:text-gray-400" style={{ fontSize: 11, display: 'block', marginBottom: 3 }}>Dirección IP</label>
                 <input value={risConfig.pacs.ip} placeholder="192.168.1.100" onChange={e => setRisConfig({ ...risConfig, pacs: { ...risConfig.pacs, ip: e.target.value } })}
-                  style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 13, boxSizing: 'border-box' }} />
+                  className="w-full px-2.5 py-2 rounded-lg border border-gray-200 dark:border-gray-600 text-sm bg-white dark:bg-white/5 text-gray-900 dark:text-white" />
               </div>
               <div>
-                <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 3 }}>Puerto</label>
+                <label className="text-gray-500 dark:text-gray-400" style={{ fontSize: 11, display: 'block', marginBottom: 3 }}>Puerto</label>
                 <input type="number" value={risConfig.pacs.puerto} placeholder="4242" onChange={e => setRisConfig({ ...risConfig, pacs: { ...risConfig.pacs, puerto: e.target.value } })}
-                  style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 13, boxSizing: 'border-box' }} />
+                  className="w-full px-2.5 py-2 rounded-lg border border-gray-200 dark:border-gray-600 text-sm bg-white dark:bg-white/5 text-gray-900 dark:text-white" />
               </div>
             </div>
             <div>
-              <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 3 }}>AE Title</label>
+              <label className="text-gray-500 dark:text-gray-400" style={{ fontSize: 11, display: 'block', marginBottom: 3 }}>AE Title</label>
               <input value={risConfig.pacs.aeTitle} placeholder="ORTHANC" onChange={e => setRisConfig({ ...risConfig, pacs: { ...risConfig.pacs, aeTitle: e.target.value } })}
-                style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 13, boxSizing: 'border-box' }} />
+                className="w-full px-2.5 py-2 rounded-lg border border-gray-200 dark:border-gray-600 text-sm bg-white dark:bg-white/5 text-gray-900 dark:text-white" />
             </div>
-            <p style={{ margin: '10px 0 0', fontSize: 11, color: '#999' }}>Servidor PACS que almacena y distribuye las imágenes DICOM.</p>
+            <p className="text-gray-400 dark:text-gray-500" style={{ margin: '10px 0 0', fontSize: 11 }}>Servidor PACS que almacena y distribuye las imágenes DICOM.</p>
+          </div>
+
+          {/* Orthanc Module */}
+          <div className="bg-green-50 dark:bg-white/5 rounded-xl p-5 border border-green-200 dark:border-gray-600" style={{ gridColumn: '1 / -1' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <h4 className="text-green-700 dark:text-green-400" style={{ margin: 0, fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}><FaDatabase /> Orthanc (Servidor VPS)</h4>
+              <label className="text-gray-600 dark:text-gray-300" style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12 }}>
+                <input type="checkbox" checked={risConfig.orthanc?.habilitado || false} onChange={e => setRisConfig({ ...risConfig, orthanc: { ...(risConfig.orthanc || {}), habilitado: e.target.checked } })} />
+                Habilitado
+              </label>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 10, marginBottom: 10 }}>
+              <div>
+                <label className="text-gray-500 dark:text-gray-400" style={{ fontSize: 11, display: 'block', marginBottom: 3 }}>IP del VPS (Orthanc)</label>
+                <input value={risConfig.orthanc?.ip || ''} placeholder="123.45.67.89" onChange={e => setRisConfig({ ...risConfig, orthanc: { ...(risConfig.orthanc || {}), ip: e.target.value } })}
+                  className="w-full px-2.5 py-2 rounded-lg border border-gray-200 dark:border-gray-600 text-sm bg-white dark:bg-white/5 text-gray-900 dark:text-white" />
+              </div>
+              <div>
+                <label className="text-gray-500 dark:text-gray-400" style={{ fontSize: 11, display: 'block', marginBottom: 3 }}>Puerto</label>
+                <input type="number" value={risConfig.orthanc?.puerto || ''} placeholder="8042" onChange={e => setRisConfig({ ...risConfig, orthanc: { ...(risConfig.orthanc || {}), puerto: e.target.value } })}
+                  className="w-full px-2.5 py-2 rounded-lg border border-gray-200 dark:border-gray-600 text-sm bg-white dark:bg-white/5 text-gray-900 dark:text-white" />
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+              <div>
+                <label className="text-gray-500 dark:text-gray-400" style={{ fontSize: 11, display: 'block', marginBottom: 3 }}>Usuario</label>
+                <input value={risConfig.orthanc?.usuario || ''} placeholder="admin" onChange={e => setRisConfig({ ...risConfig, orthanc: { ...(risConfig.orthanc || {}), usuario: e.target.value } })}
+                  className="w-full px-2.5 py-2 rounded-lg border border-gray-200 dark:border-gray-600 text-sm bg-white dark:bg-white/5 text-gray-900 dark:text-white" />
+              </div>
+              <div>
+                <label className="text-gray-500 dark:text-gray-400" style={{ fontSize: 11, display: 'block', marginBottom: 3 }}>Contraseña</label>
+                <input type="password" value={risConfig.orthanc?.password || ''} placeholder="••••••" onChange={e => setRisConfig({ ...risConfig, orthanc: { ...(risConfig.orthanc || {}), password: e.target.value } })}
+                  className="w-full px-2.5 py-2 rounded-lg border border-gray-200 dark:border-gray-600 text-sm bg-white dark:bg-white/5 text-gray-900 dark:text-white" />
+              </div>
+              <div>
+                <label className="text-gray-500 dark:text-gray-400" style={{ fontSize: 11, display: 'block', marginBottom: 3 }}>AE Title</label>
+                <input value={risConfig.orthanc?.aeTitle || ''} placeholder="CS7_KONICA" onChange={e => setRisConfig({ ...risConfig, orthanc: { ...(risConfig.orthanc || {}), aeTitle: e.target.value } })}
+                  className="w-full px-2.5 py-2 rounded-lg border border-gray-200 dark:border-gray-600 text-sm bg-white dark:bg-white/5 text-gray-900 dark:text-white" />
+              </div>
+            </div>
+            <p className="text-gray-400 dark:text-gray-500" style={{ margin: '10px 0 0', fontSize: 11 }}>Configuración del servidor Orthanc en el VPS para enviar imágenes DICOM y recibir worklists. La IP y puerto deben apuntar al servidor VPS.</p>
           </div>
         </div>
 

@@ -10,7 +10,7 @@ module.exports = {
             colors: {
                 primary: "#00E5FF", // Electric Teal
                 "primary-dark": "#00B8D4",
-                "background-light": "#F8FAFC",
+                "background-light": "#F0F2F5",
                 "background-dark": "#020617", // Pitch black/Deep Navy
                 "surface-dark": "#0F172A", // Dark Navy
                 "surface-light": "#FFFFFF",

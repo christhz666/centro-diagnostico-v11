@@ -2,11 +2,35 @@ const fetch = require('node-fetch');
 const Resultado = require('../models/Resultado');
 const Factura = require('../models/Factura');
 
-// Configuración de Orthanc (proveniente de .env)
-const ORTHANC_URL = process.env.ORTHANC_URL || 'http://127.0.0.1:8042';
-const ORTHANC_USER = process.env.ORTHANC_USER || 'admin';
-const ORTHANC_PASS = process.env.ORTHANC_PASS || 'admin';
-const ORTHANC_AE_TITLE = process.env.ORTHANC_AE_TITLE || 'CS7_KONICA';
+// Configuración de Orthanc (proveniente de .env, override con DB config)
+let ORTHANC_URL = process.env.ORTHANC_URL || 'http://127.0.0.1:8042';
+let ORTHANC_USER = process.env.ORTHANC_USER || 'admin';
+let ORTHANC_PASS = process.env.ORTHANC_PASS || 'admin';
+let ORTHANC_AE_TITLE = process.env.ORTHANC_AE_TITLE || 'CS7_KONICA';
+
+// Load config from DB if available
+const loadOrthancConfig = async () => {
+    try {
+        const Configuracion = require('../models/Configuracion');
+        const cfgDoc = await Configuracion.findOne({ clave: 'ris_config' });
+        if (cfgDoc && cfgDoc.valor) {
+            const parsed = JSON.parse(cfgDoc.valor);
+            if (parsed.orthanc && parsed.orthanc.habilitado) {
+                const o = parsed.orthanc;
+                if (o.ip && o.puerto) {
+                    ORTHANC_URL = `http://${o.ip}:${o.puerto}`;
+                }
+                if (o.usuario) ORTHANC_USER = o.usuario;
+                if (o.password) ORTHANC_PASS = o.password;
+                if (o.aeTitle) ORTHANC_AE_TITLE = o.aeTitle;
+                console.log(`[Orthanc] Config loaded from DB: ${ORTHANC_URL}, AE: ${ORTHANC_AE_TITLE}`);
+            }
+        }
+    } catch (e) {
+        // Silently use env defaults
+    }
+};
+loadOrthancConfig();
 
 // Generar header de autorización
 const getAuthHeader = () => {
@@ -22,10 +46,16 @@ exports.enviarPacienteARayosX = async (paciente, factura, cita, itemsFactura) =>
         if (!paciente || !factura) return;
 
         // Comprobar si hay estudios de Rayos X o Imagenología
-        const estudiosRX = itemsFactura.filter(item =>
-            item.estudio &&
-            ['Imagenología', 'Rayos X', 'CR', 'Sonografía'].includes(item.estudio.categoria)
-        );
+        const categoriasImagen = ['Imagenología', 'Rayos X', 'CR', 'Sonografía', 'Tomografía', 'Mamografía', 'Ecografía', 'RX'];
+        const estudiosRX = itemsFactura.filter(item => {
+            if (!item.estudio) return false;
+            const cat = (item.estudio.categoria || '').toLowerCase();
+            const nombre = (item.estudio.nombre || '').toLowerCase();
+            return categoriasImagen.some(c => cat.toLowerCase() === c.toLowerCase()) ||
+                cat.includes('imagen') || cat.includes('rayo') || cat.includes('radio') ||
+                nombre.includes('rayo') || nombre.includes('radiograf') || nombre.includes('rx ') ||
+                nombre.includes('sonograf') || nombre.includes('tomograf') || nombre.includes('mamograf');
+        });
 
         if (estudiosRX.length === 0) {
             return; // No hay rayos X, no hacer nada
