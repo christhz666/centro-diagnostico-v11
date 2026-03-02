@@ -247,7 +247,7 @@ const RegistroInteligente = () => {
                   <option value="M">Masculino</option><option value="F">Femenino</option>
                 </select>
               </div>
-              <div style={{ gridColumn: 'span 2' }}><label className="clinical-label">Cédula / ID {nuevoPaciente.esMenor ? '' : ''}</label><input className="clinical-input" placeholder={nuevoPaciente.esMenor ? 'Menor de edad' : '000-0000000-0'} value={nuevoPaciente.cedula} disabled={nuevoPaciente.esMenor} onChange={e => setNuevoPaciente({ ...nuevoPaciente, cedula: e.target.value })} />
+              <div style={{ gridColumn: 'span 2' }}><label className="clinical-label">Cédula / ID</label><input className="clinical-input" placeholder={nuevoPaciente.esMenor ? 'Menor de edad' : '000-0000000-0'} value={nuevoPaciente.cedula} disabled={nuevoPaciente.esMenor} onChange={e => setNuevoPaciente({ ...nuevoPaciente, cedula: e.target.value })} />
                 {nuevoPaciente.esMenor && <span style={{ fontSize: 11, color: '#f59e0b', fontWeight: 600, marginTop: 4, display: 'block' }}>⚠ Paciente menor de edad — Cédula no requerida</span>}
               </div>
               <div><label className="clinical-label">Teléfono *</label><input className="clinical-input" placeholder="809-000-0000" value={nuevoPaciente.telefono} onChange={e => setNuevoPaciente({ ...nuevoPaciente, telefono: e.target.value })} /></div>

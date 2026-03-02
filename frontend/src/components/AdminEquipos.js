@@ -94,13 +94,14 @@ const AdminEquipos = () => {
     cargarEquipos();
     cargarResultadosRecientes();
     // Load RIS config
-    axios.get('/api/configuracion/', { headers }).then(resp => {
+    const tkn = localStorage.getItem('token');
+    axios.get('/api/configuracion/', { headers: { Authorization: `Bearer ${tkn}` } }).then(resp => {
       const cfg = resp.data?.configuracion || resp.data || {};
       if (cfg.ris_config) {
         try { setRisConfig(JSON.parse(cfg.ris_config)); } catch { }
       }
     }).catch(() => { });
-  }, [cargarEquipos, cargarResultadosRecientes]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [cargarEquipos, cargarResultadosRecientes]);
 
   const guardarRisConfig = async () => {
     setGuardandoRis(true);

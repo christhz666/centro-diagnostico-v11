@@ -160,13 +160,14 @@ facturaSchema.pre('validate', async function (next) {
             const Paciente = mongoose.model('Paciente');
             const pac = await Paciente.findById(this.paciente);
             if (pac) {
-                // Username: nombre del paciente (sin espacios, minúsculas)
+                // Username: nombre del paciente + secuencia de factura para unicidad
                 const nombre = (pac.nombre || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-                this.pacienteUsername = nombre || 'paciente';
+                const seq = this.numero ? this.numero.replace(/[^0-9]/g, '').slice(-4) : String(Date.now()).slice(-4);
+                this.pacienteUsername = (nombre || 'paciente') + seq;
 
                 // Password: apellido del paciente (sin espacios, minúsculas)
                 const apellido = (pac.apellido || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-                const rawPassword = apellido || 'clave123';
+                const rawPassword = apellido || String(Date.now()).slice(-6);
 
                 // Guardar texto plano para impresión ANTES de hashear
                 this._plainPassword = rawPassword;
