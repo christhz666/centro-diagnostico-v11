@@ -94,6 +94,11 @@ function App() {
     api.forceLogin(u, t, persist);
     setToken(t);
     setUser(u);
+    // Show guided tour on first login
+    const tourKey = `tour_done_${u?.email || u?.username || 'user'}`;
+    if (!localStorage.getItem(tourKey)) {
+      setTimeout(() => setRunTour(true), 1500);
+    }
   };
 
   const handleLogout = () => {
@@ -131,6 +136,24 @@ function App() {
   const filteredMenu = menuItems.filter(i => i.roles.includes(rol) && i.path !== '/admin');
   const isAdmin = rol === 'admin';
 
+  const tourSteps = [
+    { target: 'nav', content: '📋 Menú de navegación: Accede a todas las secciones del sistema desde aquí.', placement: 'right', disableBeacon: true },
+    { target: '[href="/"]', content: '📊 Dashboard: Vista general con estadísticas de pacientes, citas e ingresos del día.', placement: 'right' },
+    { target: '[href="/registro"]', content: '➕ Registro: Ingresa nuevos pacientes y asigna estudios médicos.', placement: 'right' },
+    { target: '[href="/consulta"]', content: '🔍 Consulta: Busca pacientes por nombre o cédula rápidamente.', placement: 'right' },
+    { target: '[href="/resultados"]', content: '🔬 Resultados: Revisa, edita y valida los resultados de laboratorio.', placement: 'right' },
+    { target: '[href="/imagenologia"]', content: '🖼️ Imagenología: Visor de imágenes DICOM con herramientas de ajuste (brillo, contraste, zoom, rotación).', placement: 'right' },
+  ];
+
+  const handleTourCallback = (data) => {
+    const { status } = data;
+    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
+      setRunTour(false);
+      const tourKey = `tour_done_${user?.email || user?.username || 'user'}`;
+      localStorage.setItem(tourKey, 'true');
+    }
+  };
+
   return (
     <OfflineScreen>
       <Router>
@@ -139,6 +162,16 @@ function App() {
             <Login onLogin={handleLogin} />
           ) : (
             <>
+              <Joyride
+                steps={tourSteps}
+                run={runTour}
+                continuous
+                showSkipButton
+                showProgress
+                callback={handleTourCallback}
+                locale={{ back: 'Atrás', close: 'Cerrar', last: 'Finalizar', next: 'Siguiente', skip: 'Saltar tour' }}
+                styles={{ options: { primaryColor: '#2563eb', zIndex: 10000 } }}
+              />
               {/* Header */}
               <header className="sticky top-0 z-50 h-16 glass-header flex items-center justify-between px-4 lg:px-8 border-b border-gray-100 dark:border-white/5">
                 <div className="flex items-center gap-4">

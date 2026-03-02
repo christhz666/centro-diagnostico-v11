@@ -31,6 +31,7 @@ const TIPO_COLORES = {
   coagulacion: '#9b59b6',
   inmunologia: '#1abc9c',
   microbiologia: '#e67e22',
+  imagenologia: '#2563eb',
   otro: '#95a5a6'
 };
 
@@ -50,6 +51,11 @@ const AdminEquipos = () => {
     protocolo: 'ASTM', estado: 'activo',
     configuracion: { ip: '', puertoTcp: '', puerto: '', baudRate: 9600, rutaArchivos: '' }
   });
+  const [risConfig, setRisConfig] = useState({
+    risIn: { ip: '', puerto: '', habilitado: false, nombre: 'RIS-IN' },
+    pacs: { ip: '', puerto: '', aeTitle: '', habilitado: false, nombre: 'PACS' }
+  });
+  const [guardandoRis, setGuardandoRis] = useState(false);
 
   const token = localStorage.getItem('token');
   const headers = { Authorization: `Bearer ${token}` };
@@ -84,7 +90,26 @@ const AdminEquipos = () => {
     } catch { /* No critical */ }
   }, []);
 
-  useEffect(() => { cargarEquipos(); cargarResultadosRecientes(); }, [cargarEquipos, cargarResultadosRecientes]);
+  useEffect(() => { cargarEquipos(); cargarResultadosRecientes(); cargarRisConfig(); }, [cargarEquipos, cargarResultadosRecientes]);
+
+  const cargarRisConfig = async () => {
+    try {
+      const resp = await axios.get('/api/configuracion/', { headers });
+      const cfg = resp.data?.configuracion || resp.data || {};
+      if (cfg.ris_config) {
+        try { setRisConfig(JSON.parse(cfg.ris_config)); } catch { }
+      }
+    } catch { /* No critical */ }
+  };
+
+  const guardarRisConfig = async () => {
+    setGuardandoRis(true);
+    try {
+      await axios.put('/api/configuracion/', { ris_config: JSON.stringify(risConfig) }, { headers });
+      alert('Configuración RIS/PACS guardada correctamente');
+    } catch (err) { alert('Error: ' + (err.response?.data?.message || err.message)); }
+    finally { setGuardandoRis(false); }
+  };
 
   // Polling cada 15 segundos para actualizar estados
   useEffect(() => {
@@ -327,6 +352,77 @@ const AdminEquipos = () => {
           </div>
         </div>
       )}
+
+      {/* ── Configuración RIS / Worklist / PACS ──────────────── */}
+      <div style={{ background: 'white', borderRadius: 16, padding: '24px 28px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', border: '1px solid #f0f0f0', marginBottom: 28 }}>
+        <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 700, color: '#1b262c', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <FaBroadcastTower style={{ color: '#e67e22' }} /> Configuración RIS / Worklist / PACS
+        </h3>
+        <p style={{ margin: '0 0 20px', fontSize: 13, color: '#888' }}>Configure la conexión para enviar worklists a equipos de rayos X y recibir imágenes DICOM.</p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
+          {/* RIS-IN Module */}
+          <div style={{ background: '#fef9f0', borderRadius: 14, padding: 20, border: '1.5px solid #f5e6c8' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <h4 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#d35400', display: 'flex', alignItems: 'center', gap: 8 }}><FaNetworkWired /> RIS-IN (Worklist)</h4>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12 }}>
+                <input type="checkbox" checked={risConfig.risIn.habilitado} onChange={e => setRisConfig({ ...risConfig, risIn: { ...risConfig.risIn, habilitado: e.target.checked } })} />
+                Habilitado
+              </label>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 10 }}>
+              <div>
+                <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 3 }}>Dirección IP</label>
+                <input value={risConfig.risIn.ip} placeholder="192.168.1.50" onChange={e => setRisConfig({ ...risConfig, risIn: { ...risConfig.risIn, ip: e.target.value } })}
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 13, boxSizing: 'border-box' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 3 }}>Puerto</label>
+                <input type="number" value={risConfig.risIn.puerto} placeholder="104" onChange={e => setRisConfig({ ...risConfig, risIn: { ...risConfig.risIn, puerto: e.target.value } })}
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 13, boxSizing: 'border-box' }} />
+              </div>
+            </div>
+            <p style={{ margin: '10px 0 0', fontSize: 11, color: '#999' }}>Módulo que envía la worklist al equipo de Rayos X vía DICOM MWL.</p>
+          </div>
+
+          {/* PACS Module */}
+          <div style={{ background: '#f0f4ff', borderRadius: 14, padding: 20, border: '1.5px solid #c8d8f5' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <h4 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#2563eb', display: 'flex', alignItems: 'center', gap: 8 }}><FaDatabase /> PACS (Imágenes)</h4>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 12 }}>
+                <input type="checkbox" checked={risConfig.pacs.habilitado} onChange={e => setRisConfig({ ...risConfig, pacs: { ...risConfig.pacs, habilitado: e.target.checked } })} />
+                Habilitado
+              </label>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 10, marginBottom: 10 }}>
+              <div>
+                <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 3 }}>Dirección IP</label>
+                <input value={risConfig.pacs.ip} placeholder="192.168.1.100" onChange={e => setRisConfig({ ...risConfig, pacs: { ...risConfig.pacs, ip: e.target.value } })}
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 13, boxSizing: 'border-box' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 3 }}>Puerto</label>
+                <input type="number" value={risConfig.pacs.puerto} placeholder="4242" onChange={e => setRisConfig({ ...risConfig, pacs: { ...risConfig.pacs, puerto: e.target.value } })}
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 13, boxSizing: 'border-box' }} />
+              </div>
+            </div>
+            <div>
+              <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 3 }}>AE Title</label>
+              <input value={risConfig.pacs.aeTitle} placeholder="ORTHANC" onChange={e => setRisConfig({ ...risConfig, pacs: { ...risConfig.pacs, aeTitle: e.target.value } })}
+                style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 13, boxSizing: 'border-box' }} />
+            </div>
+            <p style={{ margin: '10px 0 0', fontSize: 11, color: '#999' }}>Servidor PACS que almacena y distribuye las imágenes DICOM.</p>
+          </div>
+        </div>
+
+        <button onClick={guardarRisConfig} disabled={guardandoRis} style={{
+          marginTop: 20, padding: '12px 24px', background: 'linear-gradient(135deg,#e67e22,#f39c12)', color: 'white',
+          border: 'none', borderRadius: 10, cursor: 'pointer', fontSize: 14, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8
+        }}>
+          {guardandoRis ? <FaSync style={{ animation: 'spin 0.5s linear infinite' }} /> : <FaCheckCircle />}
+          {guardandoRis ? 'Guardando...' : 'Guardar Configuración RIS/PACS'}
+        </button>
+      </div>
 
       {/* ── Modal Crear/Editar ─────────────────────────────────── */}
       {showForm && (
