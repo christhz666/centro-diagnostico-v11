@@ -30,7 +30,9 @@ const loadOrthancConfig = async () => {
         // Silently use env defaults
     }
 };
-loadOrthancConfig();
+
+// Ensure config is loaded before first use
+const configReady = loadOrthancConfig();
 
 // Generar header de autorización
 const getAuthHeader = () => {
@@ -43,6 +45,7 @@ const getAuthHeader = () => {
  */
 exports.enviarPacienteARayosX = async (paciente, factura, cita, itemsFactura) => {
     try {
+        await configReady; // Ensure DB config is loaded
         if (!paciente || !factura) return;
 
         // Comprobar si hay estudios de Rayos X o Imagenología
@@ -51,9 +54,10 @@ exports.enviarPacienteARayosX = async (paciente, factura, cita, itemsFactura) =>
             if (!item.estudio) return false;
             const cat = (item.estudio.categoria || '').toLowerCase();
             const nombre = (item.estudio.nombre || '').toLowerCase();
-            return categoriasImagen.some(c => cat.toLowerCase() === c.toLowerCase()) ||
+            const matchCategoria = categoriasImagen.some(c => cat === c.toLowerCase());
+            return matchCategoria ||
                 cat.includes('imagen') || cat.includes('rayo') || cat.includes('radio') ||
-                nombre.includes('rayo') || nombre.includes('radiograf') || nombre.includes('rx ') ||
+                nombre.includes('rayo') || nombre.includes('radiograf') || /\brx\b/.test(nombre) ||
                 nombre.includes('sonograf') || nombre.includes('tomograf') || nombre.includes('mamograf');
         });
 

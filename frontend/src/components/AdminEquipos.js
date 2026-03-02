@@ -54,7 +54,7 @@ const AdminEquipos = () => {
   const [risConfig, setRisConfig] = useState({
     risIn: { ip: '', puerto: '', habilitado: false, nombre: 'RIS-IN' },
     pacs: { ip: '', puerto: '', aeTitle: '', habilitado: false, nombre: 'PACS' },
-    orthanc: { ip: '', puerto: '8042', usuario: 'admin', password: 'admin', aeTitle: 'CS7_KONICA', habilitado: false, nombre: 'Orthanc' }
+    orthanc: { ip: '', puerto: '8042', usuario: '', password: '', aeTitle: '', habilitado: false, nombre: 'Orthanc' }
   });
   const [guardandoRis, setGuardandoRis] = useState(false);
 

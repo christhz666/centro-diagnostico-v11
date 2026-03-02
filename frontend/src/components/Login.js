@@ -57,6 +57,7 @@ function StarfieldCanvas() {
 }
 
 const Login = ({ onLogin, empresaConfig = {} }) => {
+    const empresaNombre = empresaConfig.nombre || empresaConfig.empresa_nombre || 'MedicCore';
     const [credentials, setCredentials] = useState(() => {
         const savedEmail = localStorage.getItem('rememberedEmail') || '';
         return { email: savedEmail, password: '' };
@@ -115,7 +116,7 @@ const Login = ({ onLogin, empresaConfig = {} }) => {
                                 <span className="material-icons-round text-background-dark text-3xl">science</span>
                             </div>
                         )}
-                        <h1 className="text-3xl font-display font-bold text-white tracking-tight">{empresaConfig.nombre || empresaConfig.empresa_nombre || 'MedicCore'}</h1>
+                        <h1 className="text-3xl font-display font-bold text-white tracking-tight">{empresaNombre}</h1>
                         <p className="text-gray-400 text-sm mt-2 font-medium uppercase tracking-widest">Diagnóstico Inteligente</p>
                     </div>
 
@@ -188,7 +189,7 @@ const Login = ({ onLogin, empresaConfig = {} }) => {
                     </form>
 
                     <p className="mt-8 text-center text-xs text-gray-500 font-medium">
-                        &copy; 2026 {empresaConfig.nombre || empresaConfig.empresa_nombre || 'MedicCore'}. <br />
+                        &copy; 2026 {empresaNombre}. <br />
                         Secure Transit SSL/TLS 1.3
                     </p>
                 </div>

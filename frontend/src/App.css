@@ -811,7 +811,10 @@ html.dark div[style*="background:#fff"] {
   border-color: rgba(255,255,255,0.08) !important;
 }
 
-html.dark div[style*="background: '#f"] {
+html.dark div[style*="background: '#f0f4f8'"],
+html.dark div[style*="background: '#f8f9ff'"],
+html.dark div[style*="background: '#fafbfd'"],
+html.dark div[style*="background: '#f8f9fa'"] {
   background: rgba(255,255,255,0.03) !important;
 }
 
