@@ -56,7 +56,7 @@ function StarfieldCanvas() {
     return <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }} />;
 }
 
-const Login = ({ onLogin }) => {
+const Login = ({ onLogin, empresaConfig = {} }) => {
     const [credentials, setCredentials] = useState(() => {
         const savedEmail = localStorage.getItem('rememberedEmail') || '';
         return { email: savedEmail, password: '' };
@@ -108,10 +108,14 @@ const Login = ({ onLogin }) => {
             <div className="relative z-10 w-full max-w-md p-8">
                 <div style={{ background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }} className="border border-white/10 rounded-[32px] p-8 shadow-2xl glow-border">
                     <div className="flex flex-col items-center mb-8">
-                        <div className="h-16 w-16 bg-primary rounded-2xl flex items-center justify-center shadow-neon mb-6">
-                            <span className="material-icons-round text-background-dark text-3xl">science</span>
-                        </div>
-                        <h1 className="text-3xl font-display font-bold text-white tracking-tight">MedicCore</h1>
+                        {empresaConfig.logo_login ? (
+                            <img src={empresaConfig.logo_login} alt="Logo" className="max-h-20 max-w-[240px] object-contain mb-6" />
+                        ) : (
+                            <div className="h-16 w-16 bg-primary rounded-2xl flex items-center justify-center shadow-neon mb-6">
+                                <span className="material-icons-round text-background-dark text-3xl">science</span>
+                            </div>
+                        )}
+                        <h1 className="text-3xl font-display font-bold text-white tracking-tight">{empresaConfig.nombre || empresaConfig.empresa_nombre || 'MedicCore'}</h1>
                         <p className="text-gray-400 text-sm mt-2 font-medium uppercase tracking-widest">Diagnóstico Inteligente</p>
                     </div>
 
@@ -184,7 +188,7 @@ const Login = ({ onLogin }) => {
                     </form>
 
                     <p className="mt-8 text-center text-xs text-gray-500 font-medium">
-                        &copy; 2026 MedicCore Systems. <br />
+                        &copy; 2026 {empresaConfig.nombre || empresaConfig.empresa_nombre || 'MedicCore'}. <br />
                         Secure Transit SSL/TLS 1.3
                     </p>
                 </div>
