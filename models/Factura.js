@@ -156,17 +156,18 @@ facturaSchema.pre('validate', async function (next) {
         }
 
         // Generar credenciales del paciente para ver resultados
+        // SIEMPRE se regeneran para garantizar formato limpio (nombre/apellido sin números)
         // Usuario = nombre del paciente (solo letras, minúsculas)
         // Clave = apellido del paciente (solo letras, minúsculas)
-        if (!this.pacienteUsername && this.paciente) {
+        if (this.paciente) {
             const Paciente = mongoose.model('Paciente');
             const pac = await Paciente.findById(this.paciente);
             if (pac) {
-                // Username: SOLO el nombre del paciente, sin números
+                // Username: SOLO el nombre del paciente, sin números ni caracteres especiales
                 const nombre = (pac.nombre || '').trim().toLowerCase().replace(/[^a-z]/g, '');
                 this.pacienteUsername = nombre || 'paciente';
 
-                // Password: SOLO el apellido del paciente, sin números
+                // Password: SOLO el apellido del paciente, sin números ni caracteres especiales
                 const apellido = (pac.apellido || '').trim().toLowerCase().replace(/[^a-z]/g, '');
                 const rawPassword = apellido || 'paciente';
 
