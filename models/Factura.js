@@ -156,27 +156,23 @@ facturaSchema.pre('validate', async function (next) {
         }
 
         // Generar credenciales del paciente para ver resultados
-        // SIEMPRE se regeneran para garantizar formato limpio (nombre/apellido sin números)
+        // SOLO para facturas NUEVAS — no regenerar en updates
         // Usuario = nombre del paciente (solo letras, minúsculas)
         // Clave = apellido del paciente (solo letras, minúsculas)
-        if (this.paciente) {
+        if (this.isNew && this.paciente) {
             const Paciente = mongoose.model('Paciente');
             const pac = await Paciente.findById(this.paciente);
             if (pac) {
-                // Username: SOLO el nombre del paciente, sin números ni caracteres especiales
-                const nombre = (pac.nombre || '').trim().toLowerCase().replace(/[^a-z]/g, '');
+                // Username: SOLO el nombre del paciente
+                const nombre = (pac.nombre || '').trim().toLowerCase().replace(/[^a-záéíóúñü]/g, '');
                 this.pacienteUsername = nombre || 'paciente';
 
-                // Password: SOLO el apellido del paciente, sin números ni caracteres especiales
-                const apellido = (pac.apellido || '').trim().toLowerCase().replace(/[^a-z]/g, '');
-                const rawPassword = apellido || 'paciente';
+                // Password: SOLO el apellido del paciente (guardado en texto plano)
+                const apellido = (pac.apellido || '').trim().toLowerCase().replace(/[^a-záéíóúñü]/g, '');
+                this.pacientePassword = apellido || 'paciente';
 
-                // Guardar texto plano para impresión ANTES de hashear
-                this._plainPassword = rawPassword;
-
-                // Hashear la contraseña para la base de datos
-                const salt = await bcrypt.genSalt(10);
-                this.pacientePassword = await bcrypt.hash(rawPassword, salt);
+                // Guardar texto plano para impresión
+                this._plainPassword = this.pacientePassword;
             }
         }
     } catch (e) {
@@ -186,9 +182,18 @@ facturaSchema.pre('validate', async function (next) {
 });
 
 // Método para comparar la contraseña del paciente
+// Soporta tanto texto plano (nuevo) como bcrypt hasheado (viejo)
 facturaSchema.methods.comparePassword = async function (candidatePassword) {
     if (!this.pacientePassword) return false;
-    return bcrypt.compare(candidatePassword, this.pacientePassword);
+    const candidate = (candidatePassword || '').trim().toLowerCase().replace(/[^a-záéíóúñü0-9]/g, '');
+
+    // Si el password guardado NO empieza con $2 (no es bcrypt hash), comparar directamente
+    if (!this.pacientePassword.startsWith('$2')) {
+        return candidate === this.pacientePassword;
+    }
+
+    // Si es un hash bcrypt (formato viejo), usar bcrypt.compare
+    return bcrypt.compare(candidate, this.pacientePassword);
 };
 
 facturaSchema.index({ numero: 1, sucursal: 1 }, { unique: true });

@@ -497,18 +497,17 @@ exports.accesoPaciente = async (req, res, next) => {
             });
         }
 
-        // Normalizar input
-        const userNorm = username.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-        const passNorm = password.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+        // Normalizar input (permitir tildes y ñ como en el modelo)
+        const userNorm = username.trim().toLowerCase().replace(/[^a-záéíóúñü0-9]/g, '');
+        const passNorm = password.trim().toLowerCase().replace(/[^a-záéíóúñü0-9]/g, '');
 
-        // 1) Buscar factura por pacienteUsername exacto (funciona con formato viejo y nuevo)
+        // 1) Buscar factura por pacienteUsername exacto
         let factura = await Factura.findOne({
             pacienteUsername: userNorm
         }).populate('paciente', 'nombre apellido cedula fechaNacimiento sexo').sort('-createdAt');
 
         // 2) Si no se encontró, buscar por nombre del paciente directamente
         if (!factura) {
-            // Buscar pacientes cuyo nombre coincida
             const pacientes = await Paciente.find({
                 nombre: { $regex: new RegExp('^' + userNorm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') }
             }).select('_id');
@@ -517,6 +516,20 @@ exports.accesoPaciente = async (req, res, next) => {
                 const pacienteIds = pacientes.map(p => p._id);
                 factura = await Factura.findOne({
                     paciente: { $in: pacienteIds },
+                    pacientePassword: { $exists: true, $ne: null }
+                }).populate('paciente', 'nombre apellido cedula fechaNacimiento sexo').sort('-createdAt');
+            }
+        }
+
+        // 3) Si aún no se encontró, buscar por cédula del paciente
+        if (!factura) {
+            const pacByCedula = await Paciente.findOne({
+                cedula: { $regex: new RegExp(username.trim().replace(/[^0-9]/g, ''), 'i') }
+            }).select('_id');
+
+            if (pacByCedula) {
+                factura = await Factura.findOne({
+                    paciente: pacByCedula._id,
                     pacientePassword: { $exists: true, $ne: null }
                 }).populate('paciente', 'nombre apellido cedula fechaNacimiento sexo').sort('-createdAt');
             }

@@ -295,7 +295,7 @@ function App() {
 
                 <main className={`flex-1 overflow-y-auto p-4 lg:p-8 relative transition-all duration-300
                   ${!isMobile && sidebarOpen ? 'ml-64' : (!isMobile ? 'ml-20' : 'ml-0')}
-                `} style={{ paddingBottom: isMobile ? '72px' : undefined }}>
+                `}>
                   <div className="fixed top-20 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl pointer-events-none -z-10"></div>
                   <Routes>
                     <Route path="/" element={<Dashboard />} />
@@ -319,17 +319,6 @@ function App() {
                   </Routes>
                 </main>
               </div>
-
-
-              {/* ── MOBILE BOTTOM NAV BAR ─────────────────── */}
-              {isMobile && (
-                <MobileBottomNav
-                  filteredMenu={filteredMenu}
-                  darkMode={darkMode}
-                  onMore={() => setSidebarOpen(true)}
-                  sidebarOpen={sidebarOpen}
-                />
-              )}
             </>
           )}
           <div className="fixed bottom-2 right-4 text-[10px] font-mono text-slate-400 pointer-events-none opacity-50 z-[60]">
@@ -341,63 +330,6 @@ function App() {
   );
 }
 
-/* ── Barra de navegación inferior para móvil ────────────── */
-function MobileBottomNav({ filteredMenu, darkMode, onMore, sidebarOpen }) {
-  const loc = useLocation();
-  const navItems = [
-    { path: '/', icon: 'dashboard', label: 'Inicio' },
-    { path: '/consulta', icon: 'search', label: 'Consulta' },
-    { path: '/registro', icon: 'person_add', label: 'Registro' },
-    { path: '/facturas', icon: 'receipt_long', label: 'Facturas' },
-  ].filter(i => filteredMenu.some(m => m.path === i.path));
-
-  const bg = darkMode ? '#0f172a' : '#ffffff';
-  const border = darkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e2e8f0';
-  const inactiveColor = darkMode ? '#64748b' : '#94a3b8';
-
-  return (
-    <nav style={{
-      position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
-      background: bg, borderTop: border,
-      display: 'flex', alignItems: 'stretch',
-      height: 64,
-      boxShadow: '0 -4px 20px rgba(0,0,0,0.08)',
-      paddingBottom: 'env(safe-area-inset-bottom, 0px)'
-    }}>
-      {navItems.map(item => {
-        const isActive = item.path === '/'
-          ? loc.pathname === '/'
-          : loc.pathname.startsWith(item.path);
-        const color = isActive ? '#2563eb' : inactiveColor;
-        return (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            end={item.path === '/'}
-            style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, textDecoration: 'none' }}
-          >
-            <span className="material-icons-round" style={{ fontSize: 22, color, transition: 'color 0.2s' }}>
-              {item.icon}
-            </span>
-            <span style={{ fontSize: 10, fontWeight: isActive ? 700 : 500, color, transition: 'color 0.2s', lineHeight: 1 }}>
-              {item.label}
-            </span>
-            {isActive && (
-              <span style={{ position: 'absolute', bottom: 0, width: 24, height: 3, background: '#2563eb', borderRadius: 2 }} />
-            )}
-          </NavLink>
-        );
-      })}
-      <button
-        onClick={onMore}
-        style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, background: 'none', border: 'none', cursor: 'pointer', color: sidebarOpen ? '#2563eb' : inactiveColor }}
-      >
-        <span className="material-icons-round" style={{ fontSize: 22, color: sidebarOpen ? '#2563eb' : inactiveColor }}>apps</span>
-        <span style={{ fontSize: 10, fontWeight: 500, color: sidebarOpen ? '#2563eb' : inactiveColor, lineHeight: 1 }}>Más</span>
-      </button>
-    </nav>
-  );
-}
 
 /* ── Título de la página actual ─────────────────────────── */
 function PageTitle() {
