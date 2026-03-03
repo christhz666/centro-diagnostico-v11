@@ -287,7 +287,7 @@ const FacturaTermica = ({ factura, paciente, estudios, onClose }) => {
             {factura?.pacienteUsername && (
               <div style={{ marginTop: '6px', background: '#f0f8ff', borderRadius: 5, padding: '5px', fontSize: '10px' }}>
                 <div style={{ color: '#555' }}>
-                  <strong>Usuario:</strong> {factura.pacienteUsername}
+                  <strong>Usuario:</strong> {(factura.pacienteUsername || '').replace(/\d+$/g, '')}
                 </div>
                 <div style={{ color: '#555' }}>
                   <strong>Clave:</strong> {factura._plainPassword || '(ver en pantalla)'}
