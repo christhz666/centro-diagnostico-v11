@@ -156,18 +156,19 @@ facturaSchema.pre('validate', async function (next) {
         }
 
         // Generar credenciales del paciente para ver resultados
+        // Usuario = nombre del paciente (solo letras, minúsculas)
+        // Clave = apellido del paciente (solo letras, minúsculas)
         if (!this.pacienteUsername && this.paciente) {
             const Paciente = mongoose.model('Paciente');
             const pac = await Paciente.findById(this.paciente);
             if (pac) {
-                // Username: nombre del paciente + secuencia de factura para unicidad
-                const nombre = (pac.nombre || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-                const seq = this.numero ? this.numero.replace(/[^0-9]/g, '').slice(-4) : String(Date.now()).slice(-4);
-                this.pacienteUsername = (nombre || 'paciente') + seq;
+                // Username: SOLO el nombre del paciente, sin números
+                const nombre = (pac.nombre || '').trim().toLowerCase().replace(/[^a-z]/g, '');
+                this.pacienteUsername = nombre || 'paciente';
 
-                // Password: apellido del paciente (sin espacios, minúsculas)
-                const apellido = (pac.apellido || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-                const rawPassword = apellido || String(Date.now()).slice(-6);
+                // Password: SOLO el apellido del paciente, sin números
+                const apellido = (pac.apellido || '').trim().toLowerCase().replace(/[^a-z]/g, '');
+                const rawPassword = apellido || 'paciente';
 
                 // Guardar texto plano para impresión ANTES de hashear
                 this._plainPassword = rawPassword;

@@ -485,6 +485,7 @@ exports.getResultadosPorQR = async (req, res, next) => {
 
 // @desc    Acceso del paciente con usuario y contraseña (desde factura)
 // @route   POST /api/resultados/acceso-paciente
+// Usuario = nombre del paciente (minúsculas), Clave = apellido (minúsculas)
 exports.accesoPaciente = async (req, res, next) => {
     try {
         const { username, password } = req.body;
@@ -496,10 +497,30 @@ exports.accesoPaciente = async (req, res, next) => {
             });
         }
 
-        // Buscar factura por username
-        const factura = await Factura.findOne({
-            pacienteUsername: username
+        // Normalizar input
+        const userNorm = username.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+        const passNorm = password.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+
+        // 1) Buscar factura por pacienteUsername exacto (funciona con formato viejo y nuevo)
+        let factura = await Factura.findOne({
+            pacienteUsername: userNorm
         }).populate('paciente', 'nombre apellido cedula fechaNacimiento sexo').sort('-createdAt');
+
+        // 2) Si no se encontró, buscar por nombre del paciente directamente
+        if (!factura) {
+            // Buscar pacientes cuyo nombre coincida
+            const pacientes = await Paciente.find({
+                nombre: { $regex: new RegExp('^' + userNorm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') }
+            }).select('_id');
+
+            if (pacientes.length > 0) {
+                const pacienteIds = pacientes.map(p => p._id);
+                factura = await Factura.findOne({
+                    paciente: { $in: pacienteIds },
+                    pacientePassword: { $exists: true, $ne: null }
+                }).populate('paciente', 'nombre apellido cedula fechaNacimiento sexo').sort('-createdAt');
+            }
+        }
 
         if (!factura) {
             return res.status(401).json({
@@ -509,7 +530,7 @@ exports.accesoPaciente = async (req, res, next) => {
         }
 
         // Comparar contraseña con bcrypt
-        const isMatch = await factura.comparePassword(password);
+        const isMatch = await factura.comparePassword(passNorm);
         if (!isMatch) {
             return res.status(401).json({
                 success: false,

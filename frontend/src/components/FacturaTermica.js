@@ -106,8 +106,9 @@ const FacturaTermica = ({ factura, paciente, estudios, onClose }) => {
   const nacionalidad = paciente?.nacionalidad || 'Dominicano';
   const nombreCompleto = `${getTexto(paciente?.nombre)} ${getTexto(paciente?.apellido)}`.trim() || paciente?.nombre_completo || 'N/A';
 
-  // Derive plain password from paciente.apellido (must stay in sync with Factura model pre-validate hook)
-  const derivedPassword = factura._plainPassword || ((paciente?.apellido || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '') || null);
+  // Derive credentials matching the Factura model (nombre = usuario, apellido = clave)
+  const derivedUsername = factura.pacienteUsername || (paciente?.nombre || '').trim().toLowerCase().replace(/[^a-z]/g, '') || 'paciente';
+  const derivedPassword = factura._plainPassword || (paciente?.apellido || '').trim().toLowerCase().replace(/[^a-z]/g, '') || 'paciente';
 
   return (
     <div style={{ padding: '8px', width: '302px', maxWidth: '302px', minWidth: '302px', margin: '0 auto', fontFamily: 'Arial,monospace', fontSize: '12px', boxSizing: 'border-box' }}>
@@ -287,13 +288,13 @@ const FacturaTermica = ({ factura, paciente, estudios, onClose }) => {
             <p style={{ margin: '6px 0 0', fontSize: '9px', color: '#000' }}>
               Escanee con su celular para ver sus resultados
             </p>
-            {factura?.pacienteUsername && (
-              <div style={{ marginTop: '6px', background: '#eeeeee', borderRadius: 5, padding: '5px', fontSize: '10px' }}>
-                <div style={{ color: '#000' }}>
-                  <strong>Usuario:</strong> {factura.pacienteUsername}
+            {derivedUsername && (
+              <div style={{ marginTop: '6px', background: '#eeeeee', borderRadius: 5, padding: '8px', fontSize: '11px' }}>
+                <div style={{ color: '#000', marginBottom: 3 }}>
+                  <strong>Usuario:</strong> {derivedUsername}
                 </div>
                 <div style={{ color: '#000' }}>
-                  <strong>Clave:</strong> {derivedPassword || '(consulte en recepción)'}
+                  <strong>Clave:</strong> {derivedPassword}
                 </div>
               </div>
             )}
