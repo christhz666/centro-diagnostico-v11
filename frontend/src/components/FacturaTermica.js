@@ -116,9 +116,9 @@ const FacturaTermica = ({ factura, paciente, estudios, onClose }) => {
           @media print {
             @page { size: 80mm auto; margin: 0; }
             body * { visibility: hidden; }
-            .factura-termica, .factura-termica * { visibility: visible; }
+            .factura-termica, .factura-termica * { visibility: visible; color: #000 !important; background: transparent !important; border-color: #000 !important; }
             .factura-termica {
-              position: fixed;
+              position: absolute;
               top: 0; left: 0;
               width: 80mm;
               max-width: 80mm;

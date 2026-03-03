@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   FaPalette, FaSave, FaSpinner, FaBuilding, FaImage,
-  FaUpload, FaCheck, FaEye, FaTrash, FaCogs
+  FaUpload, FaCheck, FaEye, FaTrash, FaCogs, FaXRay
 } from 'react-icons/fa';
+import { MdOutlineRadiology } from 'react-icons/md';
 import api from '../services/api';
 import AdminSucursales from './AdminSucursales';
 
@@ -155,7 +156,9 @@ const AdminPanel = () => {
     logo_factura: '',
     logo_resultados: '',
     logo_sidebar: '',
+    sucursal_rayos_x_id: '',
   });
+  const [sucursales, setSucursales] = useState([]);
   const [loading, setLoading] = useState(true);
   const [guardando, setGuardando] = useState(false);
   const [guardado, setGuardado] = useState(false);
@@ -170,7 +173,15 @@ const AdminPanel = () => {
       } catch (e) { console.error(e); }
       finally { setLoading(false); }
     };
+    const cargarSucursales = async () => {
+      try {
+        const resp = await api.request('/sucursales');
+        const data = Array.isArray(resp) ? resp : (resp?.data || resp?.sucursales || []);
+        setSucursales(data);
+      } catch (e) { console.error('Error cargando sucursales:', e); }
+    };
     cargar();
+    cargarSucursales();
   }, []);
 
   const set = (key, val) => setConfig(prev => ({ ...prev, [key]: val }));
@@ -214,20 +225,18 @@ const AdminPanel = () => {
       <div className="flex gap-2.5 mb-5 border-b-2 border-gray-200 dark:border-gray-700">
         <button
           onClick={() => setActiveTab('general')}
-          className={`px-5 py-2.5 border-none rounded-t-lg cursor-pointer font-bold flex items-center gap-2 transition-colors ${
-            activeTab === 'general'
+          className={`px-5 py-2.5 border-none rounded-t-lg cursor-pointer font-bold flex items-center gap-2 transition-colors ${activeTab === 'general'
               ? 'bg-blue-500 text-white'
               : 'bg-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-          }`}>
+            }`}>
           <FaCogs /> Configuración General
         </button>
         <button
           onClick={() => setActiveTab('sucursales')}
-          className={`px-5 py-2.5 border-none rounded-t-lg cursor-pointer font-bold flex items-center gap-2 transition-colors ${
-            activeTab === 'sucursales'
+          className={`px-5 py-2.5 border-none rounded-t-lg cursor-pointer font-bold flex items-center gap-2 transition-colors ${activeTab === 'sucursales'
               ? 'bg-blue-500 text-white'
               : 'bg-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-          }`}>
+            }`}>
           <FaBuilding /> Gestión de Sucursales
         </button>
       </div>
@@ -307,6 +316,34 @@ const AdminPanel = () => {
                   <div style={{ marginTop: 8, height: 8, borderRadius: 4, background: config[key] || defecto }} />
                 </div>
               ))}
+            </div>
+          </Seccion>
+
+          {/* ── Sucursal de Rayos X ── */}
+          <Seccion titulo="Sucursal de Rayos X" icono={<span style={{ fontSize: 18 }}>🩻</span>}>
+            <p className="text-gray-500 dark:text-gray-400" style={{ margin: '0 0 14px', fontSize: 13 }}>
+              Cuando un paciente se registra con un estudio de Rayos X, se asignará automáticamente a esta sucursal para el procesamiento.
+              Ambas sucursales pueden ver e imprimir los resultados.
+            </p>
+            <div style={{ marginBottom: 16 }}>
+              <label className="block font-semibold text-gray-700 dark:text-gray-300 mb-1 text-sm">Sucursal de Rayos X</label>
+              <select
+                value={config.sucursal_rayos_x_id || ''}
+                onChange={e => set('sucursal_rayos_x_id', e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:border-blue-500 dark:focus:border-blue-400 outline-none transition-colors"
+              >
+                <option value="">-- Sin asignar (usar sucursal actual) --</option>
+                {sucursales.map(s => (
+                  <option key={s._id || s.id} value={s._id || s.id}>
+                    {s.nombre || s.name} {s.tipo ? `(${s.tipo})` : ''}
+                  </option>
+                ))}
+              </select>
+              {sucursales.length === 0 && (
+                <p className="text-gray-400 dark:text-gray-500" style={{ margin: '6px 0 0', fontSize: 12 }}>
+                  No se encontraron sucursales. Créelas en la pestaña "Gestión de Sucursales".
+                </p>
+              )}
             </div>
           </Seccion>
 

@@ -55,7 +55,7 @@ router.put('/', protect, authorize('admin'), async (req, res) => {
 // GET /api/configuracion/empresa - Public company info (no auth required)
 router.get('/empresa', async (req, res) => {
     try {
-        const claves = ['empresa_nombre', 'empresa_rnc', 'empresa_ruc', 'empresa_telefono', 'empresa_direccion', 'empresa_email', 'logo_login', 'logo_factura', 'logo_resultados', 'logo_sidebar', 'color_primario', 'color_secundario', 'color_acento'];
+        const claves = ['empresa_nombre', 'empresa_rnc', 'empresa_ruc', 'empresa_telefono', 'empresa_direccion', 'empresa_email', 'logo_login', 'logo_factura', 'logo_resultados', 'logo_sidebar', 'color_primario', 'color_secundario', 'color_acento', 'sucursal_rayos_x_id'];
         const configs = await Configuracion.find({ clave: { $in: claves } });
 
         const info = {};

@@ -351,6 +351,9 @@ exports.marcarImpreso = async (req, res, next) => {
 
 // @desc    Verificar estado de pago antes de imprimir
 // @route   GET /api/resultados/:id/verificar-pago
+// LÓGICA: La deuda está asociada a la FACTURA específica de este resultado,
+// NO a todas las facturas del paciente. Si el paciente tiene 3 facturas y debe 1,
+// solo se bloquea esa factura, no las otras.
 exports.verificarPago = async (req, res, next) => {
     try {
         // Obtener el resultado con la cita y paciente poblados
@@ -365,38 +368,60 @@ exports.verificarPago = async (req, res, next) => {
             });
         }
 
-        // Buscar facturas asociadas al paciente que estén pendientes de pago
-        const facturasPendientes = await Factura.find({
-            paciente: resultado.paciente._id,
-            $or: [
-                { pagado: false },
-                { estado: { $in: ESTADOS_PAGO_PENDIENTE } }
-            ]
-        }).select('numero total montoPagado estado');
+        // Buscar la factura asociada a ESTE resultado específico:
+        // 1. Por resultado.factura (campo directo)
+        // 2. Por la cita del resultado (si tiene cita)
+        let facturaAsociada = null;
 
-        // Calcular el total pendiente
-        let montoPendiente = 0;
-        facturasPendientes.forEach(factura => {
-            const pendiente = factura.total - (factura.montoPagado || 0);
-            if (pendiente > 0) {
-                montoPendiente += pendiente;
-            }
-        });
+        if (resultado.factura) {
+            facturaAsociada = await Factura.findById(resultado.factura)
+                .select('numero total montoPagado pagado estado');
+        }
 
-        const puedeImprimir = montoPendiente === 0;
+        if (!facturaAsociada && resultado.cita) {
+            // Buscar factura cuya cita coincide con la cita del resultado
+            const citaId = resultado.cita._id || resultado.cita;
+            facturaAsociada = await Factura.findOne({ cita: citaId })
+                .select('numero total montoPagado pagado estado');
+        }
+
+        // Si no hay factura asociada directamente, permite imprimir (sin restricción de pago)
+        if (!facturaAsociada) {
+            return res.json({
+                success: true,
+                puede_imprimir: true,
+                monto_pendiente: 0,
+                facturas_pendientes: [],
+                paciente: {
+                    nombre: resultado.paciente.nombre,
+                    apellido: resultado.paciente.apellido
+                }
+            });
+        }
+
+        // Calcular pendiente SOLO de esa factura
+        const montoPendiente = Math.max(
+            0,
+            (facturaAsociada.total || 0) - (facturaAsociada.montoPagado || 0)
+        );
+        const facturaPagada = facturaAsociada.pagado ||
+            facturaAsociada.estado === 'pagada' ||
+            montoPendiente === 0;
+
+        const puedeImprimir = facturaPagada;
 
         res.json({
             success: true,
             puede_imprimir: puedeImprimir,
             monto_pendiente: montoPendiente,
-            facturas_pendientes: facturasPendientes.map(f => ({
-                id: f._id,
-                numero: f.numero,
-                total: f.total,
-                pagado: f.montoPagado || 0,
-                pendiente: f.total - (f.montoPagado || 0),
-                estado: f.estado
-            })),
+            facturas_pendientes: !facturaPagada ? [{
+                id: facturaAsociada._id,
+                numero: facturaAsociada.numero,
+                total: facturaAsociada.total,
+                pagado: facturaAsociada.montoPagado || 0,
+                pendiente: montoPendiente,
+                estado: facturaAsociada.estado
+            }] : [],
             paciente: {
                 nombre: resultado.paciente.nombre,
                 apellido: resultado.paciente.apellido

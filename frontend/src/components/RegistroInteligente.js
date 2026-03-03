@@ -105,6 +105,25 @@ const RegistroInteligente = () => {
     try {
       setLoading(true);
       const ahora = new Date();
+
+      // ── Detectar si hay estudios de Rayos X ──────────────────────
+      const CATEGORIAS_RAYOS_X = ['radiologia', 'radiography', 'rayos_x', 'rayos x', 'rx', 'radio', 'imagen', 'imagenologia', 'radiology'];
+      const tieneRayosX = estudiosSeleccionados.some(e => {
+        const cat = (e.categoria || e.category || '').toLowerCase();
+        const nom = (e.nombre || e.name || '').toLowerCase();
+        return CATEGORIAS_RAYOS_X.some(k => cat.includes(k) || nom.includes('rx') || nom.includes('radio') || nom.includes('rayos'));
+      });
+
+      // Obtener sucursal de Rayos X configurada
+      let sucursalRayosXId = null;
+      if (tieneRayosX) {
+        try {
+          const cfgResp = await fetch('/api/configuracion/empresa');
+          const cfgData = await cfgResp.json();
+          sucursalRayosXId = cfgData?.sucursal_rayos_x_id || null;
+        } catch (_) { /* ignorar si falla */ }
+      }
+
       const citaData = {
         paciente: pacienteSeleccionado._id || pacienteSeleccionado.id,
         fecha: ahora.toISOString().split('T')[0],
@@ -115,7 +134,9 @@ const RegistroInteligente = () => {
         total: calcularTotal(),
         metodoPago: metodoPago,
         pagado: montoPagado >= calcularTotal(),
-        estado: 'completada'
+        estado: 'completada',
+        // Si hay estudios de Rayos X y hay sucursal configurada, asignar esa sucursal
+        ...(sucursalRayosXId ? { sucursalRayosX: sucursalRayosXId } : {})
       };
       const citaRes = await api.createCita(citaData);
       const cita = citaRes.orden || citaRes.data || citaRes;
@@ -128,7 +149,9 @@ const RegistroInteligente = () => {
         descuento: descuento, total: calcularTotal(),
         montoPagado: montoPagado, metodoPago,
         estado: montoPagado >= calcularTotal() ? 'pagada' : 'emitida',
-        datosCliente: { nombre: `${pacienteSeleccionado.nombre} ${pacienteSeleccionado.apellido}`, cedula: pacienteSeleccionado.cedula || '', telefono: pacienteSeleccionado.telefono || '' }
+        datosCliente: { nombre: `${pacienteSeleccionado.nombre} ${pacienteSeleccionado.apellido}`, cedula: pacienteSeleccionado.cedula || '', telefono: pacienteSeleccionado.telefono || '' },
+        // Propagar sucursal de Rayos X a la factura también
+        ...(sucursalRayosXId ? { sucursal: sucursalRayosXId } : {})
       };
       const factRes = await api.createFactura(facturaData);
       setFacturaGenerada({ ...factRes.data || factRes, montoPagado });
