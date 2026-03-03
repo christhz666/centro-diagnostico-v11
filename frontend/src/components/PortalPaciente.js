@@ -275,7 +275,7 @@ const PortalPaciente = () => {
               <FaUser style={{ fontSize: 22, color: C.white }} />
             </div>
             <div style={{ marginLeft: 20, flex: 1 }}>
-              <p style={{ margin: '0 0 4px', fontSize: 13, color: '#888' }}>Bienvenido/a</p>
+              <p style={{ margin: '0 0 4px', fontSize: 13, color: '#888' }}>Bienvenido(a)</p>
               <h3 style={{ margin: 0, color: C.mid, fontSize: 20 }}>
                 {datos.paciente?.nombre} {datos.paciente?.apellido}
               </h3>

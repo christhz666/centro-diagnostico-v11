@@ -106,7 +106,7 @@ const FacturaTermica = ({ factura, paciente, estudios, onClose }) => {
   const nacionalidad = paciente?.nacionalidad || 'Dominicano';
   const nombreCompleto = `${getTexto(paciente?.nombre)} ${getTexto(paciente?.apellido)}`.trim() || paciente?.nombre_completo || 'N/A';
 
-  // Derive plain password from paciente.apellido (same logic as Factura model pre-validate)
+  // Derive plain password from paciente.apellido (must stay in sync with Factura model pre-validate hook)
   const derivedPassword = factura._plainPassword || ((paciente?.apellido || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '') || null);
 
   return (
