@@ -18,8 +18,9 @@ router.get("/:codigo", async (req, res) => {
     const baseUrl = process.env.PUBLIC_API_URL || `${req.protocol}://${req.get('host')}`;
     const resultadosUrl = `${baseUrl}/api/resultados/qr/${factura.codigoQR}`;
 
+    // Redirect to patient portal frontend instead of API endpoint
     if (req.query.redirect === 'resultados') {
-      return res.redirect(resultadosUrl);
+      return res.redirect(`${baseUrl}/mis-resultados?qr=${factura.codigoQR}`);
     }
 
     res.json({
