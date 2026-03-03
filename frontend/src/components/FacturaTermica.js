@@ -107,8 +107,8 @@ const FacturaTermica = ({ factura, paciente, estudios, onClose }) => {
   const nombreCompleto = `${getTexto(paciente?.nombre)} ${getTexto(paciente?.apellido)}`.trim() || paciente?.nombre_completo || 'N/A';
 
   // Derive credentials matching the Factura model (nombre = usuario, apellido = clave)
-  const derivedUsername = factura.pacienteUsername || (paciente?.nombre || '').trim().toLowerCase().replace(/[^a-z]/g, '') || 'paciente';
-  const derivedPassword = factura._plainPassword || (paciente?.apellido || '').trim().toLowerCase().replace(/[^a-z]/g, '') || 'paciente';
+  const derivedUsername = factura.pacienteUsername || (paciente?.nombre || '').trim().toLowerCase().replace(/[^a-záéíóúñü]/g, '') || 'paciente';
+  const derivedPassword = factura._plainPassword || (paciente?.apellido || '').trim().toLowerCase().replace(/[^a-záéíóúñü]/g, '') || 'paciente';
 
   return (
     <div style={{ padding: '8px', width: '302px', maxWidth: '302px', minWidth: '302px', margin: '0 auto', fontFamily: 'Arial,monospace', fontSize: '12px', boxSizing: 'border-box' }}>
