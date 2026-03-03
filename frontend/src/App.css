@@ -1050,3 +1050,192 @@ html.dark span[style*="color: #1e293b"],
 html.dark span[style*="color: #0f172a"] {
   color: #cbd5e1 !important;
 }
+
+/* ══════════════════════════════════════════════════════════
+   RESPONSIVE MÓVIL — Media Queries
+   ══════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+
+  /* ── Layout general ──────────────────────────────────── */
+  body {
+    font-size: 14px;
+  }
+
+  /* Padding-bottom para dejar espacio a la barra inferior */
+  main,
+  .main-content {
+    padding-bottom: 80px !important;
+  }
+
+  /* Encabezados de páginas más pequeños */
+  h1 {
+    font-size: 1.4rem !important;
+  }
+
+  h2 {
+    font-size: 1.2rem !important;
+  }
+
+  h3 {
+    font-size: 1.05rem !important;
+  }
+
+  /* ── Tablas — scroll horizontal + texto compacto ─────── */
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    font-size: 12px;
+  }
+
+  th,
+  td {
+    padding: 8px 10px !important;
+    font-size: 12px !important;
+  }
+
+  /* En tablas de resultados, ocultar columnas secundarias */
+  .col-hide-mobile {
+    display: none !important;
+  }
+
+  /* ── Grids — 1 columna en móvil ─────────────────────── */
+  div[style*="grid-template-columns"],
+  div[style*="gridTemplateColumns"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Cards de stats / KPIs ────────────────────────────── */
+  .stats-grid,
+  div[class*="grid-cols-4"],
+  div[class*="grid-cols-3"],
+  div[class*="grid-cols-2"] {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* ── Formularios: campos full-width ─────────────────── */
+  input,
+  select,
+  textarea {
+    width: 100% !important;
+    min-height: 44px;
+    /* Touch target mínimo */
+    font-size: 16px !important;
+    /* Evita zoom en iOS */
+  }
+
+  /* ── Botones touch-friendly ─────────────────────────── */
+  button {
+    min-height: 40px;
+  }
+
+  /* ── Paneles/Cards con padding reducido ─────────────── */
+  div[style*="padding: 32px"],
+  div[style*="padding: 28px"],
+  div[style*="padding: 24px"] {
+    padding: 16px !important;
+  }
+
+  div[style*="padding: 20px"] {
+    padding: 14px !important;
+  }
+
+  /* ── Modales — pantalla completa en móvil ────────────── */
+  .modal-content {
+    width: 96vw !important;
+    max-width: 96vw !important;
+    margin: 16px auto !important;
+    padding: 16px !important;
+    max-height: 90vh !important;
+    overflow-y: auto;
+  }
+
+  /* ── Header — compacto ───────────────────────────────── */
+  header {
+    padding: 0 12px !important;
+  }
+
+  /* ── Dashboard padings ───────────────────────────────── */
+  .main-padding,
+  section[style*="padding"] {
+    padding: 12px !important;
+  }
+
+  /* ── Textos overflow en móvil ───────────────────────── */
+  p,
+  span,
+  div {
+    word-break: break-word;
+  }
+
+  /* ── Flex wrapping ───────────────────────────────────── */
+  div[style*="display: flex"][style*="gap"] {
+    flex-wrap: wrap;
+  }
+
+  /* ── Ocultar iconos decorativos grandes en mobile ───── */
+  .icon-decorative {
+    display: none !important;
+  }
+
+  /* ── Safe area para iOS (notch) ──────────────────────── */
+  nav[style*="bottom: 0"] {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    height: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  /* ── RegistroInteligente — steps en 1 col ───────────── */
+  div[style*="gridTemplateColumns: 'repeat(auto-fit"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Factura térmica — no mostrar en móvil normal ────── 
+     Solo se imprime/abre a través del botón de imprimir */
+  .factura-termica-preview {
+    transform: scale(0.85);
+    transform-origin: top center;
+  }
+}
+
+@media (max-width: 480px) {
+
+  /* Muy pequeño (iPhone SE, Galaxy A) */
+  h1 {
+    font-size: 1.2rem !important;
+  }
+
+  .stats-grid,
+  div[class*="grid-cols-4"],
+  div[class*="grid-cols-3"],
+  div[class*="grid-cols-2"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Ocultar textos secundarios en header */
+  .header-subtitle {
+    display: none !important;
+  }
+
+  td,
+  th {
+    font-size: 11px !important;
+    padding: 6px 8px !important;
+  }
+}
+
+/* ── Tablet landscape (768-1024px) ───────────────────────── */
+@media (min-width: 769px) and (max-width: 1024px) {
+
+  div[style*="grid-template-columns"],
+  div[style*="gridTemplateColumns"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .stats-grid,
+  div[class*="grid-cols-4"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}

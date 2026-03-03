@@ -28,8 +28,8 @@ function App() {
   const [user, setUser] = useState(null);
   const [, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 1024);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches));
   const [runTour, setRunTour] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
@@ -45,7 +45,7 @@ function App() {
         const nombre = data?.nombre || data?.empresa_nombre;
         if (nombre) document.title = nombre;
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   useEffect(() => {
@@ -61,10 +61,12 @@ function App() {
 
   useEffect(() => {
     const handleResize = () => {
-      const mobile = window.innerWidth <= 1024;
+      const mobile = window.innerWidth <= 768;
       setIsMobile(mobile);
       if (mobile) setSidebarOpen(false);
+      else setSidebarOpen(true);
     };
+    handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -197,10 +199,23 @@ function App() {
               </header>
 
               <div className="flex flex-1 overflow-hidden">
+                {/* Mobile overlay — tap to close sidebar */}
+                {isMobile && sidebarOpen && (
+                  <div
+                    onClick={() => setSidebarOpen(false)}
+                    style={{
+                      position: 'fixed', inset: 0, zIndex: 39,
+                      background: 'rgba(0,0,0,0.5)',
+                      backdropFilter: 'blur(2px)'
+                    }}
+                  />
+                )}
+
                 {/* Sidebar */}
-                <aside className={`fixed inset-y-0 left-0 z-40 lg:relative transition-all duration-300 ease-in-out transform bg-white dark:bg-background-dark border-r border-gray-200 dark:border-white/5 flex flex-col
-                  ${sidebarOpen ? 'w-64 translate-x-0' : 'w-20 lg:w-20 -translate-x-full lg:translate-x-0'}
-                  ${isMobile && !sidebarOpen ? '-translate-x-full' : 'translate-x-0'}
+                <aside className={`fixed inset-y-0 left-0 z-40 transition-all duration-300 ease-in-out bg-white dark:bg-background-dark border-r border-gray-200 dark:border-white/5 flex flex-col
+                  ${isMobile
+                    ? (sidebarOpen ? 'w-72 translate-x-0 shadow-2xl' : '-translate-x-full w-72')
+                    : (sidebarOpen ? 'w-64 translate-x-0' : 'w-20 translate-x-0')}
                 `}>
                   <div className="p-6 flex items-center justify-center">
                     {empresaConfig.logo_sidebar ? (
@@ -214,14 +229,19 @@ function App() {
 
                   <nav className="flex-1 px-4 space-y-1 py-4 overflow-y-auto custom-scrollbar">
                     {filteredMenu.map((item, idx) => (
-                      <NavLink key={idx} to={item.path} end={item.path === '/'} className={({ isActive }) => `
-                        flex items-center gap-4 p-3 rounded-2xl transition-all group relative
-                        ${isActive
-                          ? 'bg-primary/10 text-primary shadow-inner-glow'
-                          : 'text-slate-400 dark:text-gray-500 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-primary'}
-                      `}>
+                      <NavLink
+                        key={idx}
+                        to={item.path}
+                        end={item.path === '/'}
+                        onClick={() => isMobile && setSidebarOpen(false)}
+                        className={({ isActive }) => `
+                          flex items-center gap-4 p-3 rounded-2xl transition-all group relative
+                          ${isActive
+                            ? 'bg-primary/10 text-primary shadow-inner-glow'
+                            : 'text-slate-400 dark:text-gray-500 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-primary'}
+                        `}>
                         <span className="material-icons-round transition-transform group-hover:scale-110">{item.icon}</span>
-                        <span className={`font-medium whitespace-nowrap transition-opacity duration-300 ${!sidebarOpen && 'lg:opacity-0 pointer-events-none'}`}>
+                        <span className={`font-medium whitespace-nowrap transition-opacity duration-300 ${!sidebarOpen && 'opacity-0 pointer-events-none w-0 overflow-hidden'}`}>
                           {item.label}
                         </span>
                         {!sidebarOpen && !isMobile && (
@@ -273,7 +293,9 @@ function App() {
                   </div>
                 </aside>
 
-                <main className="flex-1 overflow-y-auto p-4 lg:p-8 relative">
+                <main className={`flex-1 overflow-y-auto p-4 lg:p-8 relative transition-all duration-300
+                  ${!isMobile && sidebarOpen ? 'ml-64' : (!isMobile ? 'ml-20' : 'ml-0')}
+                `} style={{ paddingBottom: isMobile ? '72px' : undefined }}>
                   <div className="fixed top-20 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl pointer-events-none -z-10"></div>
                   <Routes>
                     <Route path="/" element={<Dashboard />} />
@@ -297,6 +319,17 @@ function App() {
                   </Routes>
                 </main>
               </div>
+
+
+              {/* ── MOBILE BOTTOM NAV BAR ─────────────────── */}
+              {isMobile && (
+                <MobileBottomNav
+                  filteredMenu={filteredMenu}
+                  darkMode={darkMode}
+                  onMore={() => setSidebarOpen(true)}
+                  sidebarOpen={sidebarOpen}
+                />
+              )}
             </>
           )}
           <div className="fixed bottom-2 right-4 text-[10px] font-mono text-slate-400 pointer-events-none opacity-50 z-[60]">
@@ -308,7 +341,65 @@ function App() {
   );
 }
 
-/* Componente de título de la página actual */
+/* ── Barra de navegación inferior para móvil ────────────── */
+function MobileBottomNav({ filteredMenu, darkMode, onMore, sidebarOpen }) {
+  const loc = useLocation();
+  const navItems = [
+    { path: '/', icon: 'dashboard', label: 'Inicio' },
+    { path: '/consulta', icon: 'search', label: 'Consulta' },
+    { path: '/registro', icon: 'person_add', label: 'Registro' },
+    { path: '/facturas', icon: 'receipt_long', label: 'Facturas' },
+  ].filter(i => filteredMenu.some(m => m.path === i.path));
+
+  const bg = darkMode ? '#0f172a' : '#ffffff';
+  const border = darkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e2e8f0';
+  const inactiveColor = darkMode ? '#64748b' : '#94a3b8';
+
+  return (
+    <nav style={{
+      position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
+      background: bg, borderTop: border,
+      display: 'flex', alignItems: 'stretch',
+      height: 64,
+      boxShadow: '0 -4px 20px rgba(0,0,0,0.08)',
+      paddingBottom: 'env(safe-area-inset-bottom, 0px)'
+    }}>
+      {navItems.map(item => {
+        const isActive = item.path === '/'
+          ? loc.pathname === '/'
+          : loc.pathname.startsWith(item.path);
+        const color = isActive ? '#2563eb' : inactiveColor;
+        return (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            end={item.path === '/'}
+            style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, textDecoration: 'none' }}
+          >
+            <span className="material-icons-round" style={{ fontSize: 22, color, transition: 'color 0.2s' }}>
+              {item.icon}
+            </span>
+            <span style={{ fontSize: 10, fontWeight: isActive ? 700 : 500, color, transition: 'color 0.2s', lineHeight: 1 }}>
+              {item.label}
+            </span>
+            {isActive && (
+              <span style={{ position: 'absolute', bottom: 0, width: 24, height: 3, background: '#2563eb', borderRadius: 2 }} />
+            )}
+          </NavLink>
+        );
+      })}
+      <button
+        onClick={onMore}
+        style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, background: 'none', border: 'none', cursor: 'pointer', color: sidebarOpen ? '#2563eb' : inactiveColor }}
+      >
+        <span className="material-icons-round" style={{ fontSize: 22, color: sidebarOpen ? '#2563eb' : inactiveColor }}>apps</span>
+        <span style={{ fontSize: 10, fontWeight: 500, color: sidebarOpen ? '#2563eb' : inactiveColor, lineHeight: 1 }}>Más</span>
+      </button>
+    </nav>
+  );
+}
+
+/* ── Título de la página actual ─────────────────────────── */
 function PageTitle() {
   const loc = useLocation();
   const titles = {
