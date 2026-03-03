@@ -158,6 +158,7 @@ const deployRoutes = require('./routes/deploy');
 app.use('/api/deploy', deployRoutes);
 app.use('/api/downloads', require('./routes/downloads')); // No requiere autenticación
 app.use('/api/whatsapp', require('./routes/whatsapp'));
+app.use('/api/auditoria', require('./routes/auditoria'));
 app.use('/api/imagenologia', require('./routes/imagenologia'));
 app.use('/api/orthanc', require('./routes/orthanc')); // Proxy DICOM
 app.use("/verificar", require("./routes/verificar"));

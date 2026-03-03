@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const AuditLog = require('../models/AuditLog');
 const { AppError } = require('../middleware/errorHandler');
 
 // @desc    Login
@@ -62,6 +63,16 @@ exports.login = async (req, res, next) => {
             avatar: user.avatar,
             sucursal: user.sucursal ? user.sucursal.toString() : null
         };
+
+        // Registrar auditoría
+        AuditLog.registrar({
+            usuario: user._id,
+            nombreUsuario: user.nombreCompleto || user.nombre,
+            accion: 'login',
+            detalles: `Login desde ${req.ip}`,
+            ip: req.ip,
+            userAgent: req.headers['user-agent']
+        });
 
         res.json({
             success: true,

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { FaFileInvoiceDollar, FaEye, FaPrint, FaSpinner, FaPlus, FaCheck, FaTimes, FaCalendarAlt, FaChartLine, FaWallet, FaClock, FaMoneyBillWave } from 'react-icons/fa';
+import { FaFileInvoiceDollar, FaEye, FaPrint, FaSpinner, FaPlus, FaCheck, FaTimes, FaCalendarAlt, FaChartLine, FaWallet, FaClock, FaMoneyBillWave, FaFileExcel } from 'react-icons/fa';
+import * as XLSX from 'xlsx';
 import api from '../services/api';
 import FacturaTermica from './FacturaTermica';
 
@@ -226,18 +227,48 @@ const Facturas = () => {
           </h1>
           <p style={{ margin: '8px 0 0', color: '#64748b', fontSize: 16, fontWeight: 500 }}>Control de ingresos y comprobantes autorizados</p>
         </div>
-        <button
-          onClick={() => setShowModalNueva(true)}
-          style={{
-            padding: '14px 24px', borderRadius: 10,
-            background: '#2563eb', color: 'white',
-            border: 'none', fontWeight: 700, fontSize: 14,
-            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10,
-            boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2)'
-          }}
-        >
-          <FaPlus /> FACTURACIÓN RÁPIDA
-        </button>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <button
+            onClick={() => {
+              const data = facturas.map(f => ({
+                'Número': f.numero || f._id,
+                'Paciente': `${f.paciente?.nombre || ''} ${f.paciente?.apellido || ''}`.trim(),
+                'Cédula': f.paciente?.cedula || '',
+                'Fecha': new Date(f.fecha_factura || f.createdAt).toLocaleDateString('es-DO'),
+                'Estado': f.estado || '',
+                'Total': f.total || 0,
+                'Pagado': f.montoPagado || 0,
+                'Pendiente': Math.max(0, (f.total || 0) - (f.montoPagado || 0)),
+                'Método': f.metodoPago || '',
+              }));
+              const ws = XLSX.utils.json_to_sheet(data);
+              const wb = XLSX.utils.book_new();
+              XLSX.utils.book_append_sheet(wb, ws, 'Facturas');
+              XLSX.writeFile(wb, `Facturas_${new Date().toISOString().split('T')[0]}.xlsx`);
+            }}
+            style={{
+              padding: '14px 20px', borderRadius: 10,
+              background: '#10b981', color: 'white',
+              border: 'none', fontWeight: 700, fontSize: 14,
+              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
+              boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.2)'
+            }}
+          >
+            <FaFileExcel /> EXPORTAR EXCEL
+          </button>
+          <button
+            onClick={() => setShowModalNueva(true)}
+            style={{
+              padding: '14px 24px', borderRadius: 10,
+              background: '#2563eb', color: 'white',
+              border: 'none', fontWeight: 700, fontSize: 14,
+              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10,
+              boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2)'
+            }}
+          >
+            <FaPlus /> FACTURACIÓN RÁPIDA
+          </button>
+        </div>
       </div>
 
       {/* ── Stat Tiles ── */}
@@ -295,32 +326,32 @@ const Facturas = () => {
                   const pendiente = Math.max(0, (f.total || 0) - (f.montoPagado || 0));
                   const tienePendiente = pendiente > 0 && f.estado !== 'anulada';
                   return (
-                  <tr key={f._id} style={{ borderBottom: '1px solid #f1f5f9', transition: 'all 0.1s' }} className="hover-row">
-                    <td style={{ padding: '20px 24px', color: '#2563eb', fontWeight: 700, fontSize: 13 }}>#{f.numero || f.numero_factura}</td>
-                    <td style={{ padding: '20px 24px', color: '#64748b', fontSize: 14 }}>{new Date(f.fecha_factura || f.createdAt).toLocaleDateString('es-DO')}</td>
-                    <td style={{ padding: '20px 24px', color: '#1e293b', fontWeight: 600, fontSize: 14 }}>{f.datosCliente?.nombre || f.paciente?.nombre || 'Paciente'}</td>
-                    <td style={{ padding: '20px 24px', textAlign: 'right', fontWeight: 800, color: '#0f172a', fontSize: 15 }}>${(f.total || 0).toLocaleString()}</td>
-                    <td style={{ padding: '20px 24px', textAlign: 'right', fontWeight: 600, color: '#10b981', fontSize: 14 }}>${(f.montoPagado || 0).toLocaleString()}</td>
-                    <td style={{ padding: '20px 24px', textAlign: 'right', fontWeight: 700, color: tienePendiente ? '#ef4444' : '#10b981', fontSize: 14 }}>
-                      {tienePendiente ? `$${pendiente.toLocaleString()}` : '$0'}
-                    </td>
-                    <td style={{ padding: '20px 24px' }}>
-                      <span style={{
-                        padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
-                        background: f.estado === 'pagada' ? '#ecfdf5' : f.estado === 'anulada' ? '#fef2f2' : '#fff3cd',
-                        color: f.estado === 'pagada' ? '#10b981' : f.estado === 'anulada' ? '#ef4444' : '#856404'
-                      }}>{f.estado === 'emitida' && tienePendiente ? 'pendiente' : f.estado}</span>
-                    </td>
-                    <td style={{ padding: '20px 24px' }}>
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        <button onClick={() => verDetalle(f)} style={{ background: '#f1f5f9', border: 'none', color: '#1e293b', width: 32, height: 32, borderRadius: 6, cursor: 'pointer' }}><FaEye size={12} /></button>
-                        <button onClick={() => imprimirFactura(f)} style={{ background: '#eff6ff', border: 'none', color: '#2563eb', width: 32, height: 32, borderRadius: 6, cursor: 'pointer' }}><FaPrint size={12} /></button>
-                        {tienePendiente && (
-                          <button onClick={() => { setShowModalPago(f); setMontoPago(pendiente.toString()); }} style={{ background: '#ecfdf5', border: 'none', color: '#10b981', width: 32, height: 32, borderRadius: 6, cursor: 'pointer' }} title="Registrar pago"><FaMoneyBillWave size={12} /></button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
+                    <tr key={f._id} style={{ borderBottom: '1px solid #f1f5f9', transition: 'all 0.1s' }} className="hover-row">
+                      <td style={{ padding: '20px 24px', color: '#2563eb', fontWeight: 700, fontSize: 13 }}>#{f.numero || f.numero_factura}</td>
+                      <td style={{ padding: '20px 24px', color: '#64748b', fontSize: 14 }}>{new Date(f.fecha_factura || f.createdAt).toLocaleDateString('es-DO')}</td>
+                      <td style={{ padding: '20px 24px', color: '#1e293b', fontWeight: 600, fontSize: 14 }}>{f.datosCliente?.nombre || f.paciente?.nombre || 'Paciente'}</td>
+                      <td style={{ padding: '20px 24px', textAlign: 'right', fontWeight: 800, color: '#0f172a', fontSize: 15 }}>${(f.total || 0).toLocaleString()}</td>
+                      <td style={{ padding: '20px 24px', textAlign: 'right', fontWeight: 600, color: '#10b981', fontSize: 14 }}>${(f.montoPagado || 0).toLocaleString()}</td>
+                      <td style={{ padding: '20px 24px', textAlign: 'right', fontWeight: 700, color: tienePendiente ? '#ef4444' : '#10b981', fontSize: 14 }}>
+                        {tienePendiente ? `$${pendiente.toLocaleString()}` : '$0'}
+                      </td>
+                      <td style={{ padding: '20px 24px' }}>
+                        <span style={{
+                          padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
+                          background: f.estado === 'pagada' ? '#ecfdf5' : f.estado === 'anulada' ? '#fef2f2' : '#fff3cd',
+                          color: f.estado === 'pagada' ? '#10b981' : f.estado === 'anulada' ? '#ef4444' : '#856404'
+                        }}>{f.estado === 'emitida' && tienePendiente ? 'pendiente' : f.estado}</span>
+                      </td>
+                      <td style={{ padding: '20px 24px' }}>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button onClick={() => verDetalle(f)} style={{ background: '#f1f5f9', border: 'none', color: '#1e293b', width: 32, height: 32, borderRadius: 6, cursor: 'pointer' }}><FaEye size={12} /></button>
+                          <button onClick={() => imprimirFactura(f)} style={{ background: '#eff6ff', border: 'none', color: '#2563eb', width: 32, height: 32, borderRadius: 6, cursor: 'pointer' }}><FaPrint size={12} /></button>
+                          {tienePendiente && (
+                            <button onClick={() => { setShowModalPago(f); setMontoPago(pendiente.toString()); }} style={{ background: '#ecfdf5', border: 'none', color: '#10b981', width: 32, height: 32, borderRadius: 6, cursor: 'pointer' }} title="Registrar pago"><FaMoneyBillWave size={12} /></button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
                   );
                 })
               )}

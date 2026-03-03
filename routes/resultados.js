@@ -27,6 +27,7 @@ router.put('/:id', resultadoController.updateResultado);
 router.put('/:id/validar', resultadoController.validarResultado);
 router.patch('/:id/validar', resultadoController.validarResultado);
 router.put('/:id/imprimir', resultadoController.marcarImpreso);
+router.put('/:id/firma', resultadoController.firmarResultado);
 router.delete('/:id', resultadoController.deleteResultado);
 
 module.exports = router;

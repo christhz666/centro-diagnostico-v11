@@ -951,3 +951,42 @@ exports.diagnosticoDicom = async (req, res, next) => {
         next(error);
     }
 };
+
+// @desc    Firmar resultado digitalmente
+// @route   PUT /api/resultados/:id/firma
+exports.firmarResultado = async (req, res, next) => {
+    try {
+        const { firmaDigital } = req.body;
+        if (!firmaDigital) {
+            return res.status(400).json({ success: false, message: 'Se requiere la firma digital' });
+        }
+
+        const resultado = await Resultado.findByIdAndUpdate(req.params.id, {
+            firmaDigital,
+            firmadoPor: req.user?.id,
+            fechaFirma: new Date()
+        }, { new: true });
+
+        if (!resultado) {
+            return res.status(404).json({ success: false, message: 'Resultado no encontrado' });
+        }
+
+        // Registrar auditoría
+        try {
+            const AuditLog = require('../models/AuditLog');
+            AuditLog.registrar({
+                usuario: req.user?.id,
+                nombreUsuario: req.user?.nombre,
+                accion: 'firmar_resultado',
+                entidad: 'Resultado',
+                entidadId: resultado._id.toString(),
+                detalles: `Firmó resultado ${resultado.codigoMuestra}`,
+                ip: req.ip
+            });
+        } catch (e) { }
+
+        res.json({ success: true, message: 'Resultado firmado correctamente', data: resultado });
+    } catch (error) {
+        next(error);
+    }
+};

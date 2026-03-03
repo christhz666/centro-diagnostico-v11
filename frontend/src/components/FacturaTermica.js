@@ -8,13 +8,10 @@ const FacturaTermica = ({ factura, paciente, estudios, onClose }) => {
   const [empresaConfig, setEmpresaConfig] = useState({});
 
   useEffect(() => {
-    // Load company config for invoice header
-    const token = localStorage.getItem('token');
-    fetch('/api/configuracion/', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
+    // Load company config (public endpoint — no auth needed)
+    fetch('/api/configuracion/empresa')
       .then(res => res.json())
-      .then(data => setEmpresaConfig(data.configuracion || data || {}))
+      .then(data => setEmpresaConfig(data || {}))
       .catch(() => { });
   }, []);
 

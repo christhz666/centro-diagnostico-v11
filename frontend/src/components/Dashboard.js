@@ -1,18 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
+import {
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+    PieChart, Pie, Cell, Legend,
+    AreaChart, Area
+} from 'recharts';
 
-const StatCard = ({ title, value, subtext, icon, colorClass, trend, index }) => {
+/* ── Paleta para gráficos ──────────────────────────────────── */
+const CHART_COLORS = ['#2563eb', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6'];
+
+const StatCard = ({ title, value, subtext, icon, colorClass, index }) => {
     return (
         <div className="bg-white dark:bg-surface-dark rounded-3xl p-6 glow-border shadow-lg dark:shadow-none flex flex-col justify-between h-48 group hover:-translate-y-1 transition-transform duration-300">
             <div className="flex justify-between items-start">
                 <div className={`h-10 w-10 rounded-lg ${colorClass} flex items-center justify-center`}>
                     <span className="material-icons-round">{icon}</span>
                 </div>
-                {trend && (
-                    <span className="bg-green-500/20 text-green-400 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
-                        <span className="material-icons-round text-[10px]">arrow_upward</span> {trend}
-                    </span>
-                )}
             </div>
             <div>
                 <p className="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">{title}</p>
@@ -23,26 +26,70 @@ const StatCard = ({ title, value, subtext, icon, colorClass, trend, index }) => 
     );
 };
 
+/* ── Tooltip personalizado para gráficos ──────────────────── */
+const ChartTooltip = ({ active, payload, label }) => {
+    if (!active || !payload?.length) return null;
+    return (
+        <div style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: 10, padding: '10px 14px', boxShadow: '0 8px 20px rgba(0,0,0,0.3)' }}>
+            <p style={{ margin: 0, fontSize: 12, color: '#94a3b8', marginBottom: 4 }}>{label}</p>
+            {payload.map((p, i) => (
+                <p key={i} style={{ margin: 0, fontSize: 13, fontWeight: 600, color: p.color || '#fff' }}>
+                    {p.name}: {typeof p.value === 'number' && p.name?.toLowerCase().includes('ingreso')
+                        ? `RD$ ${p.value.toLocaleString('es-DO')}`
+                        : p.value}
+                </p>
+            ))}
+        </div>
+    );
+};
+
 const Dashboard = () => {
-    const [stats, setStats] = useState({ citasHoy: 0, estudiosRealizados: 0, ingresosHoy: 0, pacientesNuevos: 0 });
+    const [stats, setStats] = useState({ citasHoy: 0, estudiosRealizados: 0, ingresosHoy: 0, pacientesNuevos: 0, facturacionMes: 0 });
     const [citasHoy, setCitasHoy] = useState([]);
+    const [citasGrafica, setCitasGrafica] = useState([]);
+    const [topEstudios, setTopEstudios] = useState([]);
     const [loading, setLoading] = useState(true);
     const [user] = useState(JSON.parse(localStorage.getItem('user')) || {});
 
     const fetchDashboardData = async () => {
         setLoading(true);
         try {
+            // Stats principales
             const d = await api.getDashboardStats();
-            if (d) {
+            const data = d?.data || d;
+            if (data) {
                 setStats({
-                    citasHoy: d.citas?.hoy ?? d.citasHoy ?? 0,
-                    estudiosRealizados: d.resultados?.completadosMes ?? d.estudiosRealizados ?? 0,
-                    ingresosHoy: d.facturacion?.hoy?.total ?? d.ingresosHoy ?? 0,
-                    pacientesNuevos: d.pacientes?.nuevosMes ?? d.pacientesNuevos ?? 0
+                    citasHoy: data.citas?.hoy ?? 0,
+                    estudiosRealizados: data.resultados?.completadosMes ?? 0,
+                    ingresosHoy: data.facturacion?.hoy?.total ?? 0,
+                    facturacionMes: data.facturacion?.mes?.total ?? 0,
+                    pacientesNuevos: data.pacientes?.nuevosMes ?? 0,
+                    resultadosPendientes: data.resultados?.pendientes ?? 0,
+                    totalPacientes: data.pacientes?.total ?? 0,
                 });
             }
+
+            // Citas del día
             const c = await api.getCitas({ fecha: new Date().toISOString().split('T')[0] });
             setCitasHoy(Array.isArray(c) ? c.slice(0, 6) : (c.data?.slice(0, 6) || []));
+
+            // Gráfica de citas (últimos 30 días)
+            try {
+                const cg = await api.getCitasGrafica();
+                const chartData = (cg?.data || cg || []).map(item => ({
+                    fecha: item._id?.split('-').slice(1).join('/'),  // "2026-03-01" -> "03/01"
+                    total: item.total || 0,
+                    completadas: item.completadas || 0,
+                }));
+                setCitasGrafica(chartData);
+            } catch { }
+
+            // Top estudios
+            try {
+                const te = await api.getTopEstudios();
+                setTopEstudios((te?.data || te || []).slice(0, 6));
+            } catch { }
+
         } catch (error) {
             console.error('Dashboard error:', error);
         } finally {
@@ -58,6 +105,8 @@ const Dashboard = () => {
 
     const hora = new Date().getHours();
     const saludo = hora < 12 ? 'Buenos días' : hora < 18 ? 'Buenas tardes' : 'Buenas noches';
+
+    const fmtMoney = (n) => `RD$ ${Number(n || 0).toLocaleString('es-DO', { minimumFractionDigits: 0 })}`;
 
     return (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -83,123 +132,120 @@ const Dashboard = () => {
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-8">
-                {/* Featured Patient Card */}
-                <div className="col-span-1 md:col-span-12 lg:col-span-5 row-span-2 bg-white dark:bg-surface-dark rounded-3xl p-6 glow-border shadow-lg dark:shadow-none flex flex-col justify-between relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/10 to-transparent rounded-bl-full pointer-events-none transition-opacity group-hover:opacity-75"></div>
-                    <div className="relative z-10">
-                        <div className="flex justify-between items-start mb-6">
-                            <span className="px-3 py-1 bg-primary/20 text-primary text-xs font-bold rounded-full uppercase tracking-wider">Último Ingreso</span>
-                            <button className="text-gray-400 hover:text-white transition-colors">
-                                <span className="material-icons-round">more_horiz</span>
-                            </button>
-                        </div>
-                        {citasHoy.length > 0 ? (
-                            <div className="flex items-center gap-4 mb-8">
-                                <div className="h-20 w-20 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-primary overflow-hidden">
-                                    <span className="material-icons-round text-4xl">person</span>
-                                </div>
-                                <div>
-                                    <h3 className="text-2xl font-display font-bold text-gray-900 dark:text-white">
-                                        {citasHoy[0].paciente?.nombre} {citasHoy[0].paciente?.apellido}
-                                    </h3>
-                                    <p className="text-gray-500 dark:text-gray-400">ID: #{citasHoy[0].paciente_id}</p>
-                                    <div className="mt-2 flex gap-2">
-                                        <span className="text-xs font-mono bg-gray-100 dark:bg-white/5 px-2 py-1 rounded text-gray-500 dark:text-gray-300">
-                                            {citasHoy[0].estudios?.[0]?.estudio?.nombre || 'Consulta'}
-                                        </span>
-                                        <span className="text-xs font-mono bg-primary/10 px-2 py-1 rounded text-primary uppercase">
-                                            {citasHoy[0].estado}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="py-12 text-center text-gray-400">Esperando pacientes...</div>
-                        )}
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <StatCard title="Citas Hoy" value={stats.citasHoy} subtext={`${citasHoy.length} en espera`} icon="calendar_today" colorClass="bg-blue-500/10 text-blue-500" />
+                <StatCard title="Resultados Mes" value={stats.estudiosRealizados} subtext={`${stats.resultadosPendientes || 0} pendientes`} icon="science" colorClass="bg-primary/10 text-primary" />
+                <StatCard title="Ingresos Hoy" value={fmtMoney(stats.ingresosHoy)} subtext={`Mes: ${fmtMoney(stats.facturacionMes)}`} icon="payments" colorClass="bg-green-500/10 text-green-500" />
+                <StatCard title="Pacientes Nuevos" value={stats.pacientesNuevos} subtext={`${stats.totalPacientes || 0} total`} icon="people" colorClass="bg-purple-500/10 text-purple-500" />
+            </div>
 
-                        <div className="grid grid-cols-2 gap-4 mb-6">
-                            <div className="bg-gray-50 dark:bg-[#0B1121] p-4 rounded-xl border border-gray-100 dark:border-white/5">
-                                <div className="text-gray-400 text-xs uppercase mb-1">Estado General</div>
-                                <div className="text-xl font-bold text-gray-900 dark:text-white flex items-end gap-1">
-                                    Estable
-                                </div>
-                            </div>
-                            <div className="bg-gray-50 dark:bg-[#0B1121] p-4 rounded-xl border border-gray-100 dark:border-white/5">
-                                <div className="text-gray-400 text-xs uppercase mb-1">Prioridad</div>
-                                <div className="text-xl font-bold text-primary flex items-end gap-1">Normal</div>
-                            </div>
+            {/* Charts Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+
+                {/* Gráfica de citas por día (Area Chart) — ocupa 2 columnas */}
+                <div className="lg:col-span-2 bg-white dark:bg-surface-dark rounded-3xl p-6 glow-border shadow-lg dark:shadow-none">
+                    <div className="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 className="text-lg font-display font-bold text-gray-900 dark:text-white">Pacientes por Día</h3>
+                            <p className="text-xs text-gray-400 mt-1">Últimos 30 días</p>
                         </div>
+                        <span className="material-icons-round text-gray-300 dark:text-gray-600">show_chart</span>
                     </div>
-                    <div className="relative z-10 mt-auto">
-                        <button
-                            onClick={() => window.location.href = `/consulta?id=${citasHoy[0]?.paciente_id}`}
-                            className="w-full py-4 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-black font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2"
-                        >
-                            Ver Historial Completo
-                            <span className="material-icons-round text-sm">arrow_forward</span>
-                        </button>
-                    </div>
+                    {citasGrafica.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={280}>
+                            <AreaChart data={citasGrafica}>
+                                <defs>
+                                    <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                                    </linearGradient>
+                                    <linearGradient id="colorComp" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.1)" />
+                                <XAxis dataKey="fecha" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
+                                <YAxis tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
+                                <Tooltip content={<ChartTooltip />} />
+                                <Area type="monotone" dataKey="total" name="Total" stroke="#2563eb" strokeWidth={2.5} fill="url(#colorTotal)" />
+                                <Area type="monotone" dataKey="completadas" name="Completadas" stroke="#10b981" strokeWidth={2} fill="url(#colorComp)" />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    ) : (
+                        <div className="h-[280px] flex items-center justify-center text-gray-400">
+                            <span className="material-icons-round text-5xl mb-2">analytics</span>
+                        </div>
+                    )}
                 </div>
 
-                {/* Stats Grid */}
-                <div className="col-span-1 md:col-span-12 lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <StatCard
-                        title="Citas Hoy"
-                        value={stats.citasHoy}
-                        subtext={`${citasHoy.length} en espera`}
-                        icon="calendar_today"
-                        colorClass="bg-blue-500/10 text-blue-500"
-                        trend="+12%"
-                    />
-                    <StatCard
-                        title="Resultados"
-                        value={stats.estudiosRealizados}
-                        subtext="Listos para revisar"
-                        icon="science"
-                        colorClass="bg-primary/10 text-primary"
-                        trend="+5%"
-                    />
-                    <StatCard
-                        title="Ingresos"
-                        value={`$${stats.ingresosHoy}`}
-                        subtext="Generados hoy"
-                        icon="payments"
-                        colorClass="bg-green-500/10 text-green-500"
-                        trend="+18%"
-                    />
-
-                    {/* System Status Card */}
-                    <div className="col-span-1 sm:col-span-2 lg:col-span-3 bg-white dark:bg-surface-dark rounded-3xl p-6 glow-border shadow-lg dark:shadow-none flex items-center justify-between relative overflow-hidden">
-                        <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-l from-primary/5 to-transparent pointer-events-none"></div>
-                        <div className="relative z-10 flex flex-col justify-center">
-                            <div className="flex items-center gap-3 mb-2">
-                                <div className="h-8 w-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400">
-                                    <span className="material-icons-round text-sm">dns</span>
-                                </div>
-                                <span className="text-xs uppercase tracking-widest text-gray-500 dark:text-gray-400 font-semibold">Estado del Sistema</span>
-                            </div>
-                            <div className="flex items-baseline gap-2">
-                                <h3 className="text-3xl font-display font-bold text-gray-900 dark:text-white">Operativo</h3>
-                                <span className="text-sm text-primary font-mono">99.9% Uptime</span>
-                            </div>
+                {/* Top Estudios (Pie Chart) */}
+                <div className="bg-white dark:bg-surface-dark rounded-3xl p-6 glow-border shadow-lg dark:shadow-none">
+                    <div className="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 className="text-lg font-display font-bold text-gray-900 dark:text-white">Estudios Populares</h3>
+                            <p className="text-xs text-gray-400 mt-1">Este mes</p>
                         </div>
-                        <div className="relative flex items-center justify-center h-20 w-20">
-                            <div className="absolute h-full w-full rounded-full border border-primary/20 pulse-circle" style={{ animationDelay: '0s' }}></div>
-                            <div className="absolute h-3/4 w-3/4 rounded-full border border-primary/40 pulse-circle" style={{ animationDelay: '1s' }}></div>
-                            <div className="h-3 w-3 rounded-full bg-primary shadow-[0_0_15px_rgba(0,229,255,1)] z-10"></div>
-                        </div>
+                        <span className="material-icons-round text-gray-300 dark:text-gray-600">pie_chart</span>
                     </div>
+                    {topEstudios.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={280}>
+                            <PieChart>
+                                <Pie
+                                    data={topEstudios.map(e => ({ name: e.nombre || 'Estudio', value: e.cantidad || 0 }))}
+                                    cx="50%" cy="50%"
+                                    innerRadius={55} outerRadius={85}
+                                    paddingAngle={3}
+                                    dataKey="value"
+                                >
+                                    {topEstudios.map((_, i) => (
+                                        <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip content={<ChartTooltip />} />
+                                <Legend
+                                    formatter={(val) => <span style={{ color: '#94a3b8', fontSize: 11 }}>{val.length > 18 ? val.slice(0, 18) + '…' : val}</span>}
+                                    wrapperStyle={{ fontSize: 11 }}
+                                />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    ) : (
+                        <div className="h-[280px] flex items-center justify-center text-gray-400">
+                            <span className="material-icons-round text-5xl">donut_large</span>
+                        </div>
+                    )}
                 </div>
             </div>
+
+            {/* Ingresos Semanales (Bar Chart) */}
+            {citasGrafica.length > 0 && (
+                <div className="bg-white dark:bg-surface-dark rounded-3xl p-6 glow-border shadow-lg dark:shadow-none mb-8">
+                    <div className="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 className="text-lg font-display font-bold text-gray-900 dark:text-white">Actividad de Citas</h3>
+                            <p className="text-xs text-gray-400 mt-1">Total vs Completadas — últimos 30 días</p>
+                        </div>
+                        <span className="material-icons-round text-gray-300 dark:text-gray-600">bar_chart</span>
+                    </div>
+                    <ResponsiveContainer width="100%" height={250}>
+                        <BarChart data={citasGrafica}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.1)" />
+                            <XAxis dataKey="fecha" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
+                            <YAxis tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
+                            <Tooltip content={<ChartTooltip />} />
+                            <Bar dataKey="total" name="Total" fill="#2563eb" radius={[6, 6, 0, 0]} barSize={16} />
+                            <Bar dataKey="completadas" name="Completadas" fill="#10b981" radius={[6, 6, 0, 0]} barSize={16} />
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+            )}
 
             {/* Patients Table Section */}
             <div className="bg-white dark:bg-surface-dark rounded-3xl shadow-lg dark:shadow-none overflow-hidden glow-border">
                 <div className="glass-header px-6 py-5 flex items-center justify-between sticky top-0 z-20">
                     <h3 className="text-lg font-display font-bold text-gray-900 dark:text-white">Pacientes de Hoy</h3>
-                    <div className="flex items-center gap-3">
-                        <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-semibold">{citasHoy.length} activos</span>
-                    </div>
+                    <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-semibold">{citasHoy.length} activos</span>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">

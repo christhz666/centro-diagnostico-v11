@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import {
     FaChartLine, FaArrowUp, FaArrowDown, FaPlus, FaTrash,
     FaSpinner, FaExclamationTriangle, FaSyncAlt, FaSearch,
-    FaMoneyBillWave, FaBalanceScale, FaCalendarAlt, FaFilter
+    FaMoneyBillWave, FaBalanceScale, FaCalendarAlt, FaFilter, FaFileExcel
 } from 'react-icons/fa';
+import * as XLSX from 'xlsx';
 import api from '../services/api';
 
 const CATEGORIAS_INGRESO = [
@@ -159,10 +160,28 @@ const Contabilidad = () => {
                     </h2>
                     <p style={{ margin: '5px 0 0', color: '#666' }}>Control financiero del negocio</p>
                 </div>
-                <button onClick={() => setShowForm(!showForm)} style={styles.btnPrimary}>
-                    <FaPlus style={{ marginRight: 8 }} />
-                    Nuevo Movimiento
-                </button>
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                    <button onClick={() => {
+                        const data = movimientos.map(m => ({
+                            'Fecha': new Date(m.fecha).toLocaleDateString('es-DO'),
+                            'Tipo': m.tipo,
+                            'Categoría': getCategoriaLabel(m.categoria),
+                            'Descripción': m.descripcion,
+                            'Método': m.metodoPago || '',
+                            'Monto': m.tipo === 'ingreso' ? (m.monto || 0) : -(m.monto || 0),
+                        }));
+                        const ws = XLSX.utils.json_to_sheet(data);
+                        const wb = XLSX.utils.book_new();
+                        XLSX.utils.book_append_sheet(wb, ws, 'Contabilidad');
+                        XLSX.writeFile(wb, `Contabilidad_${new Date().toISOString().split('T')[0]}.xlsx`);
+                    }} style={{ ...styles.btnPrimary, background: '#10b981' }}>
+                        <FaFileExcel style={{ marginRight: 8 }} /> Exportar Excel
+                    </button>
+                    <button onClick={() => setShowForm(!showForm)} style={styles.btnPrimary}>
+                        <FaPlus style={{ marginRight: 8 }} />
+                        Nuevo Movimiento
+                    </button>
+                </div>
             </div>
 
             {/* Summary Cards */}

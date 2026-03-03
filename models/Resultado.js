@@ -142,7 +142,17 @@ const resultadoSchema = new mongoose.Schema({
     vecesImpreso: {
         type: Number,
         default: 0
-    }
+    },
+
+    // Firma digital del médico (imagen base64)
+    firmaDigital: {
+        type: String
+    },
+    firmadoPor: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
+    fechaFirma: Date
 }, {
     timestamps: true
 });
