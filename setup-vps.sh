@@ -74,7 +74,10 @@ echo -e "${CYAN}── 2/8 Instalando herramientas básicas ──${NC}"
 if [ "$PKG" = "apt-get" ]; then
     apt-get install -y curl wget git unzip htop nano lsof net-tools
 else
-    $PKG install -y curl wget git unzip htop nano lsof net-tools
+    # Instalar EPEL para htop en Oracle/CentOS/RHEL
+    $PKG install -y epel-release 2>/dev/null || $PKG install -y oracle-epel-release-el9 2>/dev/null || true
+    $PKG install -y curl wget git unzip nano lsof net-tools
+    $PKG install -y htop 2>/dev/null || warn "htop no disponible (opcional, no afecta nada)"
 fi
 log "Herramientas básicas instaladas"
 
