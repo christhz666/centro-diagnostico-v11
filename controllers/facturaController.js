@@ -163,10 +163,16 @@ exports.createFactura = async (req, res, next) => {
         const orthancService = require('../services/orthancService');
         orthancService.enviarPacienteARayosX(factura.paciente, factura, req.body.cita, factura.items);
 
+        // Preserve _plainPassword for the response (set during pre-validate hook)
+        const plainPassword = factura._plainPassword;
+
         res.status(201).json({
             success: true,
             message: `Factura ${factura.numero} creada exitosamente`,
-            data: factura
+            data: {
+                ...factura.toObject(),
+                _plainPassword: plainPassword
+            }
         });
     } catch (error) {
         next(error);
@@ -347,6 +353,9 @@ exports.crearDesdeOrden = async (req, res, next) => {
 
         await factura.populate('paciente', 'nombre apellido cedula');
 
+        // Preserve _plainPassword for the response
+        const plainPassword = factura._plainPassword;
+
         res.status(201).json({
             success: true,
             message: `Factura ${factura.numero} creada desde orden`,
@@ -356,7 +365,10 @@ exports.crearDesdeOrden = async (req, res, next) => {
                 total: factura.total,
                 estado: factura.estado
             },
-            data: factura
+            data: {
+                ...factura.toObject(),
+                _plainPassword: plainPassword
+            }
         });
     } catch (error) {
         next(error);
