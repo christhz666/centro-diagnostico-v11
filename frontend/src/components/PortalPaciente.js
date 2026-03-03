@@ -1,17 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { FaFlask, FaLock, FaUser, FaSpinner, FaCheckCircle, FaClock, FaQrcode, FaExclamationTriangle, FaHospital, FaArrowLeft, FaPrint } from 'react-icons/fa';
 
-/* ─── Paleta de colores ─────────────────────────────────────── */
+/* ─── Paleta de colores mejorada ─────────────────────────────────────── */
 const C = {
-  dark: '#0f2940',
+  dark: '#0a1e2f',
   mid: '#1a3a5c',
   blue: '#2980b9',
-  sky: '#87CEEB',
+  sky: '#5dade2',
   accent: '#3498db',
+  accentLight: '#5dade2',
   green: '#27ae60',
+  greenLight: '#52c77a',
   red: '#e74c3c',
   orange: '#f39c12',
   white: '#fff',
+  gray: '#95a5a6',
+  grayLight: '#ecf0f1',
 };
 
 /* ─── Helpers ───────────────────────────────────────────────── */
@@ -30,17 +34,19 @@ const calcularEdad = (fecha) => {
 
 const EstadoBadge = ({ estado }) => {
   const cfg = {
-    pendiente: { bg: '#fff3cd', color: '#856404', label: '⏳ Pendiente' },
-    en_proceso: { bg: '#cce5ff', color: '#004085', label: '🔬 En Proceso' },
-    completado: { bg: '#d4edda', color: '#155724', label: '✅ Disponible' },
-    entregado: { bg: '#d4edda', color: '#155724', label: '✅ Entregado' },
+    pendiente: { bg: 'linear-gradient(135deg, #fff3cd, #ffe69c)', color: '#856404', label: '⏳ Pendiente', border: '#ffc107' },
+    en_proceso: { bg: 'linear-gradient(135deg, #cce5ff, #99ccff)', color: '#004085', label: '🔬 En Proceso', border: '#0066cc' },
+    completado: { bg: 'linear-gradient(135deg, #d4edda, #b2dfb8)', color: '#155724', label: '✅ Disponible', border: '#28a745' },
+    entregado: { bg: 'linear-gradient(135deg, #d4edda, #b2dfb8)', color: '#155724', label: '✅ Entregado', border: '#28a745' },
   };
-  const c = cfg[estado] || { bg: '#f8f9fa', color: '#666', label: estado || 'Desconocido' };
+  const c = cfg[estado] || { bg: '#f8f9fa', color: '#666', label: estado || 'Desconocido', border: '#ddd' };
   return (
     <span style={{
       background: c.bg, color: c.color,
-      padding: '4px 12px', borderRadius: 12, fontSize: 12, fontWeight: 'bold',
-      display: 'inline-block'
+      padding: '6px 14px', borderRadius: 14, fontSize: 12, fontWeight: 'bold',
+      display: 'inline-block',
+      border: `2px solid ${c.border}`,
+      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
     }}>
       {c.label}
     </span>
@@ -73,14 +79,68 @@ const PortalPaciente = () => {
       .catch(() => {});
   }, []);
 
-  /* ── Acceso automático por QR ── */
+  /* ── Validar QR pero requerir confirmación con contraseña ── */
   useEffect(() => {
     if (!qrParam) return;
-    const cargarQR = async () => {
+    const validarQR = async () => {
       setLoading(true);
       try {
+        // Validar que el QR existe y obtener info de la factura
+        const res = await fetch(`/api/verificar/${encodeURIComponent(qrParam)}`);
+        const data = await res.json();
+
+        if (data.valido) {
+          // QR válido - mostrar pantalla de login con mensaje
+          setModo('login-qr');
+          setError('');
+        } else {
+          setError('Código QR inválido o expirado');
+          setModo('login');
+        }
+      } catch {
+        setError('Error al validar código QR');
+        setModo('login');
+      } finally {
+        setLoading(false);
+      }
+    };
+    validarQR();
+  }, [qrParam]);
+
+  /* ── Login con usuario/contraseña (ahora requiere auth incluso con QR) ── */
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    if (!username || !password) { setError('Complete usuario y contraseña'); return; }
+    setLoading(true);
+    setError('');
+
+    console.log('[PortalPaciente] Iniciando login...', { username, hasQR: !!qrParam });
+
+    try {
+      // Si hay QR, primero validar credenciales y luego usar el QR para obtener resultados
+      if (qrParam) {
+        console.log('[PortalPaciente] Login con QR:', qrParam);
+        // Validar credenciales primero
+        const authRes = await fetch('/api/resultados/acceso-paciente', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const authData = await authRes.json();
+
+        console.log('[PortalPaciente] Respuesta de autenticación:', { success: authData.success, blocked: authData.blocked });
+
+        if (!authData.success && !authData.blocked) {
+          setError(authData.message || 'Usuario o contraseña incorrectos');
+          setLoading(false);
+          return;
+        }
+
+        // Si autenticó exitosamente, ahora usar el QR para obtener los resultados específicos
         const res = await fetch(`/api/resultados/acceso-qr/${encodeURIComponent(qrParam)}`);
         const data = await res.json();
+
+        console.log('[PortalPaciente] Respuesta de acceso QR:', { success: data.success, blocked: data.blocked, count: data.count });
 
         if (data.blocked) {
           setBloqueo({
@@ -92,52 +152,43 @@ const PortalPaciente = () => {
           });
           setModo('bloqueado');
         } else if (data.success) {
+          console.log('[PortalPaciente] Resultados cargados:', data.count || 0, 'resultados');
           setDatos(data);
           setModo('resultados');
         } else {
-          setError(data.message || 'Código QR inválido');
-          setModo('login');
+          setError(data.message || 'Error al cargar resultados');
         }
-      } catch {
-        setError('Error de conexión. Intente nuevamente.');
-        setModo('login');
-      } finally {
-        setLoading(false);
-      }
-    };
-    cargarQR();
-  }, [qrParam]);
-
-  /* ── Login con usuario/contraseña ── */
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    if (!username || !password) { setError('Complete usuario y contraseña'); return; }
-    setLoading(true);
-    setError('');
-    try {
-      const res = await fetch('/api/resultados/acceso-paciente', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
-      const data = await res.json();
-
-      if (data.blocked) {
-        setBloqueo({
-          montoPendiente: data.montoPendiente,
-          totalFactura: data.totalFactura,
-          montoPagado: data.montoPagado,
-          mensaje: data.mensaje,
-          factura: data.factura
-        });
-        setModo('bloqueado');
-      } else if (data.success) {
-        setDatos(data);
-        setModo('resultados');
       } else {
-        setError(data.message || 'Usuario o contraseña incorrectos');
+        console.log('[PortalPaciente] Login normal (sin QR)');
+        // Login normal sin QR
+        const res = await fetch('/api/resultados/acceso-paciente', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+
+        console.log('[PortalPaciente] Respuesta de login:', { success: data.success, blocked: data.blocked, count: data.count });
+
+        if (data.blocked) {
+          setBloqueo({
+            montoPendiente: data.montoPendiente,
+            totalFactura: data.totalFactura,
+            montoPagado: data.montoPagado,
+            mensaje: data.mensaje,
+            factura: data.factura
+          });
+          setModo('bloqueado');
+        } else if (data.success) {
+          console.log('[PortalPaciente] Resultados cargados:', data.count || 0, 'resultados');
+          setDatos(data);
+          setModo('resultados');
+        } else {
+          setError(data.message || 'Usuario o contraseña incorrectos');
+        }
       }
-    } catch {
+    } catch (err) {
+      console.error('[PortalPaciente] Error en login:', err);
       setError('Error de conexión. Intente nuevamente.');
     } finally {
       setLoading(false);
@@ -294,7 +345,7 @@ const PortalPaciente = () => {
           </h3>
 
           {datos.data?.length > 0 ? datos.data.map((r, i) => (
-            <div key={i} style={styles.resultCard}>
+            <div key={i} className="result-card" style={styles.resultCard}>
               <div style={styles.resultHeader}>
                 <div>
                   <h4 style={{ margin: '0 0 4px', color: C.mid, fontSize: 16 }}>
@@ -386,11 +437,39 @@ const PortalPaciente = () => {
   return (
     <div style={styles.bg}>
       <style>{`
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes spin      { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .portal-input:focus  { outline: none; border-color: ${C.accent} !important; box-shadow: 0 0 0 3px rgba(52,152,219,0.2); }
-        .portal-btn:hover    { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(26,58,92,0.4) !important; }
-        .portal-btn          { transition: all 0.2s ease; }
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(30px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+        }
+        .portal-input:focus {
+          outline: none;
+          border-color: ${C.accent} !important;
+          box-shadow: 0 0 0 4px rgba(52,152,219,0.15);
+          transform: translateY(-1px);
+        }
+        .portal-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(41,128,185,0.5) !important;
+        }
+        .portal-btn:active {
+          transform: translateY(0px);
+          box-shadow: 0 4px 15px rgba(41,128,185,0.4) !important;
+        }
+        .portal-btn {
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .result-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 12px 35px rgba(0,0,0,0.15) !important;
+        }
       `}</style>
 
       <div style={{ ...styles.card, animation: 'fadeInUp 0.5s ease' }}>
@@ -404,14 +483,24 @@ const PortalPaciente = () => {
           <p style={{ margin: '10px 0 0', color: '#888', fontSize: 13 }}>Portal de resultados para pacientes</p>
         </div>
 
-        {/* QR hint */}
-        <div style={{ background: '#e8f4fd', borderRadius: 10, padding: '12px 15px', marginBottom: 22, display: 'flex', gap: 12, alignItems: 'center' }}>
-          <FaQrcode style={{ fontSize: 28, color: C.accent, flexShrink: 0 }} />
-          <p style={{ margin: 0, fontSize: 13, color: '#444', lineHeight: 1.5 }}>
-            <strong>¿Tiene el QR de su factura?</strong><br />
-            Escanéelo con su teléfono para acceder directamente a sus resultados sin contraseña.
-          </p>
-        </div>
+        {/* QR hint or validation message */}
+        {(modo === 'login-qr' || qrParam) ? (
+          <div style={{ background: '#d1ecf1', borderRadius: 10, padding: '12px 15px', marginBottom: 22, display: 'flex', gap: 12, alignItems: 'center', border: '2px solid #bee5eb' }}>
+            <FaCheckCircle style={{ fontSize: 28, color: '#0c5460', flexShrink: 0 }} />
+            <p style={{ margin: 0, fontSize: 13, color: '#0c5460', lineHeight: 1.5 }}>
+              <strong>✓ Código QR válido</strong><br />
+              Por seguridad, ingrese su usuario y contraseña para acceder a sus resultados.
+            </p>
+          </div>
+        ) : (
+          <div style={{ background: '#e8f4fd', borderRadius: 10, padding: '12px 15px', marginBottom: 22, display: 'flex', gap: 12, alignItems: 'center' }}>
+            <FaQrcode style={{ fontSize: 28, color: C.accent, flexShrink: 0 }} />
+            <p style={{ margin: 0, fontSize: 13, color: '#444', lineHeight: 1.5 }}>
+              <strong>¿Tiene el QR de su factura?</strong><br />
+              Escanéelo con su teléfono y luego ingrese sus credenciales para acceder.
+            </p>
+          </div>
+        )}
 
         {error && (
           <div style={{ background: '#f8d7da', color: '#721c24', padding: '12px 15px', borderRadius: 8, marginBottom: 20, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -470,28 +559,33 @@ const PortalPaciente = () => {
 const styles = {
   bg: {
     minHeight: '100vh',
-    background: `linear-gradient(135deg, ${C.dark} 0%, ${C.blue} 100%)`,
+    background: `linear-gradient(135deg, ${C.dark} 0%, ${C.mid} 50%, ${C.blue} 100%)`,
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
     fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif",
+    position: 'relative',
+    overflow: 'hidden',
   },
   card: {
     background: C.white,
-    borderRadius: 20,
-    padding: '40px 35px',
+    borderRadius: 24,
+    padding: '45px 40px',
     width: '100%',
-    maxWidth: 440,
-    boxShadow: '0 25px 60px rgba(0,0,0,0.35)',
+    maxWidth: 460,
+    boxShadow: '0 30px 70px rgba(0,0,0,0.4), 0 10px 30px rgba(0,0,0,0.3)',
+    backdropFilter: 'blur(10px)',
+    border: '1px solid rgba(255,255,255,0.1)',
   },
   iconCircle: (bg) => ({
-    width: 70, height: 70,
-    background: bg,
+    width: 80, height: 80,
+    background: `linear-gradient(135deg, ${bg}, ${C.accent})`,
     borderRadius: '50%',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     margin: '0 auto',
+    boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
   }),
   label: {
     display: 'block',
@@ -502,29 +596,30 @@ const styles = {
   },
   input: {
     width: '100%',
-    padding: '13px 13px 13px 38px',
-    borderRadius: 10,
+    padding: '14px 14px 14px 42px',
+    borderRadius: 12,
     border: '2px solid #e0e0e0',
     boxSizing: 'border-box',
-    fontSize: 14,
-    transition: 'border-color 0.2s',
+    fontSize: 15,
+    transition: 'all 0.3s ease',
     background: '#fafafa',
   },
   btnPrimary: {
     width: '100%',
-    padding: '14px',
-    background: `linear-gradient(135deg, ${C.mid} 0%, ${C.blue} 100%)`,
+    padding: '16px',
+    background: `linear-gradient(135deg, ${C.mid} 0%, ${C.blue} 50%, ${C.accent} 100%)`,
     color: C.white,
     border: 'none',
-    borderRadius: 10,
+    borderRadius: 12,
     cursor: 'pointer',
     fontWeight: 700,
-    fontSize: 15,
+    fontSize: 16,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    boxShadow: `0 4px 15px rgba(26,58,92,0.3)`,
+    boxShadow: `0 6px 20px rgba(41,128,185,0.4)`,
+    transition: 'all 0.3s ease',
   },
   btnSecondary: {
     width: '100%',
@@ -543,17 +638,19 @@ const styles = {
     marginTop: 10,
   },
   btnPrint: {
-    padding: '8px 16px',
-    background: C.mid,
+    padding: '10px 18px',
+    background: `linear-gradient(135deg, ${C.mid}, ${C.blue})`,
     color: C.white,
     border: 'none',
-    borderRadius: 8,
+    borderRadius: 10,
     cursor: 'pointer',
     fontSize: 13,
     fontWeight: 600,
     display: 'flex',
     alignItems: 'center',
-    gap: 6,
+    gap: 7,
+    boxShadow: '0 4px 12px rgba(26,58,92,0.25)',
+    transition: 'all 0.3s ease',
   },
   row: {
     display: 'flex',
@@ -563,41 +660,46 @@ const styles = {
     fontSize: 15,
   },
   resultsHeader: {
-    background: 'rgba(255,255,255,0.15)',
-    backdropFilter: 'blur(10px)',
-    borderRadius: 16,
-    padding: '18px 24px',
+    background: 'rgba(255,255,255,0.2)',
+    backdropFilter: 'blur(15px)',
+    borderRadius: 18,
+    padding: '20px 26px',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     color: C.white,
-    marginBottom: 20,
+    marginBottom: 22,
+    boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
+    border: '1px solid rgba(255,255,255,0.2)',
   },
   patientCard: {
-    background: C.white,
-    borderRadius: 16,
-    padding: '20px 24px',
+    background: `linear-gradient(135deg, ${C.white} 0%, ${C.grayLight} 100%)`,
+    borderRadius: 18,
+    padding: '24px 28px',
     display: 'flex',
     alignItems: 'center',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-    marginBottom: 10,
+    boxShadow: '0 6px 25px rgba(0,0,0,0.12)',
+    marginBottom: 12,
+    border: '1px solid rgba(0,0,0,0.05)',
   },
   resultCard: {
     background: C.white,
-    borderRadius: 14,
-    marginBottom: 16,
+    borderRadius: 16,
+    marginBottom: 18,
     overflow: 'hidden',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+    boxShadow: '0 6px 25px rgba(0,0,0,0.1)',
+    border: '1px solid rgba(0,0,0,0.05)',
+    transition: 'all 0.3s ease',
   },
   resultHeader: {
-    background: '#f8f9fa',
-    padding: '16px 20px',
+    background: `linear-gradient(135deg, #f8f9fa 0%, ${C.grayLight} 100%)`,
+    padding: '18px 22px',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     flexWrap: 'wrap',
-    gap: 10,
-    borderBottom: '1px solid #e0e0e0',
+    gap: 12,
+    borderBottom: '2px solid #e8ecef',
   },
 };
 
