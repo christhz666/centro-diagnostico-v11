@@ -50,6 +50,10 @@
         color: #cbd5e1;
     }
 
+    .dark span {
+        color: inherit;
+    }
+
     .dark label {
         color: #94a3b8 !important;
     }
@@ -57,6 +61,50 @@
     .dark code {
         background: rgba(255,255,255,0.08) !important;
         color: #e2e8f0 !important;
+    }
+
+    /* Override inline dark text colors in dark mode */
+    .dark [style*="color: rgb(15"],
+    .dark [style*="color: rgb(30"],
+    .dark [style*="color: rgb(51"],
+    .dark [style*="color: rgb(55"],
+    .dark [style*="color: rgb(68"],
+    .dark [style*="color: rgb(85"] {
+        color: #e2e8f0 !important;
+    }
+
+    .dark [style*="color: rgb(100"],
+    .dark [style*="color: rgb(148"],
+    .dark [style*="color: rgb(102"],
+    .dark [style*="color: rgb(119"],
+    .dark [style*="color: rgb(136"],
+    .dark [style*="color: rgb(153"],
+    .dark [style*="color: rgb(170"] {
+        color: #94a3b8 !important;
+    }
+
+    /* Override inline white/light backgrounds in dark mode */
+    .dark [style*="background: rgb(255"],
+    .dark [style*="background-color: rgb(255"],
+    .dark [style*="background: white"] {
+        background: #0F172A !important;
+    }
+
+    .dark [style*="background: rgb(248"],
+    .dark [style*="background: rgb(241"],
+    .dark [style*="background: rgb(240"],
+    .dark [style*="background: rgb(245"],
+    .dark [style*="background: rgb(249"],
+    .dark [style*="background: rgb(250"] {
+        background: rgba(255,255,255,0.03) !important;
+    }
+
+    /* Override inline light borders in dark mode */
+    .dark [style*="border-color: rgb(226"],
+    .dark [style*="border-color: rgb(241"],
+    .dark [style*="border: 1px solid rgb(226"],
+    .dark [style*="border: 1px solid rgb(241"] {
+        border-color: rgba(255,255,255,0.08) !important;
     }
 }
 

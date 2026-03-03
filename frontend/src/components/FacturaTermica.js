@@ -47,8 +47,8 @@ const FacturaTermica = ({ factura, paciente, estudios, onClose }) => {
   const numeroFactura = factura?.numero || factura?.numero_factura || 'F-' + Date.now().toString().slice(-8);
 
   const colores = {
-    azulCielo: '#87CEEB',
-    azulOscuro: '#1a3a5c',
+    azulCielo: '#999999',
+    azulOscuro: '#000000',
     blanco: '#FFFFFF',
     negro: '#000000'
   };
@@ -106,6 +106,9 @@ const FacturaTermica = ({ factura, paciente, estudios, onClose }) => {
   const nacionalidad = paciente?.nacionalidad || 'Dominicano';
   const nombreCompleto = `${getTexto(paciente?.nombre)} ${getTexto(paciente?.apellido)}`.trim() || paciente?.nombre_completo || 'N/A';
 
+  // Derive plain password from paciente.apellido (same logic as Factura model pre-validate)
+  const derivedPassword = factura._plainPassword || ((paciente?.apellido || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '') || null);
+
   return (
     <div style={{ padding: '8px', width: '302px', maxWidth: '302px', minWidth: '302px', margin: '0 auto', fontFamily: 'Arial,monospace', fontSize: '12px', boxSizing: 'border-box' }}>
       <style>
@@ -139,7 +142,7 @@ const FacturaTermica = ({ factura, paciente, estudios, onClose }) => {
               e.target.src = '/logo-centro.png';
             }}
           />
-          <div style={{ fontSize: '10px', lineHeight: '1.4', color: colores.azulOscuro }}>
+          <div style={{ fontSize: '10px', lineHeight: '1.4', color: colores.negro }}>
             {empresaConfig.empresa_nombre && (
               <p style={{ margin: '2px 0', fontWeight: 'bold', fontSize: '12px' }}>{empresaConfig.empresa_nombre}</p>
             )}
@@ -149,7 +152,7 @@ const FacturaTermica = ({ factura, paciente, estudios, onClose }) => {
           </div>
         </div>
 
-        <div style={{ marginBottom: '10px', fontSize: '11px', background: colores.azulCielo, padding: '8px', borderRadius: '5px' }}>
+        <div style={{ marginBottom: '10px', fontSize: '11px', background: '#eeeeee', padding: '8px', borderRadius: '5px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <span><strong>Factura:</strong> {numeroFactura}</span>
             <span>{fecha.toLocaleDateString('es-DO')}</span>
@@ -179,8 +182,8 @@ const FacturaTermica = ({ factura, paciente, estudios, onClose }) => {
           </p>
         </div>
 
-        <div style={{ borderBottom: '2px solid ' + colores.azulOscuro, padding: '8px', marginBottom: '10px', background: '#f0f8ff' }}>
-          <p style={{ margin: '0 0 5px 0', fontSize: '11px', fontWeight: 'bold', textAlign: 'center', color: colores.azulOscuro }}>
+        <div style={{ borderBottom: '2px solid ' + colores.azulOscuro, padding: '8px', marginBottom: '10px', background: '#eeeeee' }}>
+          <p style={{ margin: '0 0 5px 0', fontSize: '11px', fontWeight: 'bold', textAlign: 'center', color: colores.negro }}>
             DATOS DEL SEGURO
           </p>
           <p style={{ margin: '3px 0', fontSize: '11px' }}>
@@ -204,7 +207,7 @@ const FacturaTermica = ({ factura, paciente, estudios, onClose }) => {
           </thead>
           <tbody>
             {estudiosArray.map((estudio, i) => (
-              <tr key={i} style={{ borderBottom: '1px solid ' + colores.azulCielo }}>
+              <tr key={i} style={{ borderBottom: '1px solid #ccc' }}>
                 <td style={{ padding: '5px', fontSize: '10px' }}>
                   {getTexto(estudio.nombre || estudio.estudioId?.nombre || estudio.descripcion || 'Estudio')}
                 </td>
@@ -224,7 +227,7 @@ const FacturaTermica = ({ factura, paciente, estudios, onClose }) => {
             <span>Subtotal:</span>
             <span>${subtotal.toFixed(2)}</span>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '3px', color: cobertura > 0 ? '#27ae60' : '#666' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '3px', color: '#000' }}>
             <span>Cobertura Seguro:</span>
             <span>-${cobertura.toFixed(2)}</span>
           </div>
@@ -243,7 +246,7 @@ const FacturaTermica = ({ factura, paciente, estudios, onClose }) => {
             </div>
           )}
           {pendiente > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px', background: '#fff3cd', border: '2px solid #ffc107', borderRadius: '5px', fontWeight: 'bold', fontSize: '12px', color: '#856404', marginTop: '5px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px', background: '#eeeeee', border: '2px solid #000', borderRadius: '5px', fontWeight: 'bold', fontSize: '12px', color: '#000', marginTop: '5px' }}>
               <span>PENDIENTE:</span>
               <span>${pendiente.toFixed(2)}</span>
             </div>
@@ -251,8 +254,8 @@ const FacturaTermica = ({ factura, paciente, estudios, onClose }) => {
         </div>
 
         {/* Código de barras de la ORDEN (para escaneo en consulta rápida) */}
-        <div style={{ marginTop: '15px', textAlign: 'center', borderTop: '2px solid ' + colores.azulCielo, paddingTop: '10px' }}>
-          <p style={{ margin: '0 0 3px 0', fontSize: '9px', color: '#888' }}>CÓDIGO DE ORDEN</p>
+        <div style={{ marginTop: '15px', textAlign: 'center', borderTop: '2px solid #000', paddingTop: '10px' }}>
+          <p style={{ margin: '0 0 3px 0', fontSize: '9px', color: '#000' }}>CÓDIGO DE ORDEN</p>
           <Barcode
             value={factura?.codigoBarras || factura?.registroIdNumerico || numeroFactura}
             width={1.2}
@@ -267,12 +270,12 @@ const FacturaTermica = ({ factura, paciente, estudios, onClose }) => {
           <div style={{
             marginTop: '12px',
             textAlign: 'center',
-            border: '2px dashed ' + colores.azulCielo,
+            border: '2px dashed #000',
             borderRadius: 8,
             padding: '12px 10px',
           }}>
-            <p style={{ margin: '0 0 8px 0', fontWeight: 'bold', color: colores.azulOscuro, fontSize: '11px' }}>
-              🔐 ACCEDA A SUS RESULTADOS EN LÍNEA
+            <p style={{ margin: '0 0 8px 0', fontWeight: 'bold', color: colores.negro, fontSize: '11px' }}>
+              ACCEDA A SUS RESULTADOS EN LÍNEA
             </p>
             <QRCodeSVG
               value={`${window.location.origin}/mis-resultados?qr=${factura.codigoQR}`}
@@ -281,26 +284,26 @@ const FacturaTermica = ({ factura, paciente, estudios, onClose }) => {
               includeMargin={true}
               style={{ display: 'block', margin: '0 auto' }}
             />
-            <p style={{ margin: '6px 0 0', fontSize: '9px', color: '#666' }}>
+            <p style={{ margin: '6px 0 0', fontSize: '9px', color: '#000' }}>
               Escanee con su celular para ver sus resultados
             </p>
             {factura?.pacienteUsername && (
-              <div style={{ marginTop: '6px', background: '#f0f8ff', borderRadius: 5, padding: '5px', fontSize: '10px' }}>
-                <div style={{ color: '#555' }}>
+              <div style={{ marginTop: '6px', background: '#eeeeee', borderRadius: 5, padding: '5px', fontSize: '10px' }}>
+                <div style={{ color: '#000' }}>
                   <strong>Usuario:</strong> {factura.pacienteUsername}
                 </div>
-                <div style={{ color: '#555' }}>
-                  <strong>Clave:</strong> {factura._plainPassword || '(ver en pantalla)'}
+                <div style={{ color: '#000' }}>
+                  <strong>Clave:</strong> {derivedPassword || '(consulte en recepción)'}
                 </div>
               </div>
             )}
           </div>
         )}
 
-        <div style={{ marginTop: '15px', textAlign: 'center', fontSize: '9px', background: colores.azulOscuro, color: colores.blanco, padding: '10px', borderRadius: '5px' }}>
+        <div style={{ marginTop: '15px', textAlign: 'center', fontSize: '9px', background: colores.negro, color: colores.blanco, padding: '10px', borderRadius: '5px' }}>
           <p style={{ margin: '3px 0', fontWeight: 'bold' }}>Gracias por confiar en nosotros!</p>
           <p style={{ margin: '3px 0' }}>Conserve este comprobante para retirar sus resultados</p>
-          <p style={{ margin: '5px 0 0 0', fontStyle: 'italic', color: colores.azulCielo }}>Su salud es nuestra prioridad</p>
+          <p style={{ margin: '5px 0 0 0', fontStyle: 'italic', color: '#ccc' }}>Su salud es nuestra prioridad</p>
         </div>
       </div>
 

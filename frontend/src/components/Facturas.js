@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaFileInvoiceDollar, FaEye, FaPrint, FaSpinner, FaPlus, FaCheck, FaTimes, FaCalendarAlt, FaChartLine, FaWallet, FaClock } from 'react-icons/fa';
+import { FaFileInvoiceDollar, FaEye, FaPrint, FaSpinner, FaPlus, FaCheck, FaTimes, FaCalendarAlt, FaChartLine, FaWallet, FaClock, FaMoneyBillWave } from 'react-icons/fa';
 import api from '../services/api';
 import FacturaTermica from './FacturaTermica';
 
@@ -13,6 +13,9 @@ const Facturas = () => {
   const [citaSeleccionada, setCitaSeleccionada] = useState(null);
   const [facturaImprimir, setFacturaImprimir] = useState(null);
   const [turnoActivo, setTurnoActivo] = useState(null);
+  const [showModalPago, setShowModalPago] = useState(null);
+  const [montoPago, setMontoPago] = useState('');
+  const [metodoPago, setMetodoPago] = useState('efectivo');
 
   useEffect(() => {
     fetchFacturas();
@@ -161,6 +164,25 @@ const Facturas = () => {
     } catch (err) { alert('Error: ' + err.message); }
   };
 
+  const registrarPago = async () => {
+    if (!showModalPago || !montoPago) return;
+    const monto = parseFloat(montoPago);
+    if (isNaN(monto) || monto <= 0) { alert('Ingrese un monto válido'); return; }
+
+    try {
+      setLoading(true);
+      await api.pagarFactura(showModalPago._id || showModalPago.id, monto, metodoPago);
+      setShowModalPago(null);
+      setMontoPago('');
+      setMetodoPago('efectivo');
+      fetchFacturas();
+    } catch (err) {
+      alert('Error al registrar pago: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const calcularTotalHoy = () => {
     if (!turnoActivo) return 0;
     const inicioTurno = new Date(turnoActivo.fechaInicio).getTime();
@@ -251,6 +273,7 @@ const Facturas = () => {
           <select value={filtroEstado} onChange={e => setFiltroEstado(e.target.value)} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', outline: 'none', fontSize: 13 }}>
             <option value="">Estados: Todos</option>
             <option value="pagada">Pagadas</option>
+            <option value="emitida">Pendientes</option>
             <option value="anulada">Anuladas</option>
           </select>
         </div>
@@ -259,36 +282,47 @@ const Facturas = () => {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#f8fafc' }}>
-                {['COMPROBANTE', 'FECHA', 'PACIENTE', 'TOTAL RD$', 'ESTADO', 'ACCIONES'].map(h => (
-                  <th key={h} style={{ padding: '16px 24px', textAlign: h === 'TOTAL RD$' ? 'right' : 'left', color: '#64748b', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>{h}</th>
+                {['COMPROBANTE', 'FECHA', 'PACIENTE', 'TOTAL RD$', 'PAGADO', 'PENDIENTE', 'ESTADO', 'ACCIONES'].map(h => (
+                  <th key={h} style={{ padding: '16px 24px', textAlign: (h === 'TOTAL RD$' || h === 'PAGADO' || h === 'PENDIENTE') ? 'right' : 'left', color: '#64748b', fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {facturas.length === 0 ? (
-                <tr><td colSpan="6" style={{ padding: '60px', textAlign: 'center', color: '#94a3b8' }}>Sin transacciones registradas</td></tr>
+                <tr><td colSpan="8" style={{ padding: '60px', textAlign: 'center', color: '#94a3b8' }}>Sin transacciones registradas</td></tr>
               ) : (
-                facturas.map(f => (
+                facturas.map(f => {
+                  const pendiente = Math.max(0, (f.total || 0) - (f.montoPagado || 0));
+                  const tienePendiente = pendiente > 0 && f.estado !== 'anulada';
+                  return (
                   <tr key={f._id} style={{ borderBottom: '1px solid #f1f5f9', transition: 'all 0.1s' }} className="hover-row">
                     <td style={{ padding: '20px 24px', color: '#2563eb', fontWeight: 700, fontSize: 13 }}>#{f.numero || f.numero_factura}</td>
                     <td style={{ padding: '20px 24px', color: '#64748b', fontSize: 14 }}>{new Date(f.fecha_factura || f.createdAt).toLocaleDateString('es-DO')}</td>
                     <td style={{ padding: '20px 24px', color: '#1e293b', fontWeight: 600, fontSize: 14 }}>{f.datosCliente?.nombre || f.paciente?.nombre || 'Paciente'}</td>
                     <td style={{ padding: '20px 24px', textAlign: 'right', fontWeight: 800, color: '#0f172a', fontSize: 15 }}>${(f.total || 0).toLocaleString()}</td>
+                    <td style={{ padding: '20px 24px', textAlign: 'right', fontWeight: 600, color: '#10b981', fontSize: 14 }}>${(f.montoPagado || 0).toLocaleString()}</td>
+                    <td style={{ padding: '20px 24px', textAlign: 'right', fontWeight: 700, color: tienePendiente ? '#ef4444' : '#10b981', fontSize: 14 }}>
+                      {tienePendiente ? `$${pendiente.toLocaleString()}` : '$0'}
+                    </td>
                     <td style={{ padding: '20px 24px' }}>
                       <span style={{
                         padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
-                        background: f.estado === 'pagada' ? '#ecfdf5' : '#fef2f2',
-                        color: f.estado === 'pagada' ? '#10b981' : '#ef4444'
-                      }}>{f.estado}</span>
+                        background: f.estado === 'pagada' ? '#ecfdf5' : f.estado === 'anulada' ? '#fef2f2' : '#fff3cd',
+                        color: f.estado === 'pagada' ? '#10b981' : f.estado === 'anulada' ? '#ef4444' : '#856404'
+                      }}>{f.estado === 'emitida' && tienePendiente ? 'pendiente' : f.estado}</span>
                     </td>
                     <td style={{ padding: '20px 24px' }}>
                       <div style={{ display: 'flex', gap: 8 }}>
                         <button onClick={() => verDetalle(f)} style={{ background: '#f1f5f9', border: 'none', color: '#1e293b', width: 32, height: 32, borderRadius: 6, cursor: 'pointer' }}><FaEye size={12} /></button>
                         <button onClick={() => imprimirFactura(f)} style={{ background: '#eff6ff', border: 'none', color: '#2563eb', width: 32, height: 32, borderRadius: 6, cursor: 'pointer' }}><FaPrint size={12} /></button>
+                        {tienePendiente && (
+                          <button onClick={() => { setShowModalPago(f); setMontoPago(pendiente.toString()); }} style={{ background: '#ecfdf5', border: 'none', color: '#10b981', width: 32, height: 32, borderRadius: 6, cursor: 'pointer' }} title="Registrar pago"><FaMoneyBillWave size={12} /></button>
+                        )}
                       </div>
                     </td>
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -302,11 +336,24 @@ const Facturas = () => {
             <h3 style={{ margin: '0 0 24px', fontSize: 20, fontWeight: 800 }}>Comprobante #{facturaDetalle.numero || facturaDetalle.numero_factura}</h3>
             <div style={{ background: '#f8fafc', padding: 20, borderRadius: 10, marginBottom: 24 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}><span style={{ color: '#64748b' }}>Subtotal</span><span>${(facturaDetalle.subtotal || 0).toLocaleString()}</span></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}><span style={{ color: '#ef4444' }}>Cobertura</span><span style={{ color: '#ef4444' }}>-${(facturaDetalle.cobertura || 0).toLocaleString()}</span></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e2e8f0', paddingTop: 15 }}>
-                <span style={{ fontWeight: 800 }}>TOTAL PAGADO</span>
-                <span style={{ fontWeight: 900, color: '#2563eb', fontSize: 22 }}>${(facturaDetalle.total || 0).toLocaleString()}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}><span style={{ color: '#ef4444' }}>Cobertura</span><span style={{ color: '#ef4444' }}>-${(facturaDetalle.cobertura || facturaDetalle.descuento || 0).toLocaleString()}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e2e8f0', paddingTop: 10, marginBottom: 10 }}>
+                <span style={{ fontWeight: 700 }}>Total</span>
+                <span style={{ fontWeight: 800, fontSize: 18 }}>${(facturaDetalle.total || 0).toLocaleString()}</span>
               </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}><span style={{ color: '#10b981' }}>Monto Pagado</span><span style={{ color: '#10b981', fontWeight: 700 }}>${(facturaDetalle.montoPagado || 0).toLocaleString()}</span></div>
+              {Math.max(0, (facturaDetalle.total || 0) - (facturaDetalle.montoPagado || 0)) > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e2e8f0', paddingTop: 10 }}>
+                  <span style={{ fontWeight: 800, color: '#ef4444' }}>PENDIENTE</span>
+                  <span style={{ fontWeight: 900, color: '#ef4444', fontSize: 22 }}>${Math.max(0, (facturaDetalle.total || 0) - (facturaDetalle.montoPagado || 0)).toLocaleString()}</span>
+                </div>
+              )}
+              {Math.max(0, (facturaDetalle.total || 0) - (facturaDetalle.montoPagado || 0)) <= 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e2e8f0', paddingTop: 15 }}>
+                  <span style={{ fontWeight: 800 }}>PAGADO COMPLETO</span>
+                  <span style={{ fontWeight: 900, color: '#10b981', fontSize: 22 }}>✓</span>
+                </div>
+              )}
             </div>
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={() => { setFacturaDetalle(null); imprimirFactura(facturaDetalle); }} style={{ flex: 1, padding: 12, borderRadius: 8, background: '#2563eb', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer' }}>REIMPRIMIR</button>
@@ -338,6 +385,62 @@ const Facturas = () => {
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={crearFactura} disabled={!citaSeleccionada} style={{ flex: 1, padding: 14, borderRadius: 8, background: '#2563eb', color: 'white', border: 'none', fontWeight: 700, cursor: citaSeleccionada ? 'pointer' : 'not-allowed', opacity: citaSeleccionada ? 1 : 0.5 }}>COBRAR SERVICIOS</button>
               <button onClick={() => setShowModalNueva(false)} style={{ padding: 14, borderRadius: 8, background: '#f1f5f9', border: 'none', color: '#1e293b', fontWeight: 700, cursor: 'pointer' }}>CANCELAR</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showModalPago && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000 }}>
+          <div style={{ background: 'white', borderRadius: 12, width: '100%', maxWidth: 420, padding: 32, boxShadow: 'var(--shadow-lg)' }}>
+            <h3 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 800 }}>Registrar Pago</h3>
+            <p style={{ margin: '0 0 20px', color: '#64748b', fontSize: 14 }}>Factura #{showModalPago.numero || showModalPago.numero_factura}</p>
+
+            <div style={{ background: '#f8fafc', padding: 16, borderRadius: 10, marginBottom: 20 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span style={{ color: '#64748b' }}>Total factura</span>
+                <span style={{ fontWeight: 700 }}>${(showModalPago.total || 0).toLocaleString()}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span style={{ color: '#10b981' }}>Ya pagado</span>
+                <span style={{ fontWeight: 700, color: '#10b981' }}>${(showModalPago.montoPagado || 0).toLocaleString()}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e2e8f0', paddingTop: 8 }}>
+                <span style={{ fontWeight: 800, color: '#ef4444' }}>Pendiente</span>
+                <span style={{ fontWeight: 800, color: '#ef4444' }}>${Math.max(0, (showModalPago.total || 0) - (showModalPago.montoPagado || 0)).toLocaleString()}</span>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#444', marginBottom: 6 }}>Monto a pagar (RD$)</label>
+              <input
+                type="number"
+                value={montoPago}
+                onChange={e => setMontoPago(e.target.value)}
+                placeholder="0.00"
+                style={{ width: '100%', padding: '12px 14px', borderRadius: 8, border: '2px solid #e2e8f0', fontSize: 16, fontWeight: 700, boxSizing: 'border-box' }}
+              />
+            </div>
+
+            <div style={{ marginBottom: 24 }}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#444', marginBottom: 6 }}>Método de pago</label>
+              <select
+                value={metodoPago}
+                onChange={e => setMetodoPago(e.target.value)}
+                style={{ width: '100%', padding: '12px 14px', borderRadius: 8, border: '2px solid #e2e8f0', fontSize: 14, boxSizing: 'border-box' }}
+              >
+                <option value="efectivo">Efectivo</option>
+                <option value="tarjeta">Tarjeta</option>
+                <option value="transferencia">Transferencia</option>
+                <option value="cheque">Cheque</option>
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={registrarPago} style={{ flex: 1, padding: 14, borderRadius: 8, background: '#10b981', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <FaMoneyBillWave />REGISTRAR PAGO
+              </button>
+              <button onClick={() => { setShowModalPago(null); setMontoPago(''); }} style={{ padding: 14, borderRadius: 8, background: '#f1f5f9', border: 'none', color: '#1e293b', fontWeight: 700, cursor: 'pointer' }}>CANCELAR</button>
             </div>
           </div>
         </div>
