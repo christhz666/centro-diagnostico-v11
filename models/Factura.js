@@ -185,7 +185,7 @@ facturaSchema.pre('validate', async function (next) {
 // Soporta tanto texto plano (nuevo) como bcrypt hasheado (viejo)
 facturaSchema.methods.comparePassword = async function (candidatePassword) {
     if (!this.pacientePassword) return false;
-    const candidate = (candidatePassword || '').trim().toLowerCase().replace(/[^a-záéíóúñü0-9]/g, '');
+    const candidate = (candidatePassword || '').trim().toLowerCase().replace(/[^a-záéíóúñü]/g, '');
 
     // Si el password guardado NO empieza con $2 (no es bcrypt hash), comparar directamente
     if (!this.pacientePassword.startsWith('$2')) {

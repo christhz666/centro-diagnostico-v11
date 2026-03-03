@@ -498,8 +498,8 @@ exports.accesoPaciente = async (req, res, next) => {
         }
 
         // Normalizar input (permitir tildes y ñ como en el modelo)
-        const userNorm = username.trim().toLowerCase().replace(/[^a-záéíóúñü0-9]/g, '');
-        const passNorm = password.trim().toLowerCase().replace(/[^a-záéíóúñü0-9]/g, '');
+        const userNorm = username.trim().toLowerCase().replace(/[^a-záéíóúñü]/g, '');
+        const passNorm = password.trim().toLowerCase().replace(/[^a-záéíóúñü]/g, '');
 
         // 1) Buscar factura por pacienteUsername exacto
         let factura = await Factura.findOne({
