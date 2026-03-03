@@ -60,6 +60,18 @@ const PortalPaciente = () => {
   const [error, setError] = useState('');
   const [datos, setDatos] = useState(null);
   const [bloqueo, setBloqueo] = useState(null); // { montoPendiente, totalFactura, mensaje }
+  const [empresaNombre, setEmpresaNombre] = useState('Centro Diagnóstico');
+
+  /* ── Cargar nombre de empresa ── */
+  useEffect(() => {
+    fetch('/api/configuracion/empresa')
+      .then(r => r.json())
+      .then(data => {
+        const nombre = data?.nombre || data?.empresa_nombre;
+        if (nombre) setEmpresaNombre(nombre);
+      })
+      .catch(() => {});
+  }, []);
 
   /* ── Acceso automático por QR ── */
   useEffect(() => {
@@ -159,12 +171,12 @@ const PortalPaciente = () => {
       .footer{text-align:center;margin-top:30px;padding:10px;background:#1a3a5c;color:white;border-radius:5px}
       @media print{button{display:none}}</style></head><body>
       <div style="text-align:center;border-bottom:3px solid #1a3a5c;padding-bottom:15px;margin-bottom:20px">
-        <h1 style="color:#1a3a5c;margin:0">Centro Diagnóstico Mi Esperanza</h1>
+        <h1 style="color:#1a3a5c;margin:0">${empresaNombre}</h1>
         <h2 style="font-weight:normal;color:#555;margin:5px 0">${r.estudio?.nombre || 'Resultado'}</h2>
       </div>
       <div style="background:#f0f8ff;padding:15px;border-radius:8px;margin-bottom:20px">
-        <strong>Paciente:</strong> ${datos?.paciente?.nombre} ${datos?.paciente?.apellido} &nbsp;|&nbsp;
-        <strong>Cédula:</strong> ${datos?.paciente?.cedula} &nbsp;|&nbsp;
+        <strong>Paciente:</strong> ${datos?.paciente?.nombre || ''} ${datos?.paciente?.apellido || ''} &nbsp;|&nbsp;
+        <strong>Cédula:</strong> ${datos?.paciente?.cedula || ''} &nbsp;|&nbsp;
         <strong>Fecha:</strong> ${new Date(r.createdAt).toLocaleDateString('es-DO')}
       </div>
       <table><thead><tr><th>Parámetro</th><th>Resultado</th><th>Referencia</th><th>Estado</th></tr></thead>
@@ -247,7 +259,7 @@ const PortalPaciente = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <FaHospital style={{ fontSize: 30 }} />
               <div>
-                <h2 style={{ margin: 0, fontSize: 20 }}>Centro Diagnóstico Mi Esperanza</h2>
+                <h2 style={{ margin: 0, fontSize: 20 }}>{empresaNombre}</h2>
                 <p style={{ margin: '3px 0 0', opacity: 0.8, fontSize: 13 }}>Portal de Resultados para Pacientes</p>
               </div>
             </div>
@@ -263,6 +275,7 @@ const PortalPaciente = () => {
               <FaUser style={{ fontSize: 22, color: C.white }} />
             </div>
             <div style={{ marginLeft: 20, flex: 1 }}>
+              <p style={{ margin: '0 0 4px', fontSize: 13, color: '#888' }}>Bienvenido/a</p>
               <h3 style={{ margin: 0, color: C.mid, fontSize: 20 }}>
                 {datos.paciente?.nombre} {datos.paciente?.apellido}
               </h3>
@@ -386,8 +399,8 @@ const PortalPaciente = () => {
           <div style={styles.iconCircle(C.mid)}>
             <FaHospital style={{ fontSize: 32, color: C.white }} />
           </div>
-          <h2 style={{ margin: '18px 0 5px', color: C.mid, fontSize: 22 }}>Centro Diagnóstico</h2>
-          <h3 style={{ margin: 0, color: C.blue, fontWeight: 400, fontSize: 16 }}>Mi Esperanza</h3>
+          <h2 style={{ margin: '18px 0 5px', color: C.mid, fontSize: 22 }}>{empresaNombre}</h2>
+          <h3 style={{ margin: 0, color: C.blue, fontWeight: 400, fontSize: 16 }}>Portal de Resultados</h3>
           <p style={{ margin: '10px 0 0', color: '#888', fontSize: 13 }}>Portal de resultados para pacientes</p>
         </div>
 
