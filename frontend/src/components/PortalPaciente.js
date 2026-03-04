@@ -68,6 +68,17 @@ const PortalPaciente = () => {
   const [bloqueo, setBloqueo] = useState(null); // { montoPendiente, totalFactura, mensaje }
   const [empresaNombre, setEmpresaNombre] = useState('Centro Diagnóstico');
 
+  /* ── Fallback: si después de 15s sigue en cargando-qr, mostrar login ── */
+  useEffect(() => {
+    if (modo !== 'cargando-qr') return;
+    const timeout = setTimeout(() => {
+      setModo('login');
+      setError('No se pudo verificar el código QR. Por favor, ingrese sus credenciales.');
+      setLoading(false);
+    }, 15000);
+    return () => clearTimeout(timeout);
+  }, [modo]);
+
   /* ── Cargar nombre de empresa ── */
   useEffect(() => {
     fetch('/api/configuracion/empresa')
@@ -85,8 +96,22 @@ const PortalPaciente = () => {
     const validarQR = async () => {
       setLoading(true);
       try {
+        // Timeout de 10 segundos para evitar que se quede cargando indefinidamente
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+
         // Validar que el QR existe y obtener info de la factura
-        const res = await fetch(`/api/verificar/${encodeURIComponent(qrParam)}`);
+        const res = await fetch(`/api/verificar/${encodeURIComponent(qrParam)}`, {
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        if (!res.ok) {
+          setError('Código QR inválido o expirado');
+          setModo('login');
+          return;
+        }
+
         const data = await res.json();
 
         if (data.valido) {
@@ -94,11 +119,15 @@ const PortalPaciente = () => {
           setModo('login-qr');
           setError('');
         } else {
-          setError('Código QR inválido o expirado');
+          setError(data.mensaje || 'Código QR inválido o expirado');
           setModo('login');
         }
-      } catch {
-        setError('Error al validar código QR');
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          setError('Tiempo de espera agotado. Verifique su conexión e intente de nuevo.');
+        } else {
+          setError('Error al validar código QR. Verifique su conexión.');
+        }
         setModo('login');
       } finally {
         setLoading(false);
