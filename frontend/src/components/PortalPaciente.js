@@ -19,6 +19,9 @@ const C = {
 };
 
 /* ─── Helpers ───────────────────────────────────────────────── */
+const QR_VALIDATION_TIMEOUT = 10000;
+const QR_FALLBACK_TIMEOUT = 15000;
+
 const getFmtMoney = (n) =>
   `RD$ ${Number(n || 0).toLocaleString('es-DO', { minimumFractionDigits: 2 })}`;
 
@@ -75,7 +78,7 @@ const PortalPaciente = () => {
       setModo('login');
       setError('No se pudo verificar el código QR. Por favor, ingrese sus credenciales.');
       setLoading(false);
-    }, 15000);
+    }, QR_FALLBACK_TIMEOUT);
     return () => clearTimeout(timeout);
   }, [modo]);
 
@@ -98,7 +101,7 @@ const PortalPaciente = () => {
       try {
         // Timeout de 10 segundos para evitar que se quede cargando indefinidamente
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        const timeoutId = setTimeout(() => controller.abort(), QR_VALIDATION_TIMEOUT);
 
         // Validar que el QR existe y obtener info de la factura
         const res = await fetch(`/api/verificar/${encodeURIComponent(qrParam)}`, {

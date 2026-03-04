@@ -296,7 +296,7 @@ function App() {
                     <div className="p-4 border-t border-gray-100 dark:border-white/5">
                       <button onClick={handleLogout} className="w-full flex items-center gap-4 p-3 rounded-2xl text-red-400 hover:bg-red-500/10 transition-all group">
                         <span className="material-icons-round">logout</span>
-                        <span className={`font-medium transition-opacity ${!(sidebarOpen || sidebarHover) && 'lg:opacity-0'}`}>Sair</span>
+                        <span className={`font-medium transition-opacity ${!(sidebarOpen || sidebarHover) && 'lg:opacity-0'}`}>Salir</span>
                       </button>
                     </div>
                   </aside>
