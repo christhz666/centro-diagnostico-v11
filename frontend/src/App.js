@@ -30,6 +30,7 @@ function App() {
   const [, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarHover, setSidebarHover] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches));
   const [runTour, setRunTour] = useState(false);
@@ -215,16 +216,20 @@ function App() {
                   )}
 
                   {/* Sidebar */}
-                  <aside className={`fixed inset-y-0 left-0 z-40 transition-all duration-300 ease-in-out bg-white dark:bg-background-dark border-r border-gray-200 dark:border-white/5 flex flex-col
+                  <aside
+                    onMouseEnter={() => { if (!isMobile && !sidebarOpen) setSidebarHover(true); }}
+                    onMouseLeave={() => { if (!isMobile) setSidebarHover(false); }}
+                    className={`fixed inset-y-0 left-0 z-40 transition-all duration-300 ease-in-out bg-white dark:bg-background-dark border-r border-gray-200 dark:border-white/5 flex flex-col
                   ${isMobile
                       ? (sidebarOpen ? 'w-72 translate-x-0 shadow-2xl' : '-translate-x-full w-72')
-                      : (sidebarOpen ? 'w-64 translate-x-0' : 'w-20 translate-x-0')}
+                      : ((sidebarOpen || sidebarHover) ? 'w-64 translate-x-0' : 'w-20 translate-x-0')}
+                  ${!isMobile && sidebarHover && !sidebarOpen ? 'shadow-2xl' : ''}
                 `}>
                     <div className="p-6 flex items-center justify-center">
                       {empresaConfig.logo_sidebar ? (
-                        <img src={empresaConfig.logo_sidebar} alt="Logo" className={`max-h-12 max-w-[160px] object-contain transition-all ${!sidebarOpen && 'scale-90 max-w-[40px]'}`} />
+                        <img src={empresaConfig.logo_sidebar} alt="Logo" className={`max-h-12 max-w-[160px] object-contain transition-all ${!(sidebarOpen || sidebarHover) && 'scale-90 max-w-[40px]'}`} />
                       ) : (
-                        <div className={`h-12 w-12 bg-primary rounded-2xl flex items-center justify-center shadow-neon transition-all ${!sidebarOpen && 'scale-90'}`}>
+                        <div className={`h-12 w-12 bg-primary rounded-2xl flex items-center justify-center shadow-neon transition-all ${!(sidebarOpen || sidebarHover) && 'scale-90'}`}>
                           <span className="material-icons-round text-slate-900">medical_services</span>
                         </div>
                       )}
@@ -244,10 +249,10 @@ function App() {
                               : 'text-slate-400 dark:text-gray-500 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-primary'}
                         `}>
                           <span className="material-icons-round transition-transform group-hover:scale-110">{item.icon}</span>
-                          <span className={`font-medium whitespace-nowrap transition-opacity duration-300 ${!sidebarOpen && 'opacity-0 pointer-events-none w-0 overflow-hidden'}`}>
+                          <span className={`font-medium whitespace-nowrap transition-opacity duration-300 ${!(sidebarOpen || sidebarHover) && 'opacity-0 pointer-events-none w-0 overflow-hidden'}`}>
                             {item.label}
                           </span>
-                          {!sidebarOpen && !isMobile && (
+                          {!(sidebarOpen || sidebarHover) && !isMobile && (
                             <div className="absolute left-full ml-4 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none z-50 transition-opacity whitespace-nowrap">
                               {item.label}
                             </div>
@@ -266,14 +271,14 @@ function App() {
                           >
                             <div className="flex items-center gap-4">
                               <span className="material-icons-round">settings</span>
-                              <span className={`font-medium whitespace-nowrap transition-opacity duration-300 ${!sidebarOpen && 'lg:opacity-0'}`}>Administración</span>
+                              <span className={`font-medium whitespace-nowrap transition-opacity duration-300 ${!(sidebarOpen || sidebarHover) && 'lg:opacity-0'}`}>Administración</span>
                             </div>
-                            {sidebarOpen && (
+                            {(sidebarOpen || sidebarHover) && (
                               <span className={`material-icons-round text-sm transition-transform ${adminOpen ? 'rotate-180' : ''}`}>expand_more</span>
                             )}
                           </button>
 
-                          <div className={`overflow-hidden transition-all duration-300 ${adminOpen && sidebarOpen ? 'max-h-96 mt-1 opacity-100' : 'max-h-0 opacity-0'}`}>
+                          <div className={`overflow-hidden transition-all duration-300 ${adminOpen && (sidebarOpen || sidebarHover) ? 'max-h-96 mt-1 opacity-100' : 'max-h-0 opacity-0'}`}>
                             <div className="ml-9 space-y-1 border-l-2 border-primary/20 pl-3">
                               <NavLink to="/admin/usuarios" className={({ isActive }) => `block p-2 text-sm rounded-xl transition-all ${isActive ? 'text-primary font-bold bg-primary/5' : 'text-slate-400 dark:text-gray-500 hover:text-primary'}`}>Usuarios</NavLink>
                               <NavLink to="/admin/equipos" className={({ isActive }) => `block p-2 text-sm rounded-xl transition-all ${isActive ? 'text-primary font-bold bg-primary/5' : 'text-slate-400 dark:text-gray-500 hover:text-primary'}`}>Equipos</NavLink>
@@ -291,7 +296,7 @@ function App() {
                     <div className="p-4 border-t border-gray-100 dark:border-white/5">
                       <button onClick={handleLogout} className="w-full flex items-center gap-4 p-3 rounded-2xl text-red-400 hover:bg-red-500/10 transition-all group">
                         <span className="material-icons-round">logout</span>
-                        <span className={`font-medium transition-opacity ${!sidebarOpen && 'lg:opacity-0'}`}>Sair</span>
+                        <span className={`font-medium transition-opacity ${!(sidebarOpen || sidebarHover) && 'lg:opacity-0'}`}>Salir</span>
                       </button>
                     </div>
                   </aside>

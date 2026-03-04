@@ -95,15 +95,64 @@
     .dark [style*="background: rgb(240"],
     .dark [style*="background: rgb(245"],
     .dark [style*="background: rgb(249"],
-    .dark [style*="background: rgb(250"] {
+    .dark [style*="background: rgb(250"],
+    .dark [style*="background: rgb(236"],
+    .dark [style*="background: rgb(232"],
+    .dark [style*="background: rgb(230"] {
         background: rgba(255,255,255,0.03) !important;
+    }
+
+    /* Override status badge backgrounds in dark mode */
+    .dark [style*="background: rgb(212, 237"],
+    .dark [style*="background: rgb(212,237"] {
+        background: rgba(34, 197, 94, 0.15) !important;
+    }
+
+    .dark [style*="background: rgb(248, 215"],
+    .dark [style*="background: rgb(248,215"] {
+        background: rgba(239, 68, 68, 0.15) !important;
+    }
+
+    .dark [style*="background: rgb(209, 236"],
+    .dark [style*="background: rgb(209,236"] {
+        background: rgba(6, 182, 212, 0.15) !important;
+    }
+
+    .dark [style*="background: rgb(204, 229"],
+    .dark [style*="background: rgb(204,229"] {
+        background: rgba(37, 99, 235, 0.15) !important;
+    }
+
+    /* Override missing dark text in dark mode */
+    .dark [style*="color: rgb(26, 58"],
+    .dark [style*="color: rgb(26,58"] {
+        color: #93c5fd !important;
+    }
+
+    .dark [style*="color: rgb(0, 0, 0"],
+    .dark [style*="color: rgb(0,0,0"] {
+        color: #e2e8f0 !important;
+    }
+
+    .dark [style*="color: rgb(45, 55"],
+    .dark [style*="color: rgb(45,55"] {
+        color: #e2e8f0 !important;
+    }
+
+    .dark [style*="color: rgb(74, 85"],
+    .dark [style*="color: rgb(74,85"] {
+        color: #94a3b8 !important;
     }
 
     /* Override inline light borders in dark mode */
     .dark [style*="border-color: rgb(226"],
     .dark [style*="border-color: rgb(241"],
     .dark [style*="border: 1px solid rgb(226"],
-    .dark [style*="border: 1px solid rgb(241"] {
+    .dark [style*="border: 1px solid rgb(241"],
+    .dark [style*="border: 1px solid rgb(224"],
+    .dark [style*="border: 2px solid rgb(224"],
+    .dark [style*="border-bottom: 1px solid rgb(240"],
+    .dark [style*="border-bottom: 2px solid rgb(224"] {
         border-color: rgba(255,255,255,0.08) !important;
     }
 }

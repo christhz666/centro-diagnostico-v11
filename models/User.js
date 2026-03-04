@@ -90,6 +90,17 @@ userSchema.virtual('nombreCompleto').get(function () {
     return `${this.nombre} ${this.apellido}`;
 });
 
+// Pre-validate: limpiar email/username vacíos para que sparse index funcione
+userSchema.pre('validate', function (next) {
+    if (this.email !== undefined && (!this.email || (typeof this.email === 'string' && this.email.trim() === '') || this.email === 'null')) {
+        this.email = undefined;
+    }
+    if (this.username !== undefined && (!this.username || (typeof this.username === 'string' && this.username.trim() === '') || this.username === 'null')) {
+        this.username = undefined;
+    }
+    next();
+});
+
 // Pre-save: encriptar contraseña
 userSchema.pre('save', async function (next) {
     if (!this.isModified('password')) return next();
