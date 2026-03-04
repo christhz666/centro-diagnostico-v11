@@ -161,7 +161,8 @@ app.use('/api/whatsapp', require('./routes/whatsapp'));
 app.use('/api/auditoria', require('./routes/auditoria'));
 app.use('/api/imagenologia', require('./routes/imagenologia'));
 app.use('/api/orthanc', require('./routes/orthanc')); // Proxy DICOM
-app.use("/verificar", require("./routes/verificar"));
+app.use("/api/verificar", require("./routes/verificar"));
+app.use("/verificar", require("./routes/verificar")); // Backward compatibility
 
 // Visor de imágenes médicas (acceso directo por URL)
 app.get('/visor', (req, res) => {
