@@ -104,6 +104,10 @@ const AdminUsuarios = () => {
       if (!userData.username || userData.username === 'null' || String(userData.username).trim() === '') {
         delete userData.username;
       }
+      // Apellido es opcional; no enviar cadena vacía
+      if (!userData.apellido || String(userData.apellido).trim() === '') {
+        delete userData.apellido;
+      }
       if (editando) {
         if (!userData.password) delete userData.password;
         if (!userData.sucursal) userData.sucursal = null;
@@ -232,7 +236,7 @@ const AdminUsuarios = () => {
               <div style={{ display: 'grid', gap: 12 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                   <input placeholder="Nombre *" value={formData.nombre} onChange={e => setFormData({ ...formData, nombre: e.target.value })} required style={inputStyle} />
-                  <input placeholder="Apellido *" value={formData.apellido} onChange={e => setFormData({ ...formData, apellido: e.target.value })} required style={inputStyle} />
+                  <input placeholder="Apellido (opcional)" value={formData.apellido} onChange={e => setFormData({ ...formData, apellido: e.target.value })} style={inputStyle} />
                 </div>
                 <input placeholder="Nombre de usuario (se genera automáticamente si se deja vacío)" type="text" value={formData.username} onChange={e => setFormData({ ...formData, username: e.target.value })} style={inputStyle} />
                 <input placeholder={editando ? "Nueva contraseña (dejar vacío para no cambiar)" : "Contraseña * (mínimo 6 caracteres)"} type="password" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} required={!editando} minLength={editando ? 0 : 6} style={inputStyle} />

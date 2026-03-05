@@ -365,9 +365,10 @@ class ApiService {
     async getRoles() { return this.request('/admin/roles'); }
     async createUsuario(data) {
         const d = { ...data, role: data.role || data.rol || 'recepcion' };
-        // No enviar email/username vacíos o "null" - evita error 11000 en MongoDB
+        // No enviar email/username/apellido vacíos o "null" - evita errores de validación
         if (!d.email || d.email === 'null' || String(d.email).trim() === '') delete d.email;
         if (!d.username || d.username === 'null' || String(d.username).trim() === '') delete d.username;
+        if (!d.apellido || String(d.apellido).trim() === '') delete d.apellido;
         return this.request('/admin/usuarios', { method: 'POST', body: JSON.stringify(d) });
     }
     async updateUsuario(id, data) {
