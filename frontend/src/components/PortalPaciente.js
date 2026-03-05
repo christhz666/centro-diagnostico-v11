@@ -35,6 +35,15 @@ const calcularEdad = (fecha) => {
   return `${e} años`;
 };
 
+const getEstadoColor = (estado) => {
+  if (estado === 'normal') return '#4CAF50';
+  if (estado === 'alto') return '#FF5722';
+  if (estado === 'bajo') return '#2196F3';
+  return '#FF9800';
+};
+
+const fmtParametro = (p) => (p || '').replace(/_/g, ' ');
+
 const EstadoBadge = ({ estado }) => {
   const cfg = {
     pendiente: { bg: 'linear-gradient(135deg, #fff3cd, #ffe69c)', color: '#856404', label: '⏳ Pendiente', border: '#ffc107' },
@@ -230,16 +239,10 @@ const PortalPaciente = () => {
   /* ── Imprimir un resultado ── */
   const imprimirResultado = (r) => {
     const win = window.open('', 'print', 'width=800,height=900');
-    const getEstadoColor = (estado) => {
-      if (estado === 'normal') return '#4CAF50';
-      if (estado === 'alto') return '#FF5722';
-      if (estado === 'bajo') return '#2196F3';
-      return '#FF9800';
-    };
     const valorCards = (r.valores || []).map(v => `
       <div style="background:white;border:1px solid #e0e0e0;border-left:4px solid ${getEstadoColor(v.estado || 'normal')};border-radius:8px;padding:15px;margin-bottom:10px;break-inside:avoid">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <strong style="font-size:14px;text-transform:uppercase">${(v.parametro || '').replace(/_/g, ' ')}</strong>
+          <strong style="font-size:14px;text-transform:uppercase">${fmtParametro(v.parametro)}</strong>
           <span style="background:${getEstadoColor(v.estado || 'normal')};color:white;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:bold">${(v.estado || 'N/A').toUpperCase()}</span>
         </div>
         <div style="font-size:22px;font-weight:bold;color:#2c3e50;margin-bottom:4px">${v.valor || ''} <span style="font-size:14px;color:#999;font-weight:normal">${v.unidad || ''}</span></div>
@@ -403,12 +406,6 @@ const PortalPaciente = () => {
                   {r.valores?.length > 0 && (
                     <div style={{ display: 'grid', gap: 10 }}>
                       {r.valores.map((v, j) => {
-                        const getEstadoColor = (est) => {
-                          if (est === 'normal') return '#4CAF50';
-                          if (est === 'alto') return '#FF5722';
-                          if (est === 'bajo') return '#2196F3';
-                          return '#FF9800';
-                        };
                         const estadoColor = getEstadoColor(v.estado);
                         return (
                           <div key={j} style={{
@@ -419,7 +416,7 @@ const PortalPaciente = () => {
                           }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                               <strong style={{ fontSize: 13, textTransform: 'uppercase', color: '#444' }}>
-                                {(v.parametro || '').replace(/_/g, ' ')}
+                                {fmtParametro(v.parametro)}
                               </strong>
                               {v.estado && (
                                 <span style={{

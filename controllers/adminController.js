@@ -91,11 +91,14 @@ exports.createUsuario = async (req, res, next) => {
         }
         // Auto-generar username si no se proporcionó ni username ni email
         if (!data.username && !data.email) {
-            const base = ((data.nombre || '') + (data.apellido || '')).toLowerCase().replace(/[^a-záéíóúñü]/g, '');
-            // Buscar si ya existe un usuario con ese username y añadir sufijo numérico
+            let base = ((data.nombre || '') + (data.apellido || '')).toLowerCase().replace(/[^a-záéíóúñü]/g, '');
+            if (!base) base = 'usuario';
+            // Buscar usernames existentes con el mismo prefijo para determinar sufijo
+            const existentes = await User.find({ username: new RegExp(`^${base}\\d*$`) }).select('username').lean();
+            const usados = new Set(existentes.map(u => u.username));
             let candidate = base;
             let suffix = 1;
-            while (await User.findOne({ username: candidate })) {
+            while (usados.has(candidate)) {
                 candidate = base + suffix;
                 suffix++;
             }
