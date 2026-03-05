@@ -89,11 +89,20 @@ exports.createUsuario = async (req, res, next) => {
         if (userVal && userVal !== 'null' && typeof userVal === 'string' && userVal.trim()) {
             data.username = userVal.trim().toLowerCase();
         }
+        // Auto-generar username si no se proporcionó ni username ni email
         if (!data.username && !data.email) {
-            return res.status(400).json({
-                success: false,
-                message: 'El usuario debe tener nombre de usuario o email para poder iniciar sesión.'
-            });
+            let base = ((data.nombre || '') + (data.apellido || '')).toLowerCase().replace(/[^a-záéíóúñü]/g, '');
+            if (!base) base = 'usuario';
+            // Buscar usernames existentes con el mismo prefijo para determinar sufijo
+            const existentes = await User.find({ username: new RegExp(`^${base}\\d*$`) }).select('username').lean();
+            const usados = new Set(existentes.map(u => u.username));
+            let candidate = base;
+            let suffix = 1;
+            while (usados.has(candidate)) {
+                candidate = base + suffix;
+                suffix++;
+            }
+            data.username = candidate;
         }
         // Sucursal: solo si es ObjectId válido
         if (body.sucursal && body.sucursal !== '' && body.sucursal !== 'null' && mongoose.Types.ObjectId.isValid(body.sucursal)) {
