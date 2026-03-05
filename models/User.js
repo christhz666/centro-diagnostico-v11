@@ -16,7 +16,7 @@ const userSchema = new mongoose.Schema({
     },
     apellido: {
         type: String,
-        required: [true, 'El apellido es requerido'],
+        required: false,
         trim: true,
         maxlength: [50, 'El apellido no puede exceder 50 caracteres']
     },

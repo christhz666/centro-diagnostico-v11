@@ -71,9 +71,25 @@ exports.createUsuario = async (req, res, next) => {
     try {
         const body = req.body;
         // Construir objeto solo con campos válidos (evitar email/username "null" o vacíos)
+        // Username: solo incluir si es válido
+        const userVal = body.username;
+        const usernameClean = (userVal && userVal !== 'null' && typeof userVal === 'string' && userVal.trim())
+            ? userVal.trim().toLowerCase()
+            : null;
+
+        // Nombre: si no se proporciona, derivar del username o usar 'Usuario' como fallback
+        const nombreClean = (body.nombre && typeof body.nombre === 'string' && body.nombre.trim())
+            ? body.nombre.trim()
+            : (usernameClean || 'Usuario');
+
+        // Apellido: opcional, usar cadena vacía si no se proporciona
+        const apellidoClean = (body.apellido && typeof body.apellido === 'string' && body.apellido.trim())
+            ? body.apellido.trim()
+            : undefined;
+
         const data = {
-            nombre: body.nombre,
-            apellido: body.apellido,
+            nombre: nombreClean,
+            apellido: apellidoClean,
             password: body.password,
             role: body.role || body.rol || 'recepcion',
             telefono: body.telefono || undefined,
@@ -84,10 +100,9 @@ exports.createUsuario = async (req, res, next) => {
         if (emailVal && emailVal !== 'null' && typeof emailVal === 'string' && emailVal.trim()) {
             data.email = emailVal.trim().toLowerCase();
         }
-        // Username: solo incluir si es válido
-        const userVal = body.username;
-        if (userVal && userVal !== 'null' && typeof userVal === 'string' && userVal.trim()) {
-            data.username = userVal.trim().toLowerCase();
+        // Username
+        if (usernameClean) {
+            data.username = usernameClean;
         }
         // Auto-generar username si no se proporcionó ni username ni email
         if (!data.username && !data.email) {
