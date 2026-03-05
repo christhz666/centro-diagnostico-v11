@@ -126,7 +126,15 @@ const pacienteSchema = new mongoose.Schema({
 pacienteSchema.pre('validate', function (next) {
     // Generar cedula única para menores usando ObjectId
     // Tratar 'MENOR DE EDAD' y cadenas vacías como sin cédula
-    if (this.esMenor && (!this.cedula || this.cedula === 'MENOR DE EDAD' || (typeof this.cedula === 'string' && this.cedula.trim() === ''))) {
+    const cedulaEsMenor = !this.cedula ||
+        this.cedula === 'MENOR DE EDAD' ||
+        (typeof this.cedula === 'string' && this.cedula.trim() === '');
+    if (this.esMenor && cedulaEsMenor) {
+        // Menor de edad con cédula vacía o placeholder: generar cédula única
+        this.cedula = `MENOR-${new mongoose.Types.ObjectId()}`;
+    } else if (!this.esMenor && this.cedula === 'MENOR DE EDAD') {
+        // Cedula es 'MENOR DE EDAD' pero esMenor no fue marcado: auto-marcar y generar cédula
+        this.esMenor = true;
         this.cedula = `MENOR-${new mongoose.Types.ObjectId()}`;
     }
     // Limpiar email vacío para evitar problemas con índices

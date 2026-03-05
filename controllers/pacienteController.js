@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Paciente = require('../models/Paciente');
 const { AppError } = require('../middleware/errorHandler');
 
@@ -120,29 +121,39 @@ exports.createPaciente = async (req, res, next) => {
         try {
             paciente = await Paciente.create(req.body);
         } catch (createError) {
-            // Si es error de cédula duplicada, buscar paciente existente con misma cédula y nombre
+            // Si es error de cédula duplicada
             if (createError.code === 11000 && createError.keyPattern && createError.keyPattern.cedula) {
-                const cedulaVal = req.body.cedula;
-                const nombreVal = (req.body.nombre || '').trim().toLowerCase();
-                const apellidoVal = (req.body.apellido || '').trim().toLowerCase();
+                // Para menores de edad: la cédula nunca debe ser un identificador único
+                // Si esMenor=true, generamos una nueva cédula única y reintentamos
+                if (req.body.esMenor) {
+                    req.body.cedula = `MENOR-${new mongoose.Types.ObjectId()}`;
+                    paciente = await Paciente.create(req.body);
+                } else {
+                    // Para adultos: buscar paciente existente con misma cédula y nombre
+                    const cedulaVal = req.body.cedula;
+                    const nombreVal = (req.body.nombre || '').trim().toLowerCase();
+                    const apellidoVal = (req.body.apellido || '').trim().toLowerCase();
 
-                if (cedulaVal) {
-                    const existente = await Paciente.findOne({ cedula: cedulaVal });
-                    if (existente &&
-                        (existente.nombre || '').trim().toLowerCase() === nombreVal &&
-                        (existente.apellido || '').trim().toLowerCase() === apellidoVal) {
-                        // Mismo paciente, devolver el existente
-                        return res.status(200).json({
-                            success: true,
-                            message: 'Paciente ya registrado',
-                            data: existente,
-                            yaExistia: true
-                        });
+                    if (cedulaVal) {
+                        const existente = await Paciente.findOne({ cedula: cedulaVal });
+                        if (existente &&
+                            (existente.nombre || '').trim().toLowerCase() === nombreVal &&
+                            (existente.apellido || '').trim().toLowerCase() === apellidoVal) {
+                            // Mismo paciente, devolver el existente
+                            return res.status(200).json({
+                                success: true,
+                                message: 'Paciente ya registrado',
+                                data: existente,
+                                yaExistia: true
+                            });
+                        }
                     }
+                    // Si no es duplicado manejable, re-lanzar el error
+                    throw createError;
                 }
+            } else {
+                throw createError;
             }
-            // Si no es duplicado manejable, re-lanzar el error
-            throw createError;
         }
 
         // ── Generar payload para equipo de rayos X ──
