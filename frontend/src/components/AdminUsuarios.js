@@ -108,6 +108,10 @@ const AdminUsuarios = () => {
       if (!userData.apellido || String(userData.apellido).trim() === '') {
         delete userData.apellido;
       }
+      // Para médicos: nombre es opcional (se deriva del username en el backend)
+      if (userData.role === 'medico' && (!userData.nombre || String(userData.nombre).trim() === '')) {
+        delete userData.nombre;
+      }
       if (editando) {
         if (!userData.password) delete userData.password;
         if (!userData.sucursal) userData.sucursal = null;
@@ -234,29 +238,69 @@ const AdminUsuarios = () => {
             </div>
             <form onSubmit={handleSubmit}>
               <div style={{ display: 'grid', gap: 12 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <input placeholder="Nombre *" value={formData.nombre} onChange={e => setFormData({ ...formData, nombre: e.target.value })} required style={inputStyle} />
-                  <input placeholder="Apellido (opcional)" value={formData.apellido} onChange={e => setFormData({ ...formData, apellido: e.target.value })} style={inputStyle} />
-                </div>
-                <input placeholder="Nombre de usuario (se genera automáticamente si se deja vacío)" type="text" value={formData.username} onChange={e => setFormData({ ...formData, username: e.target.value })} style={inputStyle} />
-                <input placeholder={editando ? "Nueva contraseña (dejar vacío para no cambiar)" : "Contraseña * (mínimo 6 caracteres)"} type="password" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} required={!editando} minLength={editando ? 0 : 6} style={inputStyle} />
-                <input placeholder="Teléfono" value={formData.telefono} onChange={e => setFormData({ ...formData, telefono: e.target.value })} style={inputStyle} />
+                {/* Selector de rol siempre visible primero */}
                 <div>
                   <label style={{ fontSize: 13, color: '#666', marginBottom: 5, display: 'block' }}>Rol del usuario *</label>
                   <select value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value })} required style={{ ...inputStyle, background: 'white' }}>
                     {roles.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                   </select>
                 </div>
-                <div>
-                  <label style={{ fontSize: 13, color: '#666', marginBottom: 5, display: 'block' }}><FaBuilding style={{ marginRight: 6 }} />Sucursal</label>
-                  <select value={formData.sucursal} onChange={e => setFormData({ ...formData, sucursal: e.target.value })} style={{ ...inputStyle, background: 'white' }}>
-                    <option value="">-- Sin sucursal --</option>
-                    {sucursales.map(s => <option key={s._id} value={s._id}>{s.nombre} ({s.codigo || s._id})</option>)}
-                  </select>
-                  <small style={{ color: '#888', fontSize: 11 }}>Recomendado para Recepcionista y Laboratorista</small>
-                </div>
-                {formData.role === 'medico' && (
-                  <input placeholder="Especialidad médica" value={formData.especialidad} onChange={e => setFormData({ ...formData, especialidad: e.target.value })} style={inputStyle} />
+
+                {formData.role === 'medico' ? (
+                  /* Formulario simplificado para médicos: solo usuario y contraseña */
+                  <>
+                    <div style={{ background: '#eaf4fb', border: '1px solid #b3d7ed', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#1a6e99' }}>
+                      Los médicos se identifican únicamente con <strong>nombre de usuario</strong> y <strong>contraseña</strong>.
+                    </div>
+                    <input
+                      placeholder="Nombre de usuario * (obligatorio para médicos)"
+                      type="text"
+                      value={formData.username}
+                      onChange={e => setFormData({ ...formData, username: e.target.value })}
+                      required
+                      style={inputStyle}
+                    />
+                    <input
+                      placeholder={editando ? 'Nueva contraseña (dejar vacío para no cambiar)' : 'Contraseña * (mínimo 6 caracteres)'}
+                      type="password"
+                      value={formData.password}
+                      onChange={e => setFormData({ ...formData, password: e.target.value })}
+                      required={!editando}
+                      minLength={editando ? 0 : 6}
+                      style={inputStyle}
+                    />
+                    <input
+                      placeholder="Nombre del médico (opcional)"
+                      value={formData.nombre}
+                      onChange={e => setFormData({ ...formData, nombre: e.target.value })}
+                      style={inputStyle}
+                    />
+                    <input
+                      placeholder="Especialidad médica"
+                      value={formData.especialidad}
+                      onChange={e => setFormData({ ...formData, especialidad: e.target.value })}
+                      style={inputStyle}
+                    />
+                  </>
+                ) : (
+                  /* Formulario completo para otros roles */
+                  <>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                      <input placeholder="Nombre *" value={formData.nombre} onChange={e => setFormData({ ...formData, nombre: e.target.value })} required style={inputStyle} />
+                      <input placeholder="Apellido (opcional)" value={formData.apellido} onChange={e => setFormData({ ...formData, apellido: e.target.value })} style={inputStyle} />
+                    </div>
+                    <input placeholder="Nombre de usuario (se genera automáticamente si se deja vacío)" type="text" value={formData.username} onChange={e => setFormData({ ...formData, username: e.target.value })} style={inputStyle} />
+                    <input placeholder={editando ? "Nueva contraseña (dejar vacío para no cambiar)" : "Contraseña * (mínimo 6 caracteres)"} type="password" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} required={!editando} minLength={editando ? 0 : 6} style={inputStyle} />
+                    <input placeholder="Teléfono" value={formData.telefono} onChange={e => setFormData({ ...formData, telefono: e.target.value })} style={inputStyle} />
+                    <div>
+                      <label style={{ fontSize: 13, color: '#666', marginBottom: 5, display: 'block' }}><FaBuilding style={{ marginRight: 6 }} />Sucursal</label>
+                      <select value={formData.sucursal} onChange={e => setFormData({ ...formData, sucursal: e.target.value })} style={{ ...inputStyle, background: 'white' }}>
+                        <option value="">-- Sin sucursal --</option>
+                        {sucursales.map(s => <option key={s._id} value={s._id}>{s.nombre} ({s.codigo || s._id})</option>)}
+                      </select>
+                      <small style={{ color: '#888', fontSize: 11 }}>Recomendado para Recepcionista y Laboratorista</small>
+                    </div>
+                  </>
                 )}
               </div>
               <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
