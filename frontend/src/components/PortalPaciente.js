@@ -230,46 +230,46 @@ const PortalPaciente = () => {
   /* ── Imprimir un resultado ── */
   const imprimirResultado = (r) => {
     const win = window.open('', 'print', 'width=800,height=900');
-    const rows = (r.valores || []).map(v => `
-      <tr>
-        <td style="padding:8px;border:1px solid #ddd">${v.parametro || ''}</td>
-        <td style="padding:8px;border:1px solid #ddd;text-align:center;font-weight:bold">
-          ${v.valor || ''} ${v.unidad || ''}
-        </td>
-        <td style="padding:8px;border:1px solid #ddd;text-align:center;color:#666">
-          ${v.valorReferencia || '-'}
-        </td>
-        <td style="padding:8px;border:1px solid #ddd;text-align:center">
-          <span style="background:${v.estado === 'normal' ? '#d4edda' : '#f8d7da'};
-                       color:${v.estado === 'normal' ? '#155724' : '#721c24'};
-                       padding:2px 8px;border-radius:10px;font-size:11px">
-            ${v.estado || 'N/A'}
-          </span>
-        </td>
-      </tr>`).join('');
+    const getEstadoColor = (estado) => {
+      if (estado === 'normal') return '#4CAF50';
+      if (estado === 'alto') return '#FF5722';
+      if (estado === 'bajo') return '#2196F3';
+      return '#FF9800';
+    };
+    const valorCards = (r.valores || []).map(v => `
+      <div style="background:white;border:1px solid #e0e0e0;border-left:4px solid ${getEstadoColor(v.estado || 'normal')};border-radius:8px;padding:15px;margin-bottom:10px;break-inside:avoid">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <strong style="font-size:14px;text-transform:uppercase">${(v.parametro || '').replace(/_/g, ' ')}</strong>
+          <span style="background:${getEstadoColor(v.estado || 'normal')};color:white;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:bold">${(v.estado || 'N/A').toUpperCase()}</span>
+        </div>
+        <div style="font-size:22px;font-weight:bold;color:#2c3e50;margin-bottom:4px">${v.valor || ''} <span style="font-size:14px;color:#999;font-weight:normal">${v.unidad || ''}</span></div>
+        <div style="font-size:12px;color:#888">Rango: ${v.valorReferencia || '-'}</div>
+      </div>`).join('');
     win.document.write(`<!DOCTYPE html><html><head>
-      <title>Resultado</title>
-      <style>body{font-family:Arial,sans-serif;margin:20px;color:#1a3a5c}
-      table{width:100%;border-collapse:collapse} th{background:#1a3a5c;color:white;padding:10px}
-      .footer{text-align:center;margin-top:30px;padding:10px;background:#1a3a5c;color:white;border-radius:5px}
-      @media print{button{display:none}}</style></head><body>
-      <div style="text-align:center;border-bottom:3px solid #1a3a5c;padding-bottom:15px;margin-bottom:20px">
-        <h1 style="color:#1a3a5c;margin:0">${empresaNombre}</h1>
-        <h2 style="font-weight:normal;color:#555;margin:5px 0">${r.estudio?.nombre || 'Resultado'}</h2>
+      <title>Resultado - ${empresaNombre}</title>
+      <style>body{font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:30px;color:#2c3e50}
+      @media print{button{display:none !important} .no-print{display:none !important}}</style></head><body>
+      <div style="text-align:center;border-bottom:3px solid #2c3e50;padding-bottom:15px;margin-bottom:25px">
+        <h1 style="color:#2c3e50;margin:0 0 5px;font-size:24px">${empresaNombre}</h1>
+        <p style="color:#666;margin:0;font-size:13px">Análisis de Laboratorio Clínico</p>
       </div>
-      <div style="background:#f0f8ff;padding:15px;border-radius:8px;margin-bottom:20px">
-        <strong>Paciente:</strong> ${datos?.paciente?.nombre || ''} ${datos?.paciente?.apellido || ''} &nbsp;|&nbsp;
-        <strong>Cédula:</strong> ${datos?.paciente?.cedula || ''} &nbsp;|&nbsp;
-        <strong>Fecha:</strong> ${new Date(r.createdAt).toLocaleDateString('es-DO')}
+      <div style="background:#f0f8ff;padding:20px;border-radius:10px;margin-bottom:25px;border:1px solid #bee5eb">
+        <h4 style="margin:0 0 12px;color:#2c3e50;font-size:14px">👤 Información del Paciente</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:14px">
+          <div><strong>Nombre:</strong> ${datos?.paciente?.nombre || ''} ${datos?.paciente?.apellido || ''}</div>
+          <div><strong>Cédula:</strong> ${datos?.paciente?.cedula || 'N/A'}</div>
+          <div><strong>Sexo:</strong> ${datos?.paciente?.sexo === 'M' ? 'Masculino' : 'Femenino'}</div>
+          <div><strong>Fecha:</strong> ${new Date(r.createdAt).toLocaleDateString('es-DO')}</div>
+        </div>
       </div>
-      <table><thead><tr><th>Parámetro</th><th>Resultado</th><th>Referencia</th><th>Estado</th></tr></thead>
-      <tbody>${rows || '<tr><td colspan="4" style="text-align:center;padding:20px;color:#888">Sin valores registrados</td></tr>'}</tbody></table>
-      ${r.interpretacion ? `<div style="background:#e6f3ff;border-left:4px solid #1a3a5c;padding:12px;margin-top:15px;border-radius:5px">
-        <strong>Interpretación:</strong><p>${r.interpretacion}</p></div>` : ''}
-      ${r.validadoPor ? `<p style="margin-top:40px;text-align:center">Validado por: Dr. ${r.validadoPor.nombre} ${r.validadoPor.apellido || ''}</p>` : ''}
-      <div class="footer"><strong>Gracias por confiar en nosotros</strong> · Su salud es nuestra prioridad</div>
-      <div style="text-align:center;margin-top:20px">
-        <button onclick="window.print()" style="padding:12px 30px;background:#1a3a5c;color:white;border:none;border-radius:8px;cursor:pointer;font-size:16px">Imprimir</button>
+      <h3 style="color:#2c3e50;border-bottom:2px solid #eee;padding-bottom:8px;margin-bottom:15px">🔬 ${r.estudio?.nombre || 'Resultado'}</h3>
+      <div style="display:grid;gap:10px">${valorCards || '<p style="text-align:center;padding:20px;color:#888">Sin valores registrados</p>'}</div>
+      ${r.interpretacion ? `<div style="background:#fff3e0;border-left:4px solid #FF9800;padding:15px;margin-top:20px;border-radius:5px">
+        <h4 style="margin:0 0 8px;color:#e65100;font-size:14px">📋 Interpretación Médica</h4><p style="margin:0;font-size:14px">${r.interpretacion}</p></div>` : ''}
+      ${r.validadoPor ? `<p style="margin-top:35px;text-align:center;font-size:14px;color:#555">✅ Validado por: Dr. ${r.validadoPor.nombre} ${r.validadoPor.apellido || ''}</p>` : ''}
+      <div style="text-align:center;margin-top:30px;padding:12px;background:#2c3e50;color:white;border-radius:8px;font-size:13px"><strong>Gracias por confiar en nosotros</strong> · Su salud es nuestra prioridad</div>
+      <div class="no-print" style="text-align:center;margin-top:20px">
+        <button onclick="window.print()" style="padding:12px 30px;background:#2c3e50;color:white;border:none;border-radius:8px;cursor:pointer;font-size:16px">🖨 Imprimir</button>
       </div></body></html>`);
     win.document.close();
   };
@@ -401,39 +401,45 @@ const PortalPaciente = () => {
               {(r.estado === 'completado' || r.estado === 'entregado') ? (
                 <div style={{ padding: 20 }}>
                   {r.valores?.length > 0 && (
-                    <div style={{ overflowX: 'auto' }}>
-                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
-                        <thead>
-                          <tr style={{ background: '#f0f8ff' }}>
-                            {['Parámetro', 'Valor', 'Unidad', 'Referencia', 'Estado'].map(h => (
-                              <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: '#555', fontWeight: '600', borderBottom: '2px solid #e0e0e0' }}>
-                                {h}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {r.valores.map((v, j) => (
-                            <tr key={j} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                              <td style={{ padding: '10px 12px', fontWeight: 500 }}>{v.parametro}</td>
-                              <td style={{ padding: '10px 12px', fontWeight: 'bold', color: v.estado && v.estado !== 'normal' ? C.red : C.green }}>
-                                {v.valor}
-                              </td>
-                              <td style={{ padding: '10px 12px', color: '#888' }}>{v.unidad}</td>
-                              <td style={{ padding: '10px 12px', color: '#888', fontSize: 12 }}>{v.valorReferencia}</td>
-                              <td style={{ padding: '10px 12px' }}>
-                                {v.estado && (
-                                  <span style={{
-                                    background: v.estado === 'normal' ? '#d4edda' : '#f8d7da',
-                                    color: v.estado === 'normal' ? '#155724' : '#721c24',
-                                    padding: '3px 10px', borderRadius: 10, fontSize: 11, fontWeight: 600
-                                  }}>{v.estado}</span>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                    <div style={{ display: 'grid', gap: 10 }}>
+                      {r.valores.map((v, j) => {
+                        const getEstadoColor = (est) => {
+                          if (est === 'normal') return '#4CAF50';
+                          if (est === 'alto') return '#FF5722';
+                          if (est === 'bajo') return '#2196F3';
+                          return '#FF9800';
+                        };
+                        const estadoColor = getEstadoColor(v.estado);
+                        return (
+                          <div key={j} style={{
+                            background: '#fff', border: '1px solid #e0e0e0',
+                            borderLeft: `4px solid ${estadoColor}`,
+                            borderRadius: 8, padding: '14px 18px',
+                            transition: 'all 0.2s ease'
+                          }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                              <strong style={{ fontSize: 13, textTransform: 'uppercase', color: '#444' }}>
+                                {(v.parametro || '').replace(/_/g, ' ')}
+                              </strong>
+                              {v.estado && (
+                                <span style={{
+                                  background: estadoColor, color: '#fff',
+                                  padding: '3px 10px', borderRadius: 12, fontSize: 11, fontWeight: 'bold',
+                                  textTransform: 'uppercase'
+                                }}>
+                                  {v.estado}
+                                </span>
+                              )}
+                            </div>
+                            <div style={{ fontSize: 22, fontWeight: 'bold', color: '#2c3e50', marginBottom: 2 }}>
+                              {v.valor} <span style={{ fontSize: 14, color: '#999', fontWeight: 'normal' }}>{v.unidad}</span>
+                            </div>
+                            <div style={{ fontSize: 12, color: '#888' }}>
+                              Rango: {v.valorReferencia || '-'}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                   {r.interpretacion && (
@@ -481,6 +487,14 @@ const PortalPaciente = () => {
           0%, 100% { transform: scale(1); }
           50% { transform: scale(1.05); }
         }
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+        }
+        @keyframes shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
         .portal-input:focus {
           outline: none;
           border-color: ${C.accent} !important;
@@ -488,8 +502,8 @@ const PortalPaciente = () => {
           transform: translateY(-1px);
         }
         .portal-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(41,128,185,0.5) !important;
+          transform: translateY(-3px);
+          box-shadow: 0 12px 35px rgba(41,128,185,0.5) !important;
         }
         .portal-btn:active {
           transform: translateY(0px);
@@ -504,20 +518,47 @@ const PortalPaciente = () => {
         }
       `}</style>
 
-      <div style={{ ...styles.card, animation: 'fadeInUp 0.5s ease' }}>
-        {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: 30 }}>
-          <div style={styles.iconCircle(C.mid)}>
-            <FaHospital style={{ fontSize: 32, color: C.white }} />
+      {/* Decorative floating elements */}
+      <div style={{ position: 'absolute', top: '10%', left: '5%', width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.03)', animation: 'float 6s ease-in-out infinite', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: '15%', right: '8%', width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.04)', animation: 'float 8s ease-in-out infinite 1s', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', top: '50%', right: '15%', width: 50, height: 50, borderRadius: '50%', background: 'rgba(255,255,255,0.02)', animation: 'float 5s ease-in-out infinite 2s', pointerEvents: 'none' }} />
+
+      <div style={{ ...styles.card, animation: 'fadeInUp 0.6s ease' }}>
+        {/* Logo section with enhanced design */}
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <div style={{
+            width: 90, height: 90,
+            background: `linear-gradient(135deg, ${C.dark}, ${C.mid}, ${C.blue})`,
+            borderRadius: '50%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            margin: '0 auto',
+            boxShadow: '0 10px 30px rgba(10,30,47,0.3)',
+            animation: 'pulse 3s ease-in-out infinite',
+          }}>
+            <FaFlask style={{ fontSize: 36, color: C.white }} />
           </div>
-          <h2 style={{ margin: '18px 0 5px', color: C.mid, fontSize: 22 }}>{empresaNombre}</h2>
-          <h3 style={{ margin: 0, color: C.blue, fontWeight: 400, fontSize: 16 }}>Portal de Resultados</h3>
-          <p style={{ margin: '10px 0 0', color: '#888', fontSize: 13 }}>Portal de resultados para pacientes</p>
+          <h2 style={{ margin: '20px 0 6px', color: C.dark, fontSize: 24, fontWeight: 800, letterSpacing: '-0.5px' }}>{empresaNombre}</h2>
+          <div style={{
+            display: 'inline-block',
+            background: `linear-gradient(135deg, ${C.mid}, ${C.blue})`,
+            color: C.white,
+            padding: '6px 18px',
+            borderRadius: 20,
+            fontSize: 13,
+            fontWeight: 600,
+            marginTop: 4,
+            letterSpacing: '0.5px',
+          }}>
+            Portal de Resultados
+          </div>
+          <p style={{ margin: '12px 0 0', color: '#888', fontSize: 13 }}>
+            Consulte sus análisis clínicos de forma segura
+          </p>
         </div>
 
         {/* QR hint or validation message */}
         {(modo === 'login-qr' || qrParam) ? (
-          <div style={{ background: '#d1ecf1', borderRadius: 10, padding: '12px 15px', marginBottom: 22, display: 'flex', gap: 12, alignItems: 'center', border: '2px solid #bee5eb' }}>
+          <div style={{ background: 'linear-gradient(135deg, #d1ecf1, #e8f8fd)', borderRadius: 12, padding: '14px 16px', marginBottom: 22, display: 'flex', gap: 12, alignItems: 'center', border: '2px solid #bee5eb', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
             <FaCheckCircle style={{ fontSize: 28, color: '#0c5460', flexShrink: 0 }} />
             <p style={{ margin: 0, fontSize: 13, color: '#0c5460', lineHeight: 1.5 }}>
               <strong>✓ Código QR válido</strong><br />
@@ -525,40 +566,46 @@ const PortalPaciente = () => {
             </p>
           </div>
         ) : (
-          <div style={{ background: '#e8f4fd', borderRadius: 10, padding: '12px 15px', marginBottom: 22, display: 'flex', gap: 12, alignItems: 'center' }}>
+          <div style={{ background: 'linear-gradient(135deg, #e8f4fd, #f0f8ff)', borderRadius: 12, padding: '14px 16px', marginBottom: 22, display: 'flex', gap: 12, alignItems: 'center', border: '1px solid #d6eaf8', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
             <FaQrcode style={{ fontSize: 28, color: C.accent, flexShrink: 0 }} />
             <p style={{ margin: 0, fontSize: 13, color: '#444', lineHeight: 1.5 }}>
               <strong>¿Tiene el QR de su factura?</strong><br />
-              Escanéelo con su teléfono y luego ingrese sus credenciales para acceder.
+              Escanéelo con su teléfono para acceder más rápido.
             </p>
           </div>
         )}
 
         {error && (
-          <div style={{ background: '#f8d7da', color: '#721c24', padding: '12px 15px', borderRadius: 8, marginBottom: 20, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ background: 'linear-gradient(135deg, #f8d7da, #fce4ec)', color: '#721c24', padding: '12px 16px', borderRadius: 10, marginBottom: 20, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8, border: '1px solid #f5c6cb', boxShadow: '0 2px 8px rgba(231,76,60,0.1)' }}>
             <FaExclamationTriangle /> {error}
           </div>
         )}
 
         <form onSubmit={handleLogin}>
-          <div style={{ marginBottom: 16 }}>
-            <label style={styles.label}>Usuario</label>
+          <div style={{ marginBottom: 18 }}>
+            <label style={styles.label}>
+              <FaUser style={{ fontSize: 11, marginRight: 6, color: C.accent }} />
+              Usuario
+            </label>
             <div style={{ position: 'relative' }}>
-              <FaUser style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: '#aaa' }} />
+              <FaUser style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#bbb', fontSize: 14 }} />
               <input
                 className="portal-input"
                 value={username}
                 onChange={e => setUsername(e.target.value)}
-                placeholder="Ej: juan4501"
+                placeholder="Ingrese su usuario"
                 style={styles.input}
               />
             </div>
           </div>
 
-          <div style={{ marginBottom: 24 }}>
-            <label style={styles.label}>Contraseña</label>
+          <div style={{ marginBottom: 26 }}>
+            <label style={styles.label}>
+              <FaLock style={{ fontSize: 11, marginRight: 6, color: C.accent }} />
+              Contraseña
+            </label>
             <div style={{ position: 'relative' }}>
-              <FaLock style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)', color: '#aaa' }} />
+              <FaLock style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#bbb', fontSize: 14 }} />
               <input
                 className="portal-input"
                 type="password"
@@ -573,14 +620,26 @@ const PortalPaciente = () => {
           <button type="submit" disabled={loading} className="portal-btn" style={styles.btnPrimary}>
             {loading
               ? <><FaSpinner style={{ animation: 'spin 1s linear infinite' }} /> Verificando...</>
-              : <><FaCheckCircle /> Ver Mis Resultados</>
+              : <><FaFlask style={{ fontSize: 18 }} /> Acceder a Mis Resultados</>
             }
           </button>
         </form>
 
-        <div style={{ marginTop: 20, padding: 15, background: '#f8f9fa', borderRadius: 10, fontSize: 13, color: '#666', lineHeight: 1.6 }}>
-          💡 <strong>¿Dónde encuentro mi usuario y contraseña?</strong><br />
-          Están impresos en la factura que recibió al registrarse. También puede escanear el código QR de la factura.
+        <div style={{ marginTop: 22, padding: 16, background: 'linear-gradient(135deg, #f8f9fa, #fff)', borderRadius: 12, fontSize: 13, color: '#666', lineHeight: 1.7, border: '1px solid #eee' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+            <span style={{ fontSize: 20, lineHeight: 1 }}>💡</span>
+            <div>
+              <strong style={{ color: '#444' }}>¿Dónde encuentro mis credenciales?</strong><br />
+              Su usuario y contraseña se encuentran impresos en la factura que recibió al registrarse en el centro. También puede escanear el código QR de su factura.
+            </div>
+          </div>
+        </div>
+
+        {/* Security badge */}
+        <div style={{ textAlign: 'center', marginTop: 16 }}>
+          <span style={{ fontSize: 11, color: '#aaa', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+            <FaLock style={{ fontSize: 10 }} /> Conexión segura · Sus datos están protegidos
+          </span>
         </div>
       </div>
     </div>
