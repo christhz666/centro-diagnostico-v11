@@ -5,9 +5,13 @@
     "main": "monitor.js",
     "scripts": {
         "start": "node monitor.js",
-        "test": "node monitor.js --test"
+        "test": "node monitor.js --test",
+        "build:exe": "pkg monitor.js --targets node18-win-x64 --output monitor-comunicaciones.exe"
     },
     "dependencies": {
         "serialport": "^12.0.0"
+    },
+    "devDependencies": {
+        "pkg": "^5.8.1"
     }
 }
