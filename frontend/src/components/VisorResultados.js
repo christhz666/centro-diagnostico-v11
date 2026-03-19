@@ -13,7 +13,6 @@ const VisorResultados = () => {
   const [empresaConfig, setEmpresaConfig] = useState({});
 
   const API_URL = '/api';
-
   useEffect(() => {
     const token = localStorage.getItem('token');
     fetch(`${API_URL}/configuracion/`, {

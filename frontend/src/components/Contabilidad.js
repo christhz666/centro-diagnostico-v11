@@ -1,11 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     FaChartLine, FaArrowUp, FaArrowDown, FaPlus, FaTrash,
     FaSpinner, FaExclamationTriangle, FaSyncAlt, FaSearch,
     FaMoneyBillWave, FaBalanceScale, FaCalendarAlt, FaFilter, FaFileExcel
 } from 'react-icons/fa';
-import * as XLSX from 'xlsx';
 import api from '../services/api';
+import { loadXLSX } from '../utils/loadXlsx';
+import useDebounce from '../hooks/useDebounce';
+
+const theme = {
+    surface: 'var(--legacy-surface)',
+    surfaceMuted: 'var(--legacy-surface-muted)',
+    panel: 'var(--legacy-surface-panel)',
+    border: 'var(--legacy-border)',
+    text: 'var(--legacy-text)',
+    textStrong: 'var(--legacy-text-strong)',
+    textMuted: 'var(--legacy-text-muted)'
+};
 
 const CATEGORIAS_INGRESO = [
     { value: 'consultas', label: 'Consultas' },
@@ -37,6 +48,7 @@ const Contabilidad = () => {
     const [busqueda, setBusqueda] = useState('');
     const [facturasRecientes, setFacturasRecientes] = useState([]);
     const [facturacionDia, setFacturacionDia] = useState(null);
+    const debouncedBusqueda = useDebounce(busqueda, 350);
     const [formData, setFormData] = useState({
         tipo: 'ingreso',
         categoria: 'consultas',
@@ -48,18 +60,15 @@ const Contabilidad = () => {
         notas: ''
     });
 
-    useEffect(() => {
-        cargarDatos();
-    }, [filtroTipo, filtroCategoria]);
-
-    const cargarDatos = async () => {
+    const cargarDatos = useCallback(async (searchOverride = debouncedBusqueda.trim()) => {
         setLoading(true);
         setError('');
         try {
             const params = {};
+            const searchTerm = String(searchOverride || '').trim();
             if (filtroTipo) params.tipo = filtroTipo;
             if (filtroCategoria) params.categoria = filtroCategoria;
-            if (busqueda) params.search = busqueda;
+            if (searchTerm) params.search = searchTerm;
 
             const token = localStorage.getItem('token');
             const [resumenRes, movimientosRes, facturasRes, facDiaRes] = await Promise.all([
@@ -81,7 +90,11 @@ const Contabilidad = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [filtroTipo, filtroCategoria, debouncedBusqueda]);
+
+    useEffect(() => {
+        cargarDatos();
+    }, [cargarDatos]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -126,11 +139,27 @@ const Contabilidad = () => {
         return all.find(c => c.value === cat)?.label || cat;
     };
 
+    const exportarExcel = async () => {
+        const XLSX = await loadXLSX();
+        const data = movimientos.map(m => ({
+            'Fecha': new Date(m.fecha).toLocaleDateString('es-DO'),
+            'Tipo': m.tipo,
+            'Categoría': getCategoriaLabel(m.categoria),
+            'Descripción': m.descripcion,
+            'Método': m.metodoPago || '',
+            'Monto': m.tipo === 'ingreso' ? (m.monto || 0) : -(m.monto || 0),
+        }));
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Contabilidad');
+        XLSX.writeFile(wb, `Contabilidad_${new Date().toISOString().split('T')[0]}.xlsx`);
+    };
+
     if (loading && !resumen) {
         return (
             <div style={styles.loadingContainer}>
                 <FaSpinner className="spin" style={{ fontSize: 40, color: '#3282b8' }} />
-                <p style={{ marginTop: 15, color: '#666' }}>Cargando contabilidad...</p>
+                <p style={{ marginTop: 15, color: theme.textMuted }}>Cargando contabilidad...</p>
             </div>
         );
     }
@@ -139,7 +168,7 @@ const Contabilidad = () => {
         return (
             <div style={styles.errorContainer}>
                 <FaExclamationTriangle style={{ fontSize: 40, color: '#e74c3c' }} />
-                <p style={{ margin: '15px 0', color: '#666' }}>{error}</p>
+                <p style={{ margin: '15px 0', color: theme.textMuted }}>{error}</p>
                 <button onClick={cargarDatos} style={styles.retryButton}>
                     <FaSyncAlt style={{ marginRight: 8 }} /> Reintentar
                 </button>
@@ -158,23 +187,10 @@ const Contabilidad = () => {
                         <FaBalanceScale style={{ marginRight: 10, color: '#3282b8' }} />
                         Contabilidad
                     </h2>
-                    <p style={{ margin: '5px 0 0', color: '#666' }}>Control financiero del negocio</p>
+                    <p style={{ margin: '5px 0 0', color: theme.textMuted }}>Control financiero del negocio</p>
                 </div>
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                    <button onClick={() => {
-                        const data = movimientos.map(m => ({
-                            'Fecha': new Date(m.fecha).toLocaleDateString('es-DO'),
-                            'Tipo': m.tipo,
-                            'Categoría': getCategoriaLabel(m.categoria),
-                            'Descripción': m.descripcion,
-                            'Método': m.metodoPago || '',
-                            'Monto': m.tipo === 'ingreso' ? (m.monto || 0) : -(m.monto || 0),
-                        }));
-                        const ws = XLSX.utils.json_to_sheet(data);
-                        const wb = XLSX.utils.book_new();
-                        XLSX.utils.book_append_sheet(wb, ws, 'Contabilidad');
-                        XLSX.writeFile(wb, `Contabilidad_${new Date().toISOString().split('T')[0]}.xlsx`);
-                    }} style={{ ...styles.btnPrimary, background: '#10b981' }}>
+                    <button onClick={exportarExcel} style={{ ...styles.btnPrimary, background: '#10b981' }}>
                         <FaFileExcel style={{ marginRight: 8 }} /> Exportar Excel
                     </button>
                     <button onClick={() => setShowForm(!showForm)} style={styles.btnPrimary}>
@@ -192,21 +208,21 @@ const Contabilidad = () => {
                         📊 Facturación Real del Día (datos de facturas)
                     </h4>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 15 }}>
-                        <div style={{ textAlign: 'center', background: 'white', padding: 15, borderRadius: 8 }}>
+                        <div style={{ textAlign: 'center', background: theme.surface, padding: 15, borderRadius: 8, border: `1px solid ${theme.border}` }}>
                             <div style={{ fontSize: 22, fontWeight: 'bold', color: '#27ae60' }}>RD$ {(facturacionDia.hoy?.totalFacturado || 0).toLocaleString()}</div>
-                            <div style={{ fontSize: 12, color: '#666' }}>Total Facturado Hoy</div>
+                            <div style={{ fontSize: 12, color: theme.textMuted }}>Total Facturado Hoy</div>
                         </div>
-                        <div style={{ textAlign: 'center', background: 'white', padding: 15, borderRadius: 8 }}>
+                        <div style={{ textAlign: 'center', background: theme.surface, padding: 15, borderRadius: 8, border: `1px solid ${theme.border}` }}>
                             <div style={{ fontSize: 22, fontWeight: 'bold', color: '#3498db' }}>RD$ {(facturacionDia.hoy?.totalCobrado || 0).toLocaleString()}</div>
-                            <div style={{ fontSize: 12, color: '#666' }}>Cobrado Hoy</div>
+                            <div style={{ fontSize: 12, color: theme.textMuted }}>Cobrado Hoy</div>
                         </div>
-                        <div style={{ textAlign: 'center', background: 'white', padding: 15, borderRadius: 8 }}>
+                        <div style={{ textAlign: 'center', background: theme.surface, padding: 15, borderRadius: 8, border: `1px solid ${theme.border}` }}>
                             <div style={{ fontSize: 22, fontWeight: 'bold', color: '#9b59b6' }}>{facturacionDia.hoy?.cantidad || 0}</div>
-                            <div style={{ fontSize: 12, color: '#666' }}>Facturas Emitidas</div>
+                            <div style={{ fontSize: 12, color: theme.textMuted }}>Facturas Emitidas</div>
                         </div>
-                        <div style={{ textAlign: 'center', background: 'white', padding: 15, borderRadius: 8 }}>
-                            <div style={{ fontSize: 22, fontWeight: 'bold', color: '#e67e22' }}>RD$ {(facturacionDia.mes?.totalFacturado || 0).toLocaleString()}</div>
-                            <div style={{ fontSize: 12, color: '#666' }}>Total Mes</div>
+                        <div style={{ textAlign: 'center', background: theme.surface, padding: 15, borderRadius: 8, border: `1px solid ${theme.border}` }}>
+                            <div style={{ fontSize: 22, fontWeight: 'bold', color: '#e67e22' }}>RD$ {(facturacionDia.mes?.totalCobrado || 0).toLocaleString()}</div>
+                            <div style={{ fontSize: 12, color: theme.textMuted }}>Cobrado Mes</div>
                         </div>
                     </div>
                     {facturacionDia.ultimasFacturas && facturacionDia.ultimasFacturas.length > 0 && (
@@ -261,8 +277,11 @@ const Contabilidad = () => {
                         <div style={styles.cardContent}>
                             <FaMoneyBillWave style={{ fontSize: 30, opacity: 0.8 }} />
                             <div>
-                                <p style={styles.cardLabel}>Facturado del Mes</p>
-                                <h3 style={styles.cardValue}>{formatMoney(resumen.facturacion?.totalFacturado)}</h3>
+                                <p style={styles.cardLabel}>Cobrado del Mes</p>
+                                <h3 style={styles.cardValue}>{formatMoney(resumen.facturacion?.totalCobrado)}</h3>
+                                <p style={{ margin: '4px 0 0', fontSize: 12, opacity: 0.88 }}>
+                                    Facturado: {formatMoney(resumen.facturacion?.totalFacturado)}
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -482,7 +501,7 @@ const Contabilidad = () => {
             {/* Filters */}
             <div style={styles.filterBar}>
                 <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-                    <FaFilter style={{ color: '#666' }} />
+                    <FaFilter style={{ color: theme.textMuted }} />
                     <select
                         value={filtroTipo}
                         onChange={(e) => setFiltroTipo(e.target.value)}
@@ -503,12 +522,11 @@ const Contabilidad = () => {
                         ))}
                     </select>
                     <div style={styles.searchBox}>
-                        <FaSearch style={{ color: '#999', marginRight: 8 }} />
+                        <FaSearch style={{ color: theme.textMuted, marginRight: 8 }} />
                         <input
                             type="text"
                             value={busqueda}
                             onChange={(e) => setBusqueda(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && cargarDatos()}
                             placeholder="Buscar..."
                             style={styles.searchInput}
                         />
@@ -533,13 +551,13 @@ const Contabilidad = () => {
                     <tbody>
                         {movimientos.length === 0 ? (
                             <tr>
-                                <td colSpan="7" style={{ ...styles.td, textAlign: 'center', color: '#999', padding: 40 }}>
+                                <td colSpan="7" style={{ ...styles.td, textAlign: 'center', color: theme.textMuted, padding: 40 }}>
                                     No hay movimientos registrados
                                 </td>
                             </tr>
                         ) : (
                             movimientos.map(mov => (
-                                <tr key={mov._id} style={styles.tr}>
+                                <tr key={mov._id} style={styles.tr} className="hover-row">
                                     <td style={styles.td}>
                                         {new Date(mov.fecha).toLocaleDateString('es-DO')}
                                     </td>
@@ -634,17 +652,17 @@ const styles = {
         gap: 20, marginBottom: 25
     },
     summaryCard: {
-        background: 'white', borderRadius: 12, padding: 20,
+        background: 'var(--legacy-surface)', borderRadius: 12, padding: 20, border: '1px solid var(--legacy-border)',
         boxShadow: '0 2px 10px rgba(0,0,0,0.05)'
     },
     summaryTitle: {
-        margin: '0 0 15px', color: '#1b262c', fontSize: 16
+        margin: '0 0 15px', color: 'var(--legacy-text-strong)', fontSize: 16
     },
     summaryGrid: {
         display: 'flex', flexDirection: 'column', gap: 8
     },
     formContainer: {
-        background: 'white', borderRadius: 12, padding: 25, marginBottom: 25,
+        background: 'var(--legacy-surface)', borderRadius: 12, padding: 25, marginBottom: 25,
         boxShadow: '0 2px 10px rgba(0,0,0,0.05)', border: '2px solid #3282b8'
     },
     formGrid: {
@@ -655,40 +673,40 @@ const styles = {
         display: 'flex', flexDirection: 'column'
     },
     label: {
-        fontSize: 13, fontWeight: 'bold', color: '#333', marginBottom: 5
+        fontSize: 13, fontWeight: 'bold', color: 'var(--legacy-text)', marginBottom: 5
     },
     input: {
-        padding: '8px 12px', border: '1px solid #ddd', borderRadius: 6,
-        fontSize: 14, outline: 'none'
+        padding: '8px 12px', border: '1px solid var(--legacy-border)', borderRadius: 6,
+        background: 'var(--legacy-surface)', color: 'var(--legacy-text)', fontSize: 14, outline: 'none'
     },
     filterBar: {
-        background: 'white', borderRadius: 12, padding: 15, marginBottom: 20,
+        background: 'var(--legacy-surface)', borderRadius: 12, padding: 15, marginBottom: 20, border: '1px solid var(--legacy-border)',
         boxShadow: '0 2px 10px rgba(0,0,0,0.05)'
     },
     filterSelect: {
-        padding: '8px 12px', border: '1px solid #ddd', borderRadius: 6,
-        fontSize: 13, outline: 'none', background: 'white'
+        padding: '8px 12px', border: '1px solid var(--legacy-border)', borderRadius: 6,
+        fontSize: 13, outline: 'none', background: 'var(--legacy-surface)', color: 'var(--legacy-text)'
     },
     searchBox: {
-        display: 'flex', alignItems: 'center', border: '1px solid #ddd',
-        borderRadius: 6, padding: '0 10px', background: 'white'
+        display: 'flex', alignItems: 'center', border: '1px solid var(--legacy-border)',
+        borderRadius: 6, padding: '0 10px', background: 'var(--legacy-surface)'
     },
     searchInput: {
-        border: 'none', outline: 'none', padding: '8px 0', fontSize: 13, width: 150
+        border: 'none', outline: 'none', padding: '8px 0', fontSize: 13, width: 150, background: 'transparent', color: 'var(--legacy-text)'
     },
     tableContainer: {
-        background: 'white', borderRadius: 12, overflow: 'hidden',
+        background: 'var(--legacy-surface)', borderRadius: 12, overflow: 'hidden', border: '1px solid var(--legacy-border)',
         boxShadow: '0 2px 10px rgba(0,0,0,0.05)'
     },
     table: {
         width: '100%', borderCollapse: 'collapse'
     },
     th: {
-        background: '#f8f9fa', padding: '12px 15px', textAlign: 'left',
-        fontSize: 13, fontWeight: 'bold', color: '#666', borderBottom: '2px solid #eee'
+        background: 'var(--legacy-surface-muted)', padding: '12px 15px', textAlign: 'left',
+        fontSize: 13, fontWeight: 'bold', color: 'var(--legacy-text-muted)', borderBottom: '2px solid var(--legacy-border)'
     },
     td: {
-        padding: '12px 15px', borderBottom: '1px solid #f0f0f0', fontSize: 14
+        padding: '12px 15px', borderBottom: '1px solid var(--legacy-border-soft)', fontSize: 14, color: 'var(--legacy-text)'
     },
     tr: {
         transition: 'background 0.2s'

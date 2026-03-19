@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { FaWindows, FaApple, FaLinux, FaDownload, FaNetworkWired, FaDesktop, FaEye, FaRocket, FaCheckCircle } from 'react-icons/fa';
 
 const DescargarApp = () => {
-  const [downloadInfo, setDownloadInfo] = useState(null);
+  const [downloadInfo] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   const colores = {
     primary: '#1a3a5c',
@@ -17,32 +16,6 @@ const DescargarApp = () => {
     // Ya no requerimos fetch remoto, las plataformas son estáticas en esta versión.
     setLoading(false);
   }, []);
-
-  const getPlatformIcon = (platform) => {
-    switch (platform) {
-      case 'windows':
-        return <FaWindows />;
-      case 'mac':
-        return <FaApple />;
-      case 'linux':
-        return <FaLinux />;
-      default:
-        return <FaDesktop />;
-    }
-  };
-
-  const getPlatformName = (platform) => {
-    switch (platform) {
-      case 'windows':
-        return 'Windows';
-      case 'mac':
-        return 'macOS';
-      case 'linux':
-        return 'Linux';
-      default:
-        return platform;
-    }
-  };
 
   const handleDownload = (platform) => {
     if (platform === 'web') {

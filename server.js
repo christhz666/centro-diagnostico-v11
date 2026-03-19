@@ -6,6 +6,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const dotenv = require('dotenv');
 const os = require('os');
+const mongoose = require('mongoose');
 
 // Cargar variables de entorno
 dotenv.config();
@@ -123,6 +124,13 @@ app.use('/public', express.static(path.join(__dirname, 'public')));
 
 // Health check
 app.get('/api/health', (req, res) => {
+    const dbStates = {
+        0: 'disconnected',
+        1: 'connected',
+        2: 'connecting',
+        3: 'disconnecting'
+    };
+
     res.json({
         success: true,
         message: 'Centro Diagnóstico - API funcionando',
@@ -133,7 +141,12 @@ app.get('/api/health', (req, res) => {
         port: Number(process.env.PORT || 5000),
         public_url: process.env.PUBLIC_API_URL || null,
         local_ips: getLocalIps(),
-        cors_origins: corsOrigins
+        cors_origins: corsOrigins,
+        database: {
+            state: mongoose.connection.readyState,
+            status: dbStates[mongoose.connection.readyState] || 'unknown',
+            name: mongoose.connection.name || null
+        }
     });
 });
 
@@ -161,7 +174,8 @@ app.use('/api/whatsapp', require('./routes/whatsapp'));
 app.use('/api/auditoria', require('./routes/auditoria'));
 app.use('/api/imagenologia', require('./routes/imagenologia'));
 app.use('/api/orthanc', require('./routes/orthanc')); // Proxy DICOM
-app.use("/verificar", require("./routes/verificar"));
+app.use("/api/verificar", require("./routes/verificar"));
+app.use("/verificar", require("./routes/verificar")); // Backward compatibility
 
 // Visor de imágenes médicas (acceso directo por URL)
 app.get('/visor', (req, res) => {
@@ -178,10 +192,12 @@ const fs = require('fs');
 if (fs.existsSync(frontendBuild)) {
     app.use(express.static(frontendBuild));
 
-    app.get('*', (req, res) => {
-        if (!req.originalUrl.startsWith('/api')) {
-            res.sendFile(path.join(frontendBuild, 'index.html'));
+    app.get('*', (req, res, next) => {
+        if (req.originalUrl.startsWith('/api')) {
+            return next();
         }
+
+        return res.sendFile(path.join(frontendBuild, 'index.html'));
     });
 }
 

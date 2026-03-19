@@ -10,13 +10,15 @@
  *  - Presets de texto guardados en localStorage (clave: "imgPlantillasDoctora")
  *  - La doctora puede crear, editar, eliminar y aplicar sus propias plantillas
  */
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { Suspense, lazy, useState, useEffect, useRef, useCallback } from 'react';
 import {
   FaXRay, FaUpload, FaSave, FaCheck, FaSpinner,
   FaEye, FaArrowLeft, FaPrint, FaPlus, FaTrash, FaPencilAlt,
 } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
-import DicomViewer from './DicomViewer';
+
+const DicomViewer = lazy(() => import('./DicomViewer'));
 
 /* ─── Plantillas de tipo de estudio (campos dinámicos) ──────── */
 const TIPO_PLANTILLAS = [
@@ -43,6 +45,27 @@ const ESTADO_COLORES = {
   completado: { bg: '#d4edda', color: '#155724' },
 };
 
+const theme = {
+  surface: 'var(--legacy-surface)',
+  surfaceMuted: 'var(--legacy-surface-muted)',
+  panel: 'var(--legacy-surface-panel)',
+  border: 'var(--legacy-border)',
+  borderSoft: 'var(--legacy-border-soft)',
+  text: 'var(--legacy-text)',
+  textStrong: 'var(--legacy-text-strong)',
+  textMuted: 'var(--legacy-text-muted)',
+  accentStrong: 'var(--legacy-accent-strong)'
+};
+
+function ViewerLoadingFallback() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', background: '#08111b', color: '#dbeafe', gap: 12, flexDirection: 'column' }}>
+      <FaSpinner className="spin" style={{ fontSize: 28, color: '#87CEEB' }} />
+      <div style={{ fontSize: 14, fontWeight: 600 }}>Cargando visor DICOM...</div>
+    </div>
+  );
+}
+
 /* ─── Helper: obtener rol del usuario actual ─────────────────── */
 function getRol() {
   try {
@@ -50,6 +73,12 @@ function getRol() {
     const u = JSON.parse(uStr || '{}');
     return u.role || u.rol || 'recepcion';
   } catch { return 'recepcion'; }
+}
+function getUsuarioSesion() {
+  try {
+    const uStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+    return JSON.parse(uStr || '{}');
+  } catch { return {}; }
 }
 function puedeEditar() {
   const r = getRol(); return r === 'admin' || r === 'medico';
@@ -66,6 +95,7 @@ function guardarPlantillasLS(lista) {
 
 /* ═══════════════════ COMPONENTE PRINCIPAL ══════════════════════ */
 const Imagenologia = () => {
+  const navigate = useNavigate();
   const [vista, setVista] = useState('lista');
   const [estudios, setEstudios] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -78,6 +108,7 @@ const Imagenologia = () => {
   const [tipoPlantilla, setTipoPlantilla] = useState('general');
   const [guardando, setGuardando] = useState(false);
   const [subiendo, setSubiendo] = useState(false);
+  const [firmandoResultado, setFirmandoResultado] = useState(false);
 
   // Plantillas guardadas de la doctora
   const [plantillasDoctora, setPlantillasDoctora] = useState(cargarPlantillasGuardadas);
@@ -93,12 +124,10 @@ const Imagenologia = () => {
   const canEdit = puedeEditar();
   const rol = getRol();
 
-  useEffect(() => { cargarEstudios(); }, [filtroEstado]);
-
   /* ─── Persistir plantillas doctora ──────────────────────────── */
   useEffect(() => { guardarPlantillasLS(plantillasDoctora); }, [plantillasDoctora]);
 
-  const cargarEstudios = async () => {
+  const cargarEstudios = useCallback(async () => {
     setLoading(true);
     try {
       const params = filtroEstado ? { estado: filtroEstado } : {};
@@ -106,7 +135,9 @@ const Imagenologia = () => {
       setEstudios(Array.isArray(resp) ? resp : (resp?.resultados || resp?.data || []));
     } catch { setEstudios([]); }
     finally { setLoading(false); }
-  };
+  }, [filtroEstado]);
+
+  useEffect(() => { cargarEstudios(); }, [cargarEstudios]);
 
   const abrirVisor = async (estudio) => {
     setEstudioActual(estudio);
@@ -119,6 +150,13 @@ const Imagenologia = () => {
     try {
       const ws = await api.getImagenologiaWorkspace(estudio._id || estudio.id);
       const data = ws?.data || ws || {};
+      setEstudioActual(prev => ({
+        ...(prev || estudio),
+        ...estudio,
+        firmaDigital: data.firmaDigital || estudio.firmaDigital || '',
+        firmadoPor: data.firmadoPor || estudio.firmadoPor || null,
+        validadoPor: data.validadoPor || estudio.validadoPor || null
+      }));
       if (data.reporte) setReporte(data.reporte);
       if (data.plantilla) setTipoPlantilla(data.plantilla);
       if (data.visor && data.visor.ajustes) setAjustes(data.visor.ajustes);
@@ -176,16 +214,58 @@ const Imagenologia = () => {
 
   const finalizarReporte = async () => {
     if (!estudioActual || !canEdit) return;
+    const usuarioSesion = getUsuarioSesion();
+    if (!estudioActual?.firmaDigital && !usuarioSesion?.firmaDigital) {
+      alert('Debe registrar su firma en Mi Perfil antes de finalizar un reporte de imagenologia.');
+      navigate('/perfil');
+      return;
+    }
     if (!window.confirm('¿Finalizar y marcar como completado?')) return;
     setGuardando(true);
     try {
       await api.updateImagenologiaWorkspace(estudioActual._id || estudioActual.id, { reporte, plantilla: tipoPlantilla });
-      await api.finalizarReporteImagenologia(estudioActual._id || estudioActual.id);
+      const resultadoFinalizado = await api.finalizarReporteImagenologia(estudioActual._id || estudioActual.id);
+      const data = resultadoFinalizado?.data || resultadoFinalizado || {};
+      setEstudioActual(prev => ({
+        ...(prev || {}),
+        ...data,
+        firmaDigital: data.firmaDigital || prev?.firmaDigital || usuarioSesion?.firmaDigital || '',
+        firmadoPor: data.firmadoPor || prev?.firmadoPor || null,
+        validadoPor: data.validadoPor || prev?.validadoPor || null
+      }));
       alert('Reporte finalizado');
       setVista('lista');
       cargarEstudios();
     } catch (err) { alert('Error: ' + err.message); }
     finally { setGuardando(false); }
+  };
+
+  const marcarFirmaResultado = async (checked) => {
+    if (!checked || !estudioActual || estudioActual.firmaDigital) return;
+
+    const usuarioSesion = getUsuarioSesion();
+    if (!usuarioSesion?.firmaDigital) {
+      alert('Debe registrar su firma en Mi Perfil antes de firmar el reporte.');
+      navigate('/perfil');
+      return;
+    }
+
+    try {
+      setFirmandoResultado(true);
+      const firmado = await api.firmarResultado(estudioActual._id || estudioActual.id);
+      const dataFirmada = firmado?.data || firmado || {};
+      setEstudioActual(prev => ({
+        ...(prev || {}),
+        ...dataFirmada,
+        firmaDigital: dataFirmada.firmaDigital || usuarioSesion.firmaDigital,
+        firmadoPor: dataFirmada.firmadoPor || prev?.firmadoPor || null,
+        validadoPor: dataFirmada.validadoPor || prev?.validadoPor || null
+      }));
+    } catch (err) {
+      alert(err.message || 'No se pudo firmar el reporte.');
+    } finally {
+      setFirmandoResultado(false);
+    }
   };
 
   /* ─── Plantillas guardadas de la doctora ───────────────────── */
@@ -276,15 +356,46 @@ const Imagenologia = () => {
   const imprimirReporte = async () => {
     let empresa = {};
     try { const r = await fetch('/api/configuracion/empresa'); empresa = await r.json(); } catch { }
-    const paciente = estudioActual?.paciente || {};
-    const estudio = estudioActual?.estudio || {};
-    const fecha = new Date(estudioActual?.createdAt || new Date()).toLocaleDateString('es-DO');
+    const usuarioSesion = getUsuarioSesion();
+    if (!estudioActual?.firmaDigital && !usuarioSesion?.firmaDigital) {
+      alert('Debe registrar su firma en Mi Perfil antes de imprimir un reporte de imagenologia.');
+      navigate('/perfil');
+      return;
+    }
+
+    let estudioParaImprimir = estudioActual;
+    if (!estudioParaImprimir?.firmaDigital && usuarioSesion?.firmaDigital && estudioActual?._id) {
+      try {
+        const firmado = await api.firmarResultado(estudioActual._id || estudioActual.id);
+        const dataFirmada = firmado?.data || firmado || {};
+        estudioParaImprimir = {
+          ...estudioActual,
+          ...dataFirmada,
+          firmaDigital: dataFirmada.firmaDigital || usuarioSesion.firmaDigital,
+          firmadoPor: dataFirmada.firmadoPor || estudioActual.firmadoPor || null,
+          validadoPor: dataFirmada.validadoPor || estudioActual.validadoPor || null
+        };
+        setEstudioActual(estudioParaImprimir);
+      } catch (err) {
+        console.error('No se pudo persistir la firma antes de imprimir:', err);
+      }
+    }
+
+    const paciente = estudioParaImprimir?.paciente || {};
+    const estudio = estudioParaImprimir?.estudio || {};
+    const fecha = new Date(estudioParaImprimir?.createdAt || new Date()).toLocaleDateString('es-DO');
     const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const tpl = TIPO_PLANTILLAS.find(p => p.id === tipoPlantilla) || TIPO_PLANTILLAS[0];
+    const firmaActiva = estudioParaImprimir?.firmaDigital || usuarioSesion?.firmaDigital || '';
+    const medicoFirmanteNombre = estudioParaImprimir?.firmadoPor?.nombre || estudioParaImprimir?.validadoPor?.nombre || usuarioSesion?.nombre || reporte?.medico_firmante || 'Médico Informante';
+    const medicoFirmanteApellido = estudioParaImprimir?.firmadoPor?.apellido || estudioParaImprimir?.validadoPor?.apellido || usuarioSesion?.apellido || '';
     const camposHtml = tpl.campos.map(c => {
       const v = reporte[c] || ''; if (!v) return '';
       return `<div style="margin-bottom:14px"><h4 style="margin:0 0 5px;color:#1a3a5c;font-size:13px;text-transform:uppercase">${esc(CAMPO_LABELS[c] || c)}</h4><p style="margin:0;line-height:1.7;white-space:pre-wrap;color:#2d3748">${esc(v)}</p></div>`;
     }).join('');
+    const firmaHtml = firmaActiva
+      ? `<div style="margin-bottom:10px"><img src="${firmaActiva}" alt="Firma del médico" style="max-width:220px;max-height:70px;object-fit:contain" /></div>`
+      : '<div style="height:60px"></div>';
     const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Reporte Imagenología</title>
     <style>@page{size:A4;margin:12mm 15mm}body{font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#2d3748}
     .hdr{display:flex;align-items:center;gap:16px;border-bottom:3px solid #1a3a5c;padding-bottom:12px;margin-bottom:16px}
@@ -306,7 +417,7 @@ const Imagenologia = () => {
       <div class="item"><strong>Fecha</strong><span>${fecha}</span></div>
     </div>
     ${camposHtml ? `<div class="sec">REPORTE MÉDICO</div>${camposHtml}` : '<p style="color:#888;font-style:italic">Sin reporte completado</p>'}
-    <div class="firma"><div class="fb"><div style="height:60px"></div><div class="fl"><strong>Firma y Sello</strong><br/>Médico Informante</div></div></div>
+    <div class="firma"><div class="fb">${firmaHtml}<div class="fl"><strong>Firma y Sello</strong><br/>Dr(a). ${esc(medicoFirmanteNombre)} ${esc(medicoFirmanteApellido)}</div></div></div>
     <div class="ft">${esc(empresa.nombre || 'Centro Diagnóstico')} · ${new Date().toLocaleString('es-DO')}</div>
     <div class="np" style="text-align:center;padding:20px"><button onclick="window.print()" style="padding:14px 35px;background:#1a3a5c;color:white;border:none;border-radius:10px;cursor:pointer;font-size:15px;font-weight:bold">🖨️ Imprimir</button></div>
     </body></html>`;
@@ -340,17 +451,17 @@ const Imagenologia = () => {
         {loading ? (
           <div style={{ textAlign: 'center', padding: 60 }}><FaSpinner className="spin" style={{ fontSize: 40, color: '#87CEEB' }} /></div>
         ) : estudios.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 60, background: 'white', borderRadius: 15 }}>
+          <div style={{ textAlign: 'center', padding: 60, background: theme.surface, borderRadius: 15, border: `1px solid ${theme.border}` }}>
             <FaXRay style={{ fontSize: 60, color: '#ddd', marginBottom: 16 }} />
-            <p style={{ color: '#999', fontSize: 17 }}>No hay estudios {filtroEstado ? `"${filtroEstado}"` : ''}</p>
+            <p style={{ color: theme.textMuted, fontSize: 17 }}>No hay estudios {filtroEstado ? `"${filtroEstado}"` : ''}</p>
           </div>
         ) : (
-          <div style={{ background: 'white', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 10px rgba(0,0,0,0.08)' }}>
+          <div style={{ background: theme.surface, borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 10px rgba(0,0,0,0.08)', border: `1px solid ${theme.border}` }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ background: '#f8f9fa' }}>
+                <tr style={{ background: theme.surfaceMuted }}>
                   {['Código', 'Paciente', 'Estudio', 'Imágenes', 'Estado', 'Fecha', 'Acciones'].map(h => (
-                    <th key={h} style={{ padding: '13px 14px', textAlign: ['Imágenes', 'Estado', 'Acciones'].includes(h) ? 'center' : 'left', color: '#666', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.4px' }}>{h}</th>
+                    <th key={h} style={{ padding: '13px 14px', textAlign: ['Imágenes', 'Estado', 'Acciones'].includes(h) ? 'center' : 'left', color: theme.textMuted, fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.4px' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -358,17 +469,17 @@ const Imagenologia = () => {
                 {estudios.map(e => {
                   const est = ESTADO_COLORES[e.estado] || ESTADO_COLORES.pendiente;
                   return (
-                    <tr key={e._id || e.id} style={{ borderBottom: '1px solid #f0f0f0' }} onMouseEnter={ev => ev.currentTarget.style.background = '#fafbfc'} onMouseLeave={ev => ev.currentTarget.style.background = 'white'}>
-                      <td style={{ padding: '12px 14px', fontFamily: 'monospace', fontSize: 13, color: '#1a3a5c', fontWeight: 700 }}>{e.codigo || e._id?.slice(-6).toUpperCase()}</td>
-                      <td style={{ padding: '12px 14px', fontWeight: 600 }}>{e.paciente?.nombre} {e.paciente?.apellido}</td>
-                      <td style={{ padding: '12px 14px', color: '#555' }}>{e.estudio?.nombre || 'Estudio de imagen'}</td>
+                    <tr key={e._id || e.id} style={{ borderBottom: `1px solid ${theme.borderSoft}` }} onMouseEnter={ev => ev.currentTarget.style.background = theme.surfaceMuted} onMouseLeave={ev => ev.currentTarget.style.background = theme.surface}>
+                      <td style={{ padding: '12px 14px', fontFamily: 'monospace', fontSize: 13, color: theme.accentStrong, fontWeight: 700 }}>{e.codigo || e._id?.slice(-6).toUpperCase()}</td>
+                      <td style={{ padding: '12px 14px', fontWeight: 600, color: theme.textStrong }}>{e.paciente?.nombre} {e.paciente?.apellido}</td>
+                      <td style={{ padding: '12px 14px', color: theme.text }}>{e.estudio?.nombre || 'Estudio de imagen'}</td>
                       <td style={{ padding: '12px 14px', textAlign: 'center' }}>
                         <span style={{ background: '#e8f4fd', color: '#1565c0', padding: '3px 10px', borderRadius: 12, fontSize: 12, fontWeight: 700 }}>{(e.imagenes || []).length}</span>
                       </td>
                       <td style={{ padding: '12px 14px', textAlign: 'center' }}>
                         <span style={{ padding: '4px 12px', borderRadius: 12, fontSize: 12, fontWeight: 700, background: est.bg, color: est.color }}> {(e.estado || 'pendiente').replace('_', ' ')} </span>
                       </td>
-                      <td style={{ padding: '12px 14px', color: '#888', fontSize: 13 }}>{new Date(e.createdAt || e.fecha).toLocaleDateString('es-DO')}</td>
+                      <td style={{ padding: '12px 14px', color: theme.textMuted, fontSize: 13 }}>{new Date(e.createdAt || e.fecha).toLocaleDateString('es-DO')}</td>
                       <td style={{ padding: '12px 14px', textAlign: 'center' }}>
                         <button onClick={() => abrirVisor(e)} style={{ padding: '8px 16px', background: '#1a3a5c', color: 'white', border: 'none', borderRadius: 7, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 700, fontSize: 13 }}>
                           <FaEye /> {canEdit ? 'Abrir Visor' : 'Ver Imágenes'}
@@ -456,17 +567,19 @@ const Imagenologia = () => {
 
         {/* Visor DICOM */}
         <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-          <DicomViewer
-            imagenes={imagenes}
-            ajustesIniciales={ajustes || {}}
-            onCambioAjustes={handleCambioAjustesVisor}
-            estiloContenedor={{ borderRadius: 0 }}
-          />
+          <Suspense fallback={<ViewerLoadingFallback />}>
+            <DicomViewer
+              imagenes={imagenes}
+              ajustesIniciales={ajustes || {}}
+              onCambioAjustes={handleCambioAjustesVisor}
+              estiloContenedor={{ borderRadius: 0 }}
+            />
+          </Suspense>
         </div>
 
         {/* ── Panel derecho: Reporte médico ── */}
         {!mostrarSoloVisor && (
-          <div style={{ width: 310, flexShrink: 0, background: '#f7f9fc', borderLeft: '1px solid #dde3ee', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div style={{ width: 310, flexShrink: 0, background: theme.surfaceMuted, borderLeft: `1px solid ${theme.border}`, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
             {/* Header panel */}
             <div style={{ background: '#1a3a5c', color: 'white', padding: '11px 14px', fontWeight: 700, fontSize: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
@@ -482,27 +595,27 @@ const Imagenologia = () => {
 
             {/* ── Modal gestor de plantillas ── */}
             {mostrarGestorPlantillas && canEdit && (
-              <div style={{ background: '#fff', borderBottom: '2px solid #e0e6ef', padding: 12, flexShrink: 0, maxHeight: 320, overflowY: 'auto' }}>
-                <div style={{ fontWeight: 700, color: '#1a3a5c', fontSize: 13, marginBottom: 8 }}>📁 Plantillas de la Doctora</div>
+              <div style={{ background: theme.surface, borderBottom: `2px solid ${theme.border}`, padding: 12, flexShrink: 0, maxHeight: 320, overflowY: 'auto' }}>
+                <div style={{ fontWeight: 700, color: theme.accentStrong, fontSize: 13, marginBottom: 8 }}>📁 Plantillas de la Doctora</div>
 
                 {/* Lista de plantillas guardadas */}
                 {plantillasDoctora.length === 0 ? (
-                  <p style={{ color: '#aaa', fontSize: 12, margin: '0 0 8px' }}>Sin plantillas guardadas aún.</p>
+                  <p style={{ color: theme.textMuted, fontSize: 12, margin: '0 0 8px' }}>Sin plantillas guardadas aún.</p>
                 ) : plantillasDoctora.map(pt => (
-                  <div key={pt.id} style={{ background: '#f0f8ff', border: '1px solid #b3d4f5', borderRadius: 8, padding: '8px 10px', marginBottom: 7, display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <div key={pt.id} style={{ background: theme.panel, border: `1px solid ${theme.border}`, borderRadius: 8, padding: '8px 10px', marginBottom: 7, display: 'flex', alignItems: 'center', gap: 5 }}>
                     {plantillaEditando?.id === pt.id ? (
                       <>
                         <input value={plantillaEditando.nombre} onChange={e => setPlantillaEditando(p => ({ ...p, nombre: e.target.value }))}
-                          style={{ flex: 1, padding: '4px 8px', borderRadius: 6, border: '1px solid #b3d4f5', fontSize: 12 }} />
+                          style={{ flex: 1, padding: '4px 8px', borderRadius: 6, border: `1px solid ${theme.border}`, fontSize: 12, background: theme.surface, color: theme.text }} />
                         <button onClick={actualizarPlantillaGuardada} style={{ background: '#27ae60', color: 'white', border: 'none', borderRadius: 5, padding: '4px 8px', cursor: 'pointer', fontSize: 11 }}>✓</button>
-                        <button onClick={() => setPlantillaEditando(null)} style={{ background: '#e0e0e0', border: 'none', borderRadius: 5, padding: '4px 8px', cursor: 'pointer', fontSize: 11 }}>✕</button>
+                        <button onClick={() => setPlantillaEditando(null)} style={{ background: theme.surfaceMuted, color: theme.text, border: 'none', borderRadius: 5, padding: '4px 8px', cursor: 'pointer', fontSize: 11 }}>✕</button>
                       </>
                     ) : (
                       <>
-                        <span style={{ flex: 1, fontWeight: 600, fontSize: 13, color: '#1a3a5c' }}>{pt.nombre}</span>
-                        <span style={{ fontSize: 10, color: '#888', marginRight: 4 }}>{(TIPO_PLANTILLAS.find(t => t.id === pt.tipoPlantilla) || {}).label}</span>
+                        <span style={{ flex: 1, fontWeight: 600, fontSize: 13, color: theme.accentStrong }}>{pt.nombre}</span>
+                        <span style={{ fontSize: 10, color: theme.textMuted, marginRight: 4 }}>{(TIPO_PLANTILLAS.find(t => t.id === pt.tipoPlantilla) || {}).label}</span>
                         <button onClick={() => aplicarPlantillaGuardada(pt)} title="Aplicar" style={{ background: '#1565c0', color: 'white', border: 'none', borderRadius: 5, padding: '4px 8px', cursor: 'pointer', fontSize: 11 }}>Aplicar</button>
-                        <button onClick={() => setPlantillaEditando({ ...pt })} title="Editar nombre" style={{ background: '#f0f0f0', border: 'none', borderRadius: 5, padding: '4px 6px', cursor: 'pointer', fontSize: 12 }}><FaPencilAlt /></button>
+                        <button onClick={() => setPlantillaEditando({ ...pt })} title="Editar nombre" style={{ background: theme.surfaceMuted, color: theme.text, border: 'none', borderRadius: 5, padding: '4px 6px', cursor: 'pointer', fontSize: 12 }}><FaPencilAlt /></button>
                         <button onClick={() => eliminarPlantillaGuardada(pt.id)} title="Eliminar" style={{ background: '#ffebee', color: '#e53935', border: 'none', borderRadius: 5, padding: '4px 6px', cursor: 'pointer', fontSize: 12 }}><FaTrash /></button>
                       </>
                     )}
@@ -510,15 +623,15 @@ const Imagenologia = () => {
                 ))}
 
                 {/* Guardar reporte actual como plantilla */}
-                <div style={{ borderTop: '1px solid #e0e6ef', paddingTop: 8, display: 'flex', gap: 6 }}>
+                <div style={{ borderTop: `1px solid ${theme.border}`, paddingTop: 8, display: 'flex', gap: 6 }}>
                   <input value={nombreNuevaPlantilla} onChange={e => setNombreNuevaPlantilla(e.target.value)}
                     placeholder="Nombre de la nueva plantilla…"
-                    style={{ flex: 1, padding: '6px 9px', borderRadius: 7, border: '1px solid #b3d4f5', fontSize: 12 }} />
+                    style={{ flex: 1, padding: '6px 9px', borderRadius: 7, border: `1px solid ${theme.border}`, fontSize: 12, background: theme.surface, color: theme.text }} />
                   <button onClick={guardarComoPlantilla} style={{ background: '#1a3a5c', color: 'white', border: 'none', borderRadius: 7, padding: '6px 10px', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}>
                     <FaPlus /> Guardar
                   </button>
                 </div>
-                <p style={{ fontSize: 10, color: '#aaa', margin: '4px 0 0' }}>Guarda el reporte actual como plantilla reutilizable</p>
+                <p style={{ fontSize: 10, color: theme.textMuted, margin: '4px 0 0' }}>Guarda el reporte actual como plantilla reutilizable</p>
               </div>
             )}
 
@@ -527,16 +640,40 @@ const Imagenologia = () => {
 
               {/* Aviso solo lectura */}
               {!canEdit && (
-                <div style={{ background: '#fff3e0', border: '1px solid #ffcc80', borderRadius: 8, padding: '8px 12px', marginBottom: 12, fontSize: 12, color: '#e65100', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ background: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.24)', borderRadius: 8, padding: '8px 12px', marginBottom: 12, fontSize: 12, color: '#e65100', display: 'flex', alignItems: 'center', gap: 6 }}>
                   👁 Modo solo lectura — solo la doctora puede editar el reporte
+                </div>
+              )}
+
+              {canEdit && (
+                <div style={{ marginBottom: 12, padding: '10px 12px', borderRadius: 10, border: `1px solid ${estudioActual?.firmaDigital ? '#86efac' : theme.border}`, background: estudioActual?.firmaDigital ? '#f0fdf4' : theme.surface }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: estudioActual?.firmaDigital ? 'default' : 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(estudioActual?.firmaDigital)}
+                      disabled={firmandoResultado}
+                      onChange={(e) => marcarFirmaResultado(e.target.checked)}
+                      style={{ width: 18, height: 18, accentColor: '#16a34a', cursor: estudioActual?.firmaDigital ? 'default' : 'pointer' }}
+                    />
+                    <span style={{ fontSize: 13, fontWeight: 700, color: theme.textStrong }}>
+                      {firmandoResultado ? 'Firmando resultado...' : 'Firmar resultado'}
+                    </span>
+                  </label>
+                  <div style={{ marginTop: 8, fontSize: 12, color: theme.textMuted }}>
+                    {estudioActual?.firmaDigital
+                      ? `Firmado por Dr(a). ${estudioActual?.firmadoPor?.nombre || estudioActual?.validadoPor?.nombre || getUsuarioSesion()?.nombre || 'Médico'} ${estudioActual?.firmadoPor?.apellido || estudioActual?.validadoPor?.apellido || getUsuarioSesion()?.apellido || ''}`
+                      : getUsuarioSesion()?.firmaDigital
+                        ? 'Marque el check para aplicar la firma guardada en su sesión.'
+                        : 'No hay firma cargada en la sesión. Regístrela en Mi Perfil.'}
+                  </div>
                 </div>
               )}
 
               {/* Selector tipo de estudio */}
               <div style={{ marginBottom: 12 }}>
-                <label style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '0.4px', display: 'block', marginBottom: 4 }}>Tipo de Estudio</label>
+                <label style={{ fontSize: 11, fontWeight: 700, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: '0.4px', display: 'block', marginBottom: 4 }}>Tipo de Estudio</label>
                 <select value={tipoPlantilla} onChange={e => setTipoPlantilla(e.target.value)} disabled={!canEdit}
-                  style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e0e6ef', fontSize: 13, background: canEdit ? 'white' : '#f5f5f5', color: '#333' }}>
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: `1.5px solid ${theme.border}`, fontSize: 13, background: canEdit ? theme.surface : theme.surfaceMuted, color: theme.text }}>
                   {TIPO_PLANTILLAS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
                 </select>
               </div>
@@ -544,10 +681,10 @@ const Imagenologia = () => {
               {/* Plantillas rápidas de la doctora (aplicar sin abrir gestor) */}
               {canEdit && plantillasDoctora.length > 0 && (
                 <div style={{ marginBottom: 12 }}>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '0.4px', display: 'block', marginBottom: 5 }}>Aplicar Plantilla Rápida</label>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: '0.4px', display: 'block', marginBottom: 5 }}>Aplicar Plantilla Rápida</label>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
                     {plantillasDoctora.map(pt => (
-                      <button key={pt.id} onClick={() => aplicarPlantillaGuardada(pt)} style={{ padding: '5px 10px', background: '#e8f4fd', border: '1px solid #90caf9', color: '#1565c0', borderRadius: 6, cursor: 'pointer', fontSize: 11, fontWeight: 600 }}>
+                      <button key={pt.id} onClick={() => aplicarPlantillaGuardada(pt)} style={{ padding: '5px 10px', background: theme.panel, border: `1px solid ${theme.border}`, color: '#1565c0', borderRadius: 6, cursor: 'pointer', fontSize: 11, fontWeight: 600 }}>
                         {pt.nombre}
                       </button>
                     ))}
@@ -558,12 +695,12 @@ const Imagenologia = () => {
               {/* Campos dinámicos de la plantilla */}
               {tipoActual.campos.map(campo => (
                 <div key={campo} style={{ marginBottom: 11 }}>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '0.4px', display: 'block', marginBottom: 4 }}>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: '0.4px', display: 'block', marginBottom: 4 }}>
                     {CAMPO_LABELS[campo] || campo}
                   </label>
                   {campo === 'birads' ? (
                     <select value={reporte[campo] || ''} onChange={e => canEdit && setReporte(p => ({ ...p, [campo]: e.target.value }))} disabled={!canEdit}
-                      style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e0e6ef', fontSize: 13, background: canEdit ? 'white' : '#f5f5f5' }}>
+                      style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: `1.5px solid ${theme.border}`, fontSize: 13, background: canEdit ? theme.surface : theme.surfaceMuted, color: theme.text }}>
                       <option value="">Seleccionar BIRADS</option>
                       {['0', '1', '2', '3', '4A', '4B', '4C', '5', '6'].map(b => <option key={b} value={b}>BIRADS {b}</option>)}
                     </select>
@@ -574,7 +711,7 @@ const Imagenologia = () => {
                       readOnly={!canEdit}
                       placeholder={canEdit ? `${CAMPO_LABELS[campo]}…` : '(sin información)'}
                       rows={campo === 'hallazgos' ? 5 : 3}
-                      style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e0e6ef', fontSize: 13, resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit', lineHeight: 1.5, background: canEdit ? 'white' : '#f5f5f5', cursor: canEdit ? 'text' : 'default' }}
+                      style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: `1.5px solid ${theme.border}`, fontSize: 13, resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit', lineHeight: 1.5, background: canEdit ? theme.surface : theme.surfaceMuted, cursor: canEdit ? 'text' : 'default', color: theme.text }}
                     />
                   )}
                 </div>

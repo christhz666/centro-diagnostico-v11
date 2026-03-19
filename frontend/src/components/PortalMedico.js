@@ -1,8 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FaUserMd, FaSearch, FaUser, FaFlask, FaEye, FaSpinner, FaFileMedical, FaEdit, FaCheck, FaPrint, FaSave, FaPlus, FaSignature } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import useDebounce from '../hooks/useDebounce';
 
 const PortalMedico = () => {
+  const navigate = useNavigate();
   const [busqueda, setBusqueda] = useState('');
   const [pacientes, setPacientes] = useState([]);
   const [pacienteSeleccionado, setPacienteSeleccionado] = useState(null);
@@ -12,14 +15,12 @@ const PortalMedico = () => {
   const [loadingHistorial, setLoadingHistorial] = useState(false);
   const [editando, setEditando] = useState(false);
   const [guardando, setGuardando] = useState(false);
-  const [showFirma, setShowFirma] = useState(false);
-  const [firmando, setFirmando] = useState(false);
-  const signCanvasRef = useRef(null);
-  const isDrawingRef = useRef(false);
+  const [firmandoResultado, setFirmandoResultado] = useState(false);
+  const [firmaMedico, setFirmaMedico] = useState('');
+  const [medicoSesion, setMedicoSesion] = useState(null);
+  const debouncedBusqueda = useDebounce(busqueda, 350);
 
   // Constantes para formato de códigos
-  // Nuevo formato simple: L1328 (lab) o 1329 (otras áreas)
-  const CODIGO_MUESTRA_SIMPLE_MIN_LENGTH = 1;
   // Formato antiguo para retrocompatibilidad
   const CODIGO_MUESTRA_PREFIX = 'MUE-';
   const CODIGO_MUESTRA_MIN_LENGTH = 13; // MUE-YYYYMMDD-NNNNN tiene 18, pero buscamos con 13+ para ser flexibles
@@ -28,9 +29,54 @@ const PortalMedico = () => {
     azulCielo: '#87CEEB',
     azulOscuro: '#1a3a5c'
   };
+  const theme = {
+    surface: 'var(--legacy-surface)',
+    surfaceMuted: 'var(--legacy-surface-muted)',
+    panel: 'var(--legacy-surface-panel)',
+    border: 'var(--legacy-border)',
+    borderSoft: 'var(--legacy-border-soft)',
+    text: 'var(--legacy-text)',
+    textStrong: 'var(--legacy-text-strong)',
+    textMuted: 'var(--legacy-text-muted)'
+  };
 
-  const buscarPacientes = async () => {
-    if (!busqueda.trim()) {
+  const cargarFirmaSesion = useCallback(async () => {
+    try {
+      const response = await api.getMe();
+      const user = response?.user || response?.data || response || null;
+      setMedicoSesion(user);
+      setFirmaMedico(user?.firmaDigital || '');
+    } catch (err) {
+      console.error('Error cargando firma del médico:', err);
+    }
+  }, []);
+
+  const cargarHistorial = useCallback(async (paciente) => {
+    setPacienteSeleccionado(paciente);
+    setResultadoDetalle(null);
+    setEditando(false);
+
+    try {
+      setLoadingHistorial(true);
+      const pacienteId = paciente._id || paciente.id;
+
+      // Usar el endpoint dedicado para cargar resultados por paciente
+      const response = await api.getResultadosPorPaciente(pacienteId);
+      const datos = response.data || response || [];
+
+      setHistorial(Array.isArray(datos) ? datos : []);
+    } catch (err) {
+      console.error('Error cargando historial:', err);
+      setHistorial([]);
+    } finally {
+      setLoadingHistorial(false);
+    }
+  }, []);
+
+  const buscarPacientes = useCallback(async (queryInput = '') => {
+    const query = String(queryInput || '').trim();
+
+    if (!query) {
       // Si no hay busqueda, cargar todos los pacientes
       try {
         setLoading(true);
@@ -45,13 +91,17 @@ const PortalMedico = () => {
       }
       return;
     }
+    const esFormatoSimple = /^L?\d+$/.test(query);
+    if (query.length < 2 && !(esFormatoSimple || (query.startsWith(CODIGO_MUESTRA_PREFIX) && query.length >= CODIGO_MUESTRA_MIN_LENGTH))) {
+      setPacientes([]);
+      return;
+    }
 
     // Si la búsqueda parece un código de muestra simple (L1328 o 1329) o formato antiguo (MUE-YYYYMMDD-NNNNN)
-    const esFormatoSimple = /^L?\d+$/.test(busqueda);
-    if (esFormatoSimple || (busqueda.startsWith(CODIGO_MUESTRA_PREFIX) && busqueda.length >= CODIGO_MUESTRA_MIN_LENGTH)) {
+    if (esFormatoSimple || (query.startsWith(CODIGO_MUESTRA_PREFIX) && query.length >= CODIGO_MUESTRA_MIN_LENGTH)) {
       try {
         setLoading(true);
-        const response = await api.getResultadoPorCodigoMuestra(busqueda);
+        const response = await api.getResultadoPorCodigoMuestra(query);
         const resultado = response.data || response;
         if (resultado && resultado.paciente) {
           // Buscar el paciente completo
@@ -73,7 +123,7 @@ const PortalMedico = () => {
 
     try {
       setLoading(true);
-      const response = await api.getPacientes({ search: busqueda });
+      const response = await api.getPacientes({ search: query });
       let datos = response.data || response || [];
 
       // Asegurar que es un array
@@ -85,12 +135,12 @@ const PortalMedico = () => {
       if (datos.length === 0) {
         const allResponse = await api.getPacientes({});
         const allDatos = allResponse.data || allResponse || [];
-        const busquedaLower = busqueda.toLowerCase();
+        const busquedaLower = query.toLowerCase();
         datos = allDatos.filter(p =>
           (p.nombre && p.nombre.toLowerCase().includes(busquedaLower)) ||
           (p.apellido && p.apellido.toLowerCase().includes(busquedaLower)) ||
-          (p.cedula && p.cedula.includes(busqueda)) ||
-          (p.telefono && p.telefono.includes(busqueda))
+          (p.cedula && p.cedula.includes(query)) ||
+          (p.telefono && p.telefono.includes(query))
         );
       }
 
@@ -101,45 +151,67 @@ const PortalMedico = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [cargarHistorial]);
 
-  const cargarHistorial = async (paciente) => {
-    setPacienteSeleccionado(paciente);
-    setResultadoDetalle(null);
-    setEditando(false);
-
-    try {
-      setLoadingHistorial(true);
-      const pacienteId = paciente._id || paciente.id;
-
-      // Usar el endpoint dedicado para cargar resultados por paciente
-      const response = await api.getResultadosPorPaciente(pacienteId);
-      const datos = response.data || response || [];
-
-      setHistorial(Array.isArray(datos) ? datos : []);
-    } catch (err) {
-      console.error('Error cargando historial:', err);
-      setHistorial([]);
-    } finally {
-      setLoadingHistorial(false);
-    }
-  };
+  useEffect(() => {
+    cargarFirmaSesion();
+  }, [cargarFirmaSesion]);
 
   const verResultado = (resultado) => {
     setResultadoDetalle(resultado);
     setEditando(false);
   };
 
+  const irAPerfilFirma = useCallback(() => {
+    navigate('/perfil');
+  }, [navigate]);
+
+  const asegurarFirmaDeSesion = useCallback(() => {
+    if (firmaMedico) return true;
+    alert('Debe registrar su firma en Mi Perfil antes de validar o imprimir resultados.');
+    irAPerfilFirma();
+    return false;
+  }, [firmaMedico, irAPerfilFirma]);
+
+  const asegurarResultadoFirmado = useCallback(async (resultadoBase) => {
+    if (!resultadoBase) return null;
+    if (resultadoBase.firmaDigital) return resultadoBase;
+    if (!asegurarFirmaDeSesion()) return null;
+
+    const firmado = await api.firmarResultado(resultadoBase._id || resultadoBase.id);
+    const resultadoFirmado = {
+      ...resultadoBase,
+      ...(firmado?.data || firmado || {}),
+      firmaDigital: (firmado?.data || firmado || {}).firmaDigital || firmaMedico,
+      firmadoPor: (firmado?.data || firmado || {}).firmadoPor || resultadoBase.firmadoPor || medicoSesion,
+      validadoPor: (firmado?.data || firmado || {}).validadoPor || resultadoBase.validadoPor
+    };
+
+    setResultadoDetalle((prev) => (prev && (prev._id || prev.id) === (resultadoBase._id || resultadoBase.id) ? resultadoFirmado : prev));
+    return resultadoFirmado;
+  }, [asegurarFirmaDeSesion, firmaMedico, medicoSesion]);
+
+  const marcarFirmaResultado = useCallback(async (checked) => {
+    if (!checked || !resultadoDetalle || resultadoDetalle.firmaDigital) return;
+
+    try {
+      setFirmandoResultado(true);
+      await asegurarResultadoFirmado(resultadoDetalle);
+    } catch (err) {
+      alert(err.message || 'No se pudo firmar el resultado.');
+    } finally {
+      setFirmandoResultado(false);
+    }
+  }, [asegurarResultadoFirmado, resultadoDetalle]);
+
   const guardarResultado = async () => {
     if (!resultadoDetalle) return;
     try {
       setGuardando(true);
-      const id = resultadoDetalle._id || resultadoDetalle.id;
       await api.updateResultado(resultadoDetalle._id || resultadoDetalle.id, {
         valores: resultadoDetalle.valores,
         interpretacion: resultadoDetalle.interpretacion,
-        conclusion: resultadoDetalle.conclusion,
-        estado: 'completado'
+        conclusion: resultadoDetalle.conclusion
       });
       setEditando(false);
       alert('Resultado guardado correctamente');
@@ -154,6 +226,7 @@ const PortalMedico = () => {
 
   const validarResultado = async () => {
     if (!resultadoDetalle) return;
+    if (!asegurarFirmaDeSesion()) return;
     const id = resultadoDetalle._id || resultadoDetalle.id;
     try {
       setGuardando(true);
@@ -162,14 +235,7 @@ const PortalMedico = () => {
       cargarHistorial(pacienteSeleccionado);
       setResultadoDetalle(null);
     } catch (err) {
-      try {
-        await api.updateResultado(id, { estado: 'completado' });
-        alert('Resultado validado correctamente');
-        cargarHistorial(pacienteSeleccionado);
-        setResultadoDetalle(null);
-      } catch (err2) {
-        alert('Error al validar: ' + (err2.message || 'Error desconocido'));
-      }
+      alert('Error al validar: ' + (err.message || 'Error desconocido'));
     } finally {
       setGuardando(false);
     }
@@ -214,12 +280,24 @@ const PortalMedico = () => {
     return 'Sin seguro';
   };
 
-  const imprimirResultado = () => {
+  const imprimirResultado = async () => {
     if (!resultadoDetalle || !pacienteSeleccionado) return;
+    let resultadoActivo = null;
+    try {
+      resultadoActivo = await asegurarResultadoFirmado(resultadoDetalle);
+    } catch (err) {
+      alert(err.message || 'No se pudo preparar la firma para imprimir.');
+      return;
+    }
+    if (!resultadoActivo) return;
 
     const ventana = window.open('', 'Resultado', 'width=800,height=1000');
+    if (!ventana) {
+      alert('El navegador bloqueo la ventana de impresion.');
+      return;
+    }
 
-    const valoresHTML = (resultadoDetalle.valores || []).map(v => {
+    const valoresHTML = (resultadoActivo.valores || []).map(v => {
       const estadoColor = v.estado === 'normal' ? '#d4edda' : v.estado === 'alto' ? '#f8d7da' : '#fff3cd';
       const estadoTexto = v.estado === 'normal' ? '#155724' : v.estado === 'alto' ? '#721c24' : '#856404';
       return '<tr>' +
@@ -233,9 +311,14 @@ const PortalMedico = () => {
     }).join('');
 
     const edadPaciente = calcularEdad(pacienteSeleccionado.fechaNacimiento);
-    const nombreEstudio = resultadoDetalle.estudio?.nombre || resultadoDetalle.nombreEstudio || 'ESTUDIO CLINICO';
-    const fechaResultado = new Date(resultadoDetalle.createdAt || resultadoDetalle.fecha || new Date()).toLocaleDateString('es-DO');
-    const doctorNombre = resultadoDetalle.validadoPor?.nombre || resultadoDetalle.medico?.nombre || '________________';
+    const nombreEstudio = resultadoActivo.estudio?.nombre || resultadoActivo.nombreEstudio || 'ESTUDIO CLINICO';
+    const fechaResultado = new Date(resultadoActivo.createdAt || resultadoActivo.fecha || new Date()).toLocaleDateString('es-DO');
+    const doctorNombre = resultadoActivo.firmadoPor?.nombre || resultadoActivo.validadoPor?.nombre || resultadoActivo.medico?.nombre || medicoSesion?.nombre || '________________';
+    const doctorApellido = resultadoActivo.firmadoPor?.apellido || resultadoActivo.validadoPor?.apellido || resultadoActivo.medico?.apellido || medicoSesion?.apellido || '';
+    const firmaActiva = resultadoActivo.firmaDigital || firmaMedico || '';
+    const firmaHtml = firmaActiva
+      ? '<div style="margin-bottom:12px;"><img src="' + firmaActiva + '" alt="Firma del médico" style="max-width:220px;max-height:70px;object-fit:contain;" /></div>'
+      : '<div style="height:60px"></div>';
 
     let htmlContent = '<!DOCTYPE html><html><head>';
     htmlContent += '<title>Resultado - ' + pacienteSeleccionado.nombre + '</title>';
@@ -281,23 +364,25 @@ const PortalMedico = () => {
     htmlContent += valoresHTML || '<tr><td colspan="4" style="padding:20px;text-align:center;color:#999;">Sin valores</td></tr>';
     htmlContent += '</tbody></table>';
 
-    if (resultadoDetalle.interpretacion) {
+    if (resultadoActivo.interpretacion) {
       htmlContent += '<div style="background:#e6f3ff;border-left:4px solid #1a3a5c;padding:10px;border-radius:5px;margin:10px 0;">';
-      htmlContent += '<strong>INTERPRETACION:</strong><p style="margin:5px 0 0;">' + resultadoDetalle.interpretacion + '</p></div>';
+      htmlContent += '<strong>INTERPRETACION:</strong><p style="margin:5px 0 0;">' + resultadoActivo.interpretacion + '</p></div>';
     }
 
-    if (resultadoDetalle.conclusion) {
+    if (resultadoActivo.conclusion) {
       htmlContent += '<div style="background:#e8f5e9;border-left:4px solid #27ae60;padding:10px;border-radius:5px;margin:10px 0;">';
-      htmlContent += '<strong>CONCLUSION:</strong><p style="margin:5px 0 0;">' + resultadoDetalle.conclusion + '</p></div>';
+      htmlContent += '<strong>CONCLUSION:</strong><p style="margin:5px 0 0;">' + resultadoActivo.conclusion + '</p></div>';
     }
 
-    htmlContent += '<div class="firma"><div class="firma-linea">Dr(a). ' + doctorNombre + '</div>';
+    htmlContent += '<div class="firma">' + firmaHtml + '<div class="firma-linea">Dr(a). ' + doctorNombre + ' ' + doctorApellido + '</div>';
     htmlContent += '<div style="font-size:10px;color:#666;margin-top:3px;">Firma y Sello</div></div>';
 
     htmlContent += '<div class="footer"><strong>Gracias por confiar en nosotros!</strong> | <span style="color:#87CEEB;">Su salud es nuestra prioridad</span></div>';
 
-    htmlContent += '<div class="no-print" style="text-align:center;padding:20px;">';
-    htmlContent += '<button onclick="window.print()" style="padding:15px 40px;background:#1a3a5c;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:bold;">Imprimir</button></div>';
+    htmlContent += '<script>';
+    htmlContent += "window.addEventListener('load', function () { setTimeout(function () { window.focus(); window.print(); }, 250); });";
+    htmlContent += "window.addEventListener('afterprint', function () { setTimeout(function () { window.close(); }, 150); });";
+    htmlContent += '</script>';
 
     htmlContent += '</body></html>';
 
@@ -305,10 +390,9 @@ const PortalMedico = () => {
     ventana.document.close();
   };
 
-  // Cargar pacientes al inicio
   useEffect(() => {
-    buscarPacientes();
-  }, []);
+    buscarPacientes(debouncedBusqueda);
+  }, [debouncedBusqueda, buscarPacientes]);
 
   return (
     <div style={{ padding: 20 }}>
@@ -318,17 +402,16 @@ const PortalMedico = () => {
 
       <div style={{ display: 'grid', gridTemplateColumns: pacienteSeleccionado ? '350px 1fr' : '1fr', gap: 20 }}>
         {/* Panel izquierdo: Busqueda */}
-        <div style={{ background: 'white', padding: 20, borderRadius: 15, boxShadow: '0 2px 15px rgba(0,0,0,0.1)', borderTop: `5px solid ${colores.azulOscuro}` }}>
+        <div style={{ background: theme.surface, padding: 20, borderRadius: 15, boxShadow: '0 2px 15px rgba(0,0,0,0.1)', borderTop: `5px solid ${colores.azulOscuro}`, border: `1px solid ${theme.border}` }}>
           <h3 style={{ marginTop: 0, color: colores.azulOscuro }}>Buscar Paciente</h3>
           <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
             <input
               placeholder="Nombre, cedula..."
               value={busqueda}
               onChange={e => setBusqueda(e.target.value)}
-              onKeyPress={e => e.key === 'Enter' && buscarPacientes()}
-              style={{ flex: 1, padding: 12, borderRadius: 8, border: `2px solid ${colores.azulCielo}` }}
+              style={{ flex: 1, padding: 12, borderRadius: 8, border: `2px solid ${colores.azulCielo}`, background: theme.surface, color: theme.text }}
             />
-            <button onClick={buscarPacientes} disabled={loading}
+            <button onClick={() => buscarPacientes(busqueda)} disabled={loading}
               style={{ padding: '12px 20px', background: colores.azulOscuro, color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer' }}>
               {loading ? <FaSpinner className="spin" /> : <FaSearch />}
             </button>
@@ -340,7 +423,7 @@ const PortalMedico = () => {
                 <FaSpinner className="spin" style={{ fontSize: 30, color: colores.azulCielo }} />
               </div>
             ) : pacientes.length === 0 ? (
-              <p style={{ color: '#999', textAlign: 'center', padding: 20 }}>
+              <p style={{ color: theme.textMuted, textAlign: 'center', padding: 20 }}>
                 No hay pacientes
               </p>
             ) : (
@@ -350,11 +433,11 @@ const PortalMedico = () => {
                   onClick={() => cargarHistorial(p)}
                   style={{
                     padding: 15,
-                    border: `2px solid ${(pacienteSeleccionado?._id || pacienteSeleccionado?.id) === (p._id || p.id) ? colores.azulOscuro : '#eee'}`,
+                    border: `2px solid ${(pacienteSeleccionado?._id || pacienteSeleccionado?.id) === (p._id || p.id) ? colores.azulOscuro : theme.border}`,
                     borderRadius: 10,
                     marginBottom: 10,
                     cursor: 'pointer',
-                    background: (pacienteSeleccionado?._id || pacienteSeleccionado?.id) === (p._id || p.id) ? '#f0f8ff' : 'white',
+                    background: (pacienteSeleccionado?._id || pacienteSeleccionado?.id) === (p._id || p.id) ? theme.panel : theme.surface,
                     transition: 'all 0.2s'
                   }}
                 >
@@ -364,7 +447,7 @@ const PortalMedico = () => {
                     </div>
                     <div>
                       <strong style={{ color: colores.azulOscuro }}>{p.nombre} {p.apellido}</strong>
-                      <div style={{ fontSize: 12, color: '#666' }}>{p.cedula} | {p.telefono}</div>
+                      <div style={{ fontSize: 12, color: theme.textMuted }}>{p.cedula} | {p.telefono}</div>
                     </div>
                   </div>
                 </div>
@@ -375,13 +458,13 @@ const PortalMedico = () => {
 
         {/* Panel derecho: Historial y Resultados */}
         {pacienteSeleccionado && (
-          <div style={{ background: 'white', padding: 25, borderRadius: 15, boxShadow: '0 2px 15px rgba(0,0,0,0.1)' }}>
+          <div style={{ background: theme.surface, padding: 25, borderRadius: 15, boxShadow: '0 2px 15px rgba(0,0,0,0.1)', border: `1px solid ${theme.border}` }}>
             {/* Info del paciente */}
-            <div style={{ background: '#f0f8ff', padding: 20, borderRadius: 10, marginBottom: 20, borderLeft: `5px solid ${colores.azulOscuro}` }}>
+            <div style={{ background: theme.panel, padding: 20, borderRadius: 10, marginBottom: 20, borderLeft: `5px solid ${colores.azulOscuro}` }}>
               <h3 style={{ margin: '0 0 15px', color: colores.azulOscuro }}>
                 {pacienteSeleccionado.nombre} {pacienteSeleccionado.apellido}
               </h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10, fontSize: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10, fontSize: 14, color: theme.text }}>
                 <div><strong>Cedula:</strong> {pacienteSeleccionado.cedula}</div>
                 <div><strong>Edad:</strong> {calcularEdad(pacienteSeleccionado.fechaNacimiento)}</div>
                 <div><strong>Sexo:</strong> {pacienteSeleccionado.sexo === 'M' ? 'Masculino' : 'Femenino'}</div>
@@ -403,7 +486,7 @@ const PortalMedico = () => {
                     <FaSpinner className="spin" style={{ fontSize: 40, color: colores.azulCielo }} />
                   </div>
                 ) : historial.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: 40, color: '#999' }}>
+                  <div style={{ textAlign: 'center', padding: 40, color: theme.textMuted }}>
                     <FaFlask style={{ fontSize: 50, marginBottom: 15, color: colores.azulCielo }} />
                     <p>No hay resultados registrados para este paciente</p>
                   </div>
@@ -419,12 +502,12 @@ const PortalMedico = () => {
                           display: 'flex',
                           justifyContent: 'space-between',
                           alignItems: 'center',
-                          background: r.estado === 'completado' ? '#f8fff8' : '#fffef8'
+                          background: r.estado === 'completado' ? 'rgba(34, 197, 94, 0.12)' : 'rgba(245, 158, 11, 0.12)'
                         }}
                       >
                         <div>
                           <strong style={{ color: colores.azulOscuro }}>{r.estudio?.nombre || r.nombreEstudio || 'Estudio'}</strong>
-                          <div style={{ fontSize: 12, color: '#666', marginTop: 5 }}>
+                          <div style={{ fontSize: 12, color: theme.textMuted, marginTop: 5 }}>
                             {new Date(r.createdAt || r.fecha).toLocaleDateString('es-DO')}
                             <span style={{
                               marginLeft: 10,
@@ -516,45 +599,45 @@ const PortalMedico = () => {
                     <tbody>
                       {(resultadoDetalle.valores || []).length === 0 ? (
                         <tr>
-                          <td colSpan={editando ? 6 : 5} style={{ padding: 30, textAlign: 'center', color: '#999' }}>
+                          <td colSpan={editando ? 6 : 5} style={{ padding: 30, textAlign: 'center', color: theme.textMuted }}>
                             {editando ? 'Agregue parametros con el boton de abajo' : 'Sin valores registrados'}
                           </td>
                         </tr>
                       ) : (
                         (resultadoDetalle.valores || []).map((v, i) => (
-                          <tr key={i} style={{ borderBottom: `1px solid ${colores.azulCielo}` }}>
+                          <tr key={i} style={{ borderBottom: `1px solid ${theme.borderSoft}` }}>
                             <td style={{ padding: 10 }}>
                               {editando ? (
                                 <input value={v.parametro || ''} onChange={e => actualizarValor(i, 'parametro', e.target.value)}
                                   placeholder="Nombre del parametro"
-                                  style={{ width: '100%', padding: 8, border: '1px solid #ddd', borderRadius: 4 }} />
+                                  style={{ width: '100%', padding: 8, border: `1px solid ${theme.border}`, borderRadius: 4, background: theme.surface, color: theme.text }} />
                               ) : v.parametro}
                             </td>
                             <td style={{ padding: 10, textAlign: 'center' }}>
                               {editando ? (
                                 <input value={v.valor || ''} onChange={e => actualizarValor(i, 'valor', e.target.value)}
                                   placeholder="Valor"
-                                  style={{ width: 80, padding: 8, border: '1px solid #ddd', borderRadius: 4, textAlign: 'center' }} />
+                                  style={{ width: 80, padding: 8, border: `1px solid ${theme.border}`, borderRadius: 4, textAlign: 'center', background: theme.surface, color: theme.text }} />
                               ) : <strong style={{ color: colores.azulOscuro }}>{v.valor}</strong>}
                             </td>
                             <td style={{ padding: 10, textAlign: 'center' }}>
                               {editando ? (
                                 <input value={v.unidad || ''} onChange={e => actualizarValor(i, 'unidad', e.target.value)}
                                   placeholder="Unidad"
-                                  style={{ width: 60, padding: 8, border: '1px solid #ddd', borderRadius: 4, textAlign: 'center' }} />
+                                  style={{ width: 60, padding: 8, border: `1px solid ${theme.border}`, borderRadius: 4, textAlign: 'center', background: theme.surface, color: theme.text }} />
                               ) : v.unidad}
                             </td>
-                            <td style={{ padding: 10, textAlign: 'center', color: '#666' }}>
+                            <td style={{ padding: 10, textAlign: 'center', color: theme.textMuted }}>
                               {editando ? (
                                 <input value={v.valorReferencia || ''} onChange={e => actualizarValor(i, 'valorReferencia', e.target.value)}
                                   placeholder="Ej: 70-100"
-                                  style={{ width: 100, padding: 8, border: '1px solid #ddd', borderRadius: 4, textAlign: 'center' }} />
+                                  style={{ width: 100, padding: 8, border: `1px solid ${theme.border}`, borderRadius: 4, textAlign: 'center', background: theme.surface, color: theme.text }} />
                               ) : v.valorReferencia || '-'}
                             </td>
                             <td style={{ padding: 10, textAlign: 'center' }}>
                               {editando ? (
                                 <select value={v.estado || 'normal'} onChange={e => actualizarValor(i, 'estado', e.target.value)}
-                                  style={{ padding: 8, border: '1px solid #ddd', borderRadius: 4 }}>
+                                  style={{ padding: 8, border: `1px solid ${theme.border}`, borderRadius: 4, background: theme.surface, color: theme.text }}>
                                   <option value="normal">Normal</option>
                                   <option value="alto">Alto</option>
                                   <option value="bajo">Bajo</option>
@@ -595,9 +678,9 @@ const PortalMedico = () => {
                     <textarea value={resultadoDetalle.interpretacion || ''}
                       onChange={e => setResultadoDetalle({ ...resultadoDetalle, interpretacion: e.target.value })}
                       placeholder="Escriba la interpretacion de los resultados..."
-                      style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #ddd', minHeight: 80 }} />
+                      style={{ width: '100%', padding: 10, borderRadius: 6, border: `1px solid ${theme.border}`, minHeight: 80, background: theme.surface, color: theme.text }} />
                   ) : (
-                    <p style={{ background: '#f0f8ff', padding: 12, borderRadius: 6, margin: 0, borderLeft: `4px solid ${colores.azulOscuro}` }}>
+                    <p style={{ background: theme.panel, padding: 12, borderRadius: 6, margin: 0, borderLeft: `4px solid ${colores.azulOscuro}`, color: theme.text }}>
                       {resultadoDetalle.interpretacion || 'Sin interpretacion'}
                     </p>
                   )}
@@ -610,9 +693,9 @@ const PortalMedico = () => {
                     <textarea value={resultadoDetalle.conclusion || ''}
                       onChange={e => setResultadoDetalle({ ...resultadoDetalle, conclusion: e.target.value })}
                       placeholder="Escriba la conclusion..."
-                      style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #ddd', minHeight: 80 }} />
+                      style={{ width: '100%', padding: 10, borderRadius: 6, border: `1px solid ${theme.border}`, minHeight: 80, background: theme.surface, color: theme.text }} />
                   ) : (
-                    <p style={{ background: '#e8f5e9', padding: 12, borderRadius: 6, margin: 0, borderLeft: '4px solid #27ae60' }}>
+                    <p style={{ background: 'rgba(34, 197, 94, 0.12)', padding: 12, borderRadius: 6, margin: 0, borderLeft: '4px solid #27ae60', color: theme.text }}>
                       {resultadoDetalle.conclusion || 'Sin conclusion'}
                     </p>
                   )}
@@ -620,106 +703,34 @@ const PortalMedico = () => {
 
                 {/* Firma Digital */}
                 <div style={{ marginBottom: 20, padding: 15, border: `2px solid ${resultadoDetalle.firmaDigital ? '#27ae60' : colores.azulCielo}`, borderRadius: 10, background: resultadoDetalle.firmaDigital ? '#f8fff8' : '#fffef8' }}>
-                  <label style={{ fontWeight: 'bold', color: colores.azulOscuro, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                    <FaSignature style={{ color: colores.azulCielo }} /> Firma Digital del Médico
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: resultadoDetalle.firmaDigital ? 'default' : 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(resultadoDetalle.firmaDigital)}
+                      disabled={firmandoResultado}
+                      onChange={(e) => marcarFirmaResultado(e.target.checked)}
+                      style={{ width: 18, height: 18, accentColor: '#27ae60', cursor: resultadoDetalle.firmaDigital ? 'default' : 'pointer' }}
+                    />
+                    <span style={{ fontWeight: 'bold', color: colores.azulOscuro, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <FaSignature style={{ color: colores.azulCielo }} />
+                      {firmandoResultado ? 'Firmando resultado...' : 'Firmar resultado'}
+                    </span>
                   </label>
-                  {resultadoDetalle.firmaDigital ? (
-                    <div style={{ textAlign: 'center' }}>
-                      <img src={resultadoDetalle.firmaDigital} alt="Firma" style={{ maxWidth: 300, maxHeight: 100, border: '1px solid #ddd', borderRadius: 6 }} />
-                      <p style={{ fontSize: 12, color: '#27ae60', marginTop: 8 }}>✅ Resultado firmado digitalmente</p>
-                    </div>
-                  ) : !showFirma ? (
-                    <button onClick={() => setShowFirma(true)} style={{
-                      padding: '10px 20px', background: '#8e44ad', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontWeight: 'bold'
+
+                  <p style={{ margin: '10px 0 0', fontSize: 12, color: theme.textMuted }}>
+                    {resultadoDetalle.firmaDigital
+                      ? `Firmado por Dr(a). ${resultadoDetalle.firmadoPor?.nombre || resultadoDetalle.validadoPor?.nombre || medicoSesion?.nombre || 'Médico'} ${resultadoDetalle.firmadoPor?.apellido || resultadoDetalle.validadoPor?.apellido || medicoSesion?.apellido || ''}`
+                      : firmaMedico
+                        ? 'Marque el check para aplicar la firma guardada en su sesión.'
+                        : 'Primero debe crear o cargar la firma en Mi Perfil.'}
+                  </p>
+
+                  {!firmaMedico && !resultadoDetalle.firmaDigital && (
+                    <button onClick={irAPerfilFirma} style={{
+                      marginTop: 12, padding: '10px 18px', background: '#8e44ad', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, fontWeight: 'bold'
                     }}>
-                      <FaSignature /> Firmar Resultado
+                      <FaSignature /> Ir a Mi Perfil
                     </button>
-                  ) : (
-                    <div>
-                      <canvas
-                        ref={signCanvasRef}
-                        width={400} height={150}
-                        style={{ border: '2px solid ' + colores.azulOscuro, borderRadius: 8, background: 'white', cursor: 'crosshair', touchAction: 'none', display: 'block', margin: '0 auto' }}
-                        onMouseDown={(e) => {
-                          isDrawingRef.current = true;
-                          const ctx = signCanvasRef.current.getContext('2d');
-                          const rect = signCanvasRef.current.getBoundingClientRect();
-                          ctx.beginPath();
-                          ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
-                        }}
-                        onMouseMove={(e) => {
-                          if (!isDrawingRef.current) return;
-                          const ctx = signCanvasRef.current.getContext('2d');
-                          const rect = signCanvasRef.current.getBoundingClientRect();
-                          ctx.lineWidth = 2;
-                          ctx.strokeStyle = colores.azulOscuro;
-                          ctx.lineCap = 'round';
-                          ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
-                          ctx.stroke();
-                        }}
-                        onMouseUp={() => { isDrawingRef.current = false; }}
-                        onMouseLeave={() => { isDrawingRef.current = false; }}
-                        onTouchStart={(e) => {
-                          e.preventDefault();
-                          isDrawingRef.current = true;
-                          const ctx = signCanvasRef.current.getContext('2d');
-                          const rect = signCanvasRef.current.getBoundingClientRect();
-                          const touch = e.touches[0];
-                          ctx.beginPath();
-                          ctx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
-                        }}
-                        onTouchMove={(e) => {
-                          e.preventDefault();
-                          if (!isDrawingRef.current) return;
-                          const ctx = signCanvasRef.current.getContext('2d');
-                          const rect = signCanvasRef.current.getBoundingClientRect();
-                          const touch = e.touches[0];
-                          ctx.lineWidth = 2;
-                          ctx.strokeStyle = colores.azulOscuro;
-                          ctx.lineCap = 'round';
-                          ctx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
-                          ctx.stroke();
-                        }}
-                        onTouchEnd={() => { isDrawingRef.current = false; }}
-                      />
-                      <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 10 }}>
-                        <button onClick={() => {
-                          const ctx = signCanvasRef.current.getContext('2d');
-                          ctx.clearRect(0, 0, 400, 150);
-                        }} style={{ padding: '8px 16px', background: '#e74c3c', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer' }}>
-                          Limpiar
-                        </button>
-                        <button onClick={async () => {
-                          const dataUrl = signCanvasRef.current.toDataURL('image/png');
-                          setFirmando(true);
-                          try {
-                            const token = localStorage.getItem('token');
-                            const res = await fetch(`/api/resultados/${resultadoDetalle._id || resultadoDetalle.id}/firma`, {
-                              method: 'PUT',
-                              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                              body: JSON.stringify({ firmaDigital: dataUrl })
-                            });
-                            const data = await res.json();
-                            if (data.success) {
-                              alert('✅ Resultado firmado correctamente');
-                              setResultadoDetalle({ ...resultadoDetalle, firmaDigital: dataUrl });
-                              setShowFirma(false);
-                            } else {
-                              alert('Error: ' + (data.message || 'No se pudo firmar'));
-                            }
-                          } catch (err) {
-                            alert('Error de conexión');
-                          } finally {
-                            setFirmando(false);
-                          }
-                        }} disabled={firmando} style={{ padding: '8px 20px', background: '#27ae60', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 'bold' }}>
-                          {firmando ? 'Firmando...' : '✅ Confirmar Firma'}
-                        </button>
-                        <button onClick={() => setShowFirma(false)} style={{ padding: '8px 16px', background: '#6c757d', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer' }}>
-                          Cancelar
-                        </button>
-                      </div>
-                    </div>
                   )}
                 </div>
 

@@ -80,7 +80,7 @@ exports.getResumenContable = async (req, res, next) => {
         const finHoy = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 23, 59, 59);
 
         // Get aggregated data
-        const [resumenHoy, resumenMes, resumenAnio, porCategoria, facturasIngreso] = await Promise.all([
+        const [resumenHoy, resumenMes, resumenAnio, porCategoria, facturasHoy, facturasMes, facturasAnio] = await Promise.all([
             // Today's summary
             MovimientoContable.aggregate([
                 { $match: { fecha: { $gte: inicioHoy, $lte: finHoy } } },
@@ -118,9 +118,29 @@ exports.getResumenContable = async (req, res, next) => {
                 }},
                 { $sort: { total: -1 } }
             ]),
+            // Today's invoiced collections
+            Factura.aggregate([
+                { $match: { estado: { $ne: 'anulada' }, createdAt: { $gte: inicioHoy, $lte: finHoy } } },
+                { $group: {
+                    _id: null,
+                    totalFacturado: { $sum: '$total' },
+                    totalCobrado: { $sum: '$montoPagado' },
+                    cantidad: { $sum: 1 }
+                }}
+            ]),
             // Invoiced income this month (from Factura model)
             Factura.aggregate([
                 { $match: { estado: { $ne: 'anulada' }, createdAt: { $gte: inicioMes } } },
+                { $group: {
+                    _id: null,
+                    totalFacturado: { $sum: '$total' },
+                    totalCobrado: { $sum: '$montoPagado' },
+                    cantidad: { $sum: 1 }
+                }}
+            ]),
+            // Invoiced income this year
+            Factura.aggregate([
+                { $match: { estado: { $ne: 'anulada' }, createdAt: { $gte: inicioAnio } } },
                 { $group: {
                     _id: null,
                     totalFacturado: { $sum: '$total' },
@@ -142,27 +162,36 @@ exports.getResumenContable = async (req, res, next) => {
         const egresosMes = extractTotal(resumenMes, 'egreso');
         const ingresosAnio = extractTotal(resumenAnio, 'ingreso');
         const egresosAnio = extractTotal(resumenAnio, 'egreso');
+        const cobradoHoy = facturasHoy[0]?.totalCobrado || 0;
+        const cobradoMes = facturasMes[0]?.totalCobrado || 0;
+        const cobradoAnio = facturasAnio[0]?.totalCobrado || 0;
 
         res.json({
             success: true,
             data: {
                 hoy: {
-                    ingresos: ingresosHoy.total,
+                    ingresos: ingresosHoy.total + cobradoHoy,
                     egresos: egresosHoy.total,
-                    balance: ingresosHoy.total - egresosHoy.total
+                    balance: (ingresosHoy.total + cobradoHoy) - egresosHoy.total,
+                    ingresosManuales: ingresosHoy.total,
+                    cobradoFacturas: cobradoHoy
                 },
                 mes: {
-                    ingresos: ingresosMes.total,
+                    ingresos: ingresosMes.total + cobradoMes,
                     egresos: egresosMes.total,
-                    balance: ingresosMes.total - egresosMes.total
+                    balance: (ingresosMes.total + cobradoMes) - egresosMes.total,
+                    ingresosManuales: ingresosMes.total,
+                    cobradoFacturas: cobradoMes
                 },
                 anio: {
-                    ingresos: ingresosAnio.total,
+                    ingresos: ingresosAnio.total + cobradoAnio,
                     egresos: egresosAnio.total,
-                    balance: ingresosAnio.total - egresosAnio.total
+                    balance: (ingresosAnio.total + cobradoAnio) - egresosAnio.total,
+                    ingresosManuales: ingresosAnio.total,
+                    cobradoFacturas: cobradoAnio
                 },
                 porCategoria,
-                facturacion: facturasIngreso[0] || { totalFacturado: 0, totalCobrado: 0, cantidad: 0 }
+                facturacion: facturasMes[0] || { totalFacturado: 0, totalCobrado: 0, cantidad: 0 }
             }
         });
     } catch (error) {
@@ -255,7 +284,7 @@ exports.getFacturacionDia = async (req, res, next) => {
                 { $match: { estado: { $ne: 'anulada' }, createdAt: { $gte: inicioHoy, $lte: finHoy } } },
                 { $group: {
                     _id: '$metodoPago',
-                    total: { $sum: '$total' },
+                    total: { $sum: '$montoPagado' },
                     cantidad: { $sum: 1 }
                 }}
             ]),

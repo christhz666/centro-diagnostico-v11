@@ -1,7 +1,25 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { FaFlask, FaPlus, FaEdit, FaTrash, FaUpload, FaFileExcel, FaSpinner, FaCheck, FaTimes, FaSearch } from 'react-icons/fa';
-import * as XLSX from 'xlsx';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { FaFlask, FaPlus, FaEdit, FaTrash, FaUpload, FaFileExcel, FaSpinner, FaSearch } from 'react-icons/fa';
 import api from '../services/api';
+import { loadXLSX } from '../utils/loadXlsx';
+
+// Categorias predefinidas con palabras clave para auto-asignacion
+const categoriasConfig = [
+  { nombre: 'Hematologia', keywords: ['sangre', 'hematol', 'hemograma', 'plaqueta', 'leucocito', 'eritrocito', 'hemoglobina', 'hematocrito', 'vcm', 'hcm', 'chcm', 'reticulocito', 'coagul', 'protrombina', 'fibrinogeno'] },
+  { nombre: 'Quimica Sanguinea', keywords: ['glucosa', 'colesterol', 'triglicerido', 'acido urico', 'creatinina', 'urea', 'bilirrubina', 'transaminasa', 'alt', 'ast', 'fosfatasa', 'amilasa', 'lipasa', 'albumina', 'proteina', 'electrolito', 'sodio', 'potasio', 'cloro', 'calcio', 'magnesio', 'hierro', 'ferritina', 'transferrina', 'ldh', 'cpk', 'gamma'] },
+  { nombre: 'Uroanalisis', keywords: ['orina', 'uro', 'urocultivo', 'sedimento'] },
+  { nombre: 'Coprologia', keywords: ['heces', 'copro', 'parasit', 'ameba', 'giardia', 'sangre oculta', 'coproculti'] },
+  { nombre: 'Inmunologia', keywords: ['hiv', 'vih', 'hepatitis', 'vdrl', 'rpr', 'inmuno', 'anticuerpo', 'antigeno', 'elisa', 'western', 'pcr', 'covid', 'sars', 'dengue', 'toxoplasma', 'rubeola', 'citomegalovirus', 'herpes', 'epstein', 'factor reumatoide', 'aso', 'complemento', 'inmunoglobulina', 'ige', 'alergia'] },
+  { nombre: 'Hormonas', keywords: ['hormona', 'tsh', 't3', 't4', 'tiroides', 'prolactina', 'testosterona', 'estradiol', 'progesterona', 'fsh', 'lh', 'cortisol', 'insulina', 'paratohormona', 'pth', 'dhea', 'androgeno', 'estrogeno', 'hgh', 'igf'] },
+  { nombre: 'Marcadores Tumorales', keywords: ['psa', 'cea', 'ca 125', 'ca 19', 'ca 15', 'afp', 'alfa feto', 'tumor', 'oncol', 'cancer', 'marcador'] },
+  { nombre: 'Pruebas de Embarazo', keywords: ['embarazo', 'hcg', 'beta hcg', 'prenatal', 'gestacion'] },
+  { nombre: 'Microbiologia', keywords: ['cultivo', 'antibiograma', 'bacteria', 'gram', 'koh', 'fungi', 'hongo', 'micolog'] },
+  { nombre: 'Perfiles', keywords: ['perfil', 'panel', 'completo', 'basico', 'ejecutivo', 'prenupcial', 'preoperatorio'] },
+  { nombre: 'Otros', keywords: [] }
+];
+
+const categoryCardTextColor = '#0f172a';
+const categoryPillTextColor = '#111111';
 
 const GestionEstudios = () => {
   const [estudios, setEstudios] = useState([]);
@@ -27,26 +45,7 @@ const GestionEstudios = () => {
     activo: true
   });
 
-  // Categorias predefinidas con palabras clave para auto-asignacion
-  const categoriasConfig = [
-    { nombre: 'Hematologia', keywords: ['sangre', 'hematol', 'hemograma', 'plaqueta', 'leucocito', 'eritrocito', 'hemoglobina', 'hematocrito', 'vcm', 'hcm', 'chcm', 'reticulocito', 'coagul', 'protrombina', 'fibrinogeno'] },
-    { nombre: 'Quimica Sanguinea', keywords: ['glucosa', 'colesterol', 'triglicerido', 'acido urico', 'creatinina', 'urea', 'bilirrubina', 'transaminasa', 'alt', 'ast', 'fosfatasa', 'amilasa', 'lipasa', 'albumina', 'proteina', 'electrolito', 'sodio', 'potasio', 'cloro', 'calcio', 'magnesio', 'hierro', 'ferritina', 'transferrina', 'ldh', 'cpk', 'gamma'] },
-    { nombre: 'Uroanalisis', keywords: ['orina', 'uro', 'urocultivo', 'sedimento'] },
-    { nombre: 'Coprologia', keywords: ['heces', 'copro', 'parasit', 'ameba', 'giardia', 'sangre oculta', 'coproculti'] },
-    { nombre: 'Inmunologia', keywords: ['hiv', 'vih', 'hepatitis', 'vdrl', 'rpr', 'inmuno', 'anticuerpo', 'antigeno', 'elisa', 'western', 'pcr', 'covid', 'sars', 'dengue', 'toxoplasma', 'rubeola', 'citomegalovirus', 'herpes', 'epstein', 'factor reumatoide', 'aso', 'complemento', 'inmunoglobulina', 'ige', 'alergia'] },
-    { nombre: 'Hormonas', keywords: ['hormona', 'tsh', 't3', 't4', 'tiroides', 'prolactina', 'testosterona', 'estradiol', 'progesterona', 'fsh', 'lh', 'cortisol', 'insulina', 'paratohormona', 'pth', 'dhea', 'androgeno', 'estrogeno', 'hgh', 'igf'] },
-    { nombre: 'Marcadores Tumorales', keywords: ['psa', 'cea', 'ca 125', 'ca 19', 'ca 15', 'afp', 'alfa feto', 'tumor', 'oncol', 'cancer', 'marcador'] },
-    { nombre: 'Pruebas de Embarazo', keywords: ['embarazo', 'hcg', 'beta hcg', 'prenatal', 'gestacion'] },
-    { nombre: 'Microbiologia', keywords: ['cultivo', 'antibiograma', 'bacteria', 'gram', 'koh', 'fungi', 'hongo', 'micolog'] },
-    { nombre: 'Perfiles', keywords: ['perfil', 'panel', 'completo', 'basico', 'ejecutivo', 'prenupcial', 'preoperatorio'] },
-    { nombre: 'Otros', keywords: [] }
-  ];
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const [estResponse, catResponse] = await Promise.all([
@@ -60,7 +59,19 @@ const GestionEstudios = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const categoriasDisponibles = (categorias.length
+    ? categorias
+    : categoriasConfig.map(c => ({ nombre: c.nombre, _id: c.nombre }))
+  ).map((categoria) => ({
+    nombre: categoria?.nombre || categoria?.label || categoria?._id || String(categoria),
+    _id: categoria?._id || categoria?.nombre || categoria?.label || String(categoria)
+  }));
 
   // Funcion para determinar categoria automaticamente
   const determinarCategoria = (nombreEstudio) => {
@@ -82,8 +93,9 @@ const GestionEstudios = () => {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (evt) => {
+    reader.onload = async (evt) => {
       try {
+        const XLSX = await loadXLSX();
         const bstr = evt.target.result;
         const wb = XLSX.read(bstr, { type: 'binary' });
         const wsname = wb.SheetNames[0];
@@ -278,8 +290,8 @@ const GestionEstudios = () => {
         </div>
         <select value={filtroCategoria} onChange={e => setFiltroCategoria(e.target.value)} style={{ padding: 10, borderRadius: 8, border: '1px solid #ddd', minWidth: 200 }}>
           <option value="">Todas las categorias</option>
-          {categoriasConfig.map(c => (
-            <option key={c.nombre} value={c.nombre}>{c.nombre}</option>
+          {categoriasDisponibles.map(c => (
+            <option key={c._id} value={c.nombre}>{c.nombre}</option>
           ))}
         </select>
       </div>
@@ -290,9 +302,9 @@ const GestionEstudios = () => {
           <div style={{ fontSize: 14, opacity: 0.9 }}>Total Estudios</div>
           <div style={{ fontSize: 28, fontWeight: 'bold' }}>{estudios.length}</div>
         </div>
-        <div style={{ background: 'linear-gradient(135deg, #87CEEB, #5fa8d3)', padding: 20, borderRadius: 10, color: '#1a3a5c' }}>
-          <div style={{ fontSize: 14 }}>Categorias</div>
-          <div style={{ fontSize: 28, fontWeight: 'bold' }}>{new Set(estudios.map(e => e.categoria?.nombre || e.categoria)).size}</div>
+        <div style={{ background: 'linear-gradient(135deg, #87CEEB, #5fa8d3)', padding: 20, borderRadius: 10, color: categoryCardTextColor, border: '1px solid rgba(15, 23, 42, 0.14)' }}>
+          <div style={{ fontSize: 14, color: categoryCardTextColor }}>Categorias</div>
+          <div style={{ fontSize: 28, fontWeight: 'bold', color: categoryCardTextColor }}>{new Set(estudios.map(e => e.categoria?.nombre || e.categoria)).size}</div>
         </div>
         <div style={{ background: 'linear-gradient(135deg, #27ae60, #2ecc71)', padding: 20, borderRadius: 10, color: 'white' }}>
           <div style={{ fontSize: 14, opacity: 0.9 }}>Activos</div>
@@ -326,7 +338,7 @@ const GestionEstudios = () => {
                   <td style={{ padding: 15, fontFamily: 'monospace' }}>{e.codigo || '-'}</td>
                   <td style={{ padding: 15, fontWeight: 'bold', color: '#1a3a5c' }}>{e.nombre}</td>
                   <td style={{ padding: 15 }}>
-                    <span style={{ background: '#87CEEB', color: '#1a3a5c', padding: '4px 10px', borderRadius: 15, fontSize: 12 }}>
+                    <span style={{ background: '#87CEEB', color: categoryPillTextColor, border: '1px solid rgba(17, 17, 17, 0.16)', padding: '4px 10px', borderRadius: 15, fontSize: 12, fontWeight: 700 }}>
                       {e.categoria?.nombre || e.categoria || 'Sin categoria'}
                     </span>
                   </td>
@@ -388,8 +400,8 @@ const GestionEstudios = () => {
                 <select value={formData.categoria} onChange={e => setFormData({...formData, categoria: e.target.value})}
                   style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #ddd' }}>
                   <option value="">Seleccionar...</option>
-                  {categoriasConfig.map(c => (
-                    <option key={c.nombre} value={c.nombre}>{c.nombre}</option>
+                  {categoriasDisponibles.map(c => (
+                    <option key={c._id} value={c.nombre}>{c.nombre}</option>
                   ))}
                 </select>
               </div>
@@ -469,8 +481,8 @@ const GestionEstudios = () => {
                           newData[i].categoria = ev.target.value;
                           setExcelData(newData);
                         }} style={{ padding: 5, borderRadius: 4, border: '1px solid #ddd', width: '100%' }}>
-                          {categoriasConfig.map(c => (
-                            <option key={c.nombre} value={c.nombre}>{c.nombre}</option>
+                          {categoriasDisponibles.map(c => (
+                            <option key={c._id} value={c.nombre}>{c.nombre}</option>
                           ))}
                         </select>
                       </td>

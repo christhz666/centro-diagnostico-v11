@@ -11,6 +11,8 @@ const Resultado = require('../models/Resultado');
 const Paciente = require('../models/Paciente');
 const Cita = require('../models/Cita');
 
+const MENSAJE_FIRMA_REQUERIDA = 'Debe registrar su firma en Mi Perfil antes de finalizar un reporte de imagenología.';
+
 // ─── Multer: almacenamiento de imágenes ──────────────────────────────────────
 
 const storage = multer.diskStorage({
@@ -165,7 +167,9 @@ exports.getWorkspace = async (req, res, next) => {
             .populate('paciente', 'nombre apellido cedula fechaNacimiento sexo edad telefono')
             .populate('estudio', 'nombre codigo categoria descripcion')
             .populate('cita', 'fecha registroId')
-            .populate('medico', 'nombre apellido especialidad firma');
+            .populate('medico', 'nombre apellido especialidad firma')
+            .populate('validadoPor', 'nombre apellido especialidad')
+            .populate('firmadoPor', 'nombre apellido especialidad');
 
         if (!resultado) {
             return res.status(404).json({ success: false, message: 'Resultado no encontrado' });
@@ -211,6 +215,10 @@ exports.getWorkspace = async (req, res, next) => {
                 resultadoId: resultado._id,
                 codigoMuestra: resultado.codigoMuestra,
                 estado: resultado.estado,
+                firmaDigital: resultado.firmaDigital || '',
+                firmadoPor: resultado.firmadoPor || null,
+                validadoPor: resultado.validadoPor || null,
+                fechaFirma: resultado.fechaFirma || null,
                 paciente: resultado.paciente,
                 estudio: resultado.estudio,
                 cita: resultado.cita,
@@ -400,6 +408,11 @@ exports.listaEstudios = async (req, res, next) => {
 
 exports.finalizarReporte = async (req, res, next) => {
     try {
+        if (!req.user?.firmaDigital) {
+            return res.status(400).json({ success: false, message: MENSAJE_FIRMA_REQUERIDA });
+        }
+
+        const firmaSesion = req.user?.firmaDigital || '';
         const resultado = await Resultado.findByIdAndUpdate(
             req.params.resultadoId,
             {
@@ -411,11 +424,21 @@ exports.finalizarReporte = async (req, res, next) => {
                     },
                     estado: 'completado',
                     fechaRealizacion: new Date(),
-                    realizadoPor: req.user?._id
+                    realizadoPor: req.user?._id,
+                    validadoPor: req.user?._id,
+                    fechaValidacion: new Date(),
+                    ...(firmaSesion ? {
+                        firmaDigital: firmaSesion,
+                        firmadoPor: req.user?._id,
+                        fechaFirma: new Date()
+                    } : {})
                 }
             },
             { new: true }
-        ).populate('paciente', 'nombre apellido cedula');
+        )
+            .populate('paciente', 'nombre apellido cedula')
+            .populate('validadoPor', 'nombre apellido especialidad')
+            .populate('firmadoPor', 'nombre apellido especialidad');
 
         if (!resultado) {
             return res.status(404).json({ success: false, message: 'Resultado no encontrado' });

@@ -54,6 +54,7 @@ exports.getResultados = async (req, res, next) => {
                 .populate('medico', 'nombre apellido especialidad')
                 .populate('realizadoPor', 'nombre apellido')
                 .populate('validadoPor', 'nombre apellido')
+                .populate('firmadoPor', 'nombre apellido')
                 .sort('-createdAt')
                 .skip(skip)
                 .limit(limit),
@@ -84,6 +85,7 @@ exports.getResultadosPorPaciente = async (req, res, next) => {
             .populate('estudio', 'nombre codigo categoria')
             .populate('medico', 'nombre apellido especialidad')
             .populate('validadoPor', 'nombre apellido')
+            .populate('firmadoPor', 'nombre apellido')
             .sort('-createdAt');
 
         res.json({
@@ -116,6 +118,7 @@ exports.getResultadosPorCedula = async (req, res, next) => {
             .populate('estudio', 'nombre codigo categoria')
             .populate('medico', 'nombre apellido especialidad')
             .populate('validadoPor', 'nombre apellido')
+            .populate('firmadoPor', 'nombre apellido')
             .sort('-createdAt');
 
         res.json({
@@ -151,7 +154,8 @@ exports.getResultadoPorCodigo = async (req, res, next) => {
                 .populate('estudio')
                 .populate('medico', 'nombre apellido especialidad licenciaMedica')
                 .populate('realizadoPor', 'nombre apellido')
-                .populate('validadoPor', 'nombre apellido');
+                .populate('validadoPor', 'nombre apellido')
+                .populate('firmadoPor', 'nombre apellido');
 
             if (resultadoLab) {
                 return res.json({ success: true, data: resultadoLab });
@@ -164,7 +168,8 @@ exports.getResultadoPorCodigo = async (req, res, next) => {
             .populate('estudio')
             .populate('medico', 'nombre apellido especialidad licenciaMedica')
             .populate('realizadoPor', 'nombre apellido')
-            .populate('validadoPor', 'nombre apellido');
+            .populate('validadoPor', 'nombre apellido')
+            .populate('firmadoPor', 'nombre apellido');
 
         if (!resultado) {
             return res.status(404).json({
@@ -188,7 +193,8 @@ exports.getResultado = async (req, res, next) => {
             .populate('estudio')
             .populate('medico', 'nombre apellido especialidad licenciaMedica')
             .populate('realizadoPor', 'nombre apellido')
-            .populate('validadoPor', 'nombre apellido');
+            .populate('validadoPor', 'nombre apellido')
+            .populate('firmadoPor', 'nombre apellido');
 
         if (!resultado) {
             return res.status(404).json({
@@ -208,6 +214,21 @@ exports.getResultado = async (req, res, next) => {
 exports.createResultado = async (req, res, next) => {
     try {
         req.body.realizadoPor = req.user?._id;
+
+        if (req.body.estado === 'completado') {
+            if (!req.user?.firmaDigital) {
+                return res.status(400).json({
+                    success: false,
+                    message: MENSAJE_FIRMA_REQUERIDA
+                });
+            }
+
+            req.body.validadoPor = req.user?._id;
+            req.body.fechaValidacion = new Date();
+            req.body.firmaDigital = req.user.firmaDigital;
+            req.body.firmadoPor = req.user?._id;
+            req.body.fechaFirma = new Date();
+        }
 
         const resultado = await Resultado.create(req.body);
 
@@ -233,10 +254,21 @@ const _getMontoPendiente = async (facturaId) => {
     return Math.max(0, (factura.total || 0) - (factura.montoPagado || 0));
 };
 
+const MENSAJE_FIRMA_REQUERIDA = 'Debe registrar su firma en Mi Perfil antes de completar o validar resultados.';
+
 // @desc    Actualizar resultado
 // @route   PUT /api/resultados/:id
 exports.updateResultado = async (req, res, next) => {
     try {
+        const resultadoActual = await Resultado.findById(req.params.id).select('firmaDigital');
+
+        if (!resultadoActual) {
+            return res.status(404).json({
+                success: false,
+                message: 'Resultado no encontrado'
+            });
+        }
+
         // Whitelist de campos permitidos — médicos/lab pueden editar, pero no campos de auditoría
         const allowedFields = [
             'valores', 'interpretacion', 'conclusion', 'estado',
@@ -247,20 +279,34 @@ exports.updateResultado = async (req, res, next) => {
             if (req.body[field] !== undefined) update[field] = req.body[field];
         });
 
+        if (update.estado === 'completado') {
+            if (!req.user?.firmaDigital) {
+                return res.status(400).json({
+                    success: false,
+                    message: MENSAJE_FIRMA_REQUERIDA
+                });
+            }
+
+            update.validadoPor = req.user._id;
+            update.fechaValidacion = new Date();
+            update.firmaDigital = req.user.firmaDigital;
+            update.firmadoPor = req.user._id;
+            update.fechaFirma = new Date();
+        } else if (!resultadoActual.firmaDigital && req.user?.firmaDigital && update.estado === 'entregado') {
+            update.firmaDigital = req.user.firmaDigital;
+            update.firmadoPor = req.user._id;
+            update.fechaFirma = new Date();
+        }
+
         const resultado = await Resultado.findByIdAndUpdate(
             req.params.id,
             update,
             { new: true, runValidators: true }
         )
             .populate('paciente', 'nombre apellido')
-            .populate('estudio', 'nombre codigo');
-
-        if (!resultado) {
-            return res.status(404).json({
-                success: false,
-                message: 'Resultado no encontrado'
-            });
-        }
+            .populate('estudio', 'nombre codigo')
+            .populate('validadoPor', 'nombre apellido especialidad')
+            .populate('firmadoPor', 'nombre apellido especialidad');
 
         res.json({
             success: true,
@@ -276,20 +322,36 @@ exports.updateResultado = async (req, res, next) => {
 // @route   PUT /api/resultados/:id/validar
 exports.validarResultado = async (req, res, next) => {
     try {
+        if (!req.user?.firmaDigital) {
+            return res.status(400).json({
+                success: false,
+                message: MENSAJE_FIRMA_REQUERIDA
+            });
+        }
+
+        const update = {
+            estado: 'completado',
+            validadoPor: req.user?._id,
+            fechaValidacion: new Date(),
+            interpretacion: req.body.interpretacion,
+            conclusion: req.body.conclusion
+        };
+
+        if (req.user?.firmaDigital) {
+            update.firmaDigital = req.user.firmaDigital;
+            update.firmadoPor = req.user._id;
+            update.fechaFirma = new Date();
+        }
+
         const resultado = await Resultado.findByIdAndUpdate(
             req.params.id,
-            {
-                estado: 'completado',
-                validadoPor: req.user?._id,
-                fechaValidacion: new Date(),
-                interpretacion: req.body.interpretacion,
-                conclusion: req.body.conclusion
-            },
+            update,
             { new: true }
         )
             .populate('paciente')
             .populate('estudio')
-            .populate('validadoPor', 'nombre apellido');
+            .populate('validadoPor', 'nombre apellido especialidad')
+            .populate('firmadoPor', 'nombre apellido especialidad');
 
         if (!resultado) {
             return res.status(404).json({
@@ -464,6 +526,7 @@ exports.getResultadosPorQR = async (req, res, next) => {
             .populate('estudio', 'nombre codigo categoria')
             .populate('medico', 'nombre apellido especialidad')
             .populate('validadoPor', 'nombre apellido')
+            .populate('firmadoPor', 'nombre apellido')
             .sort('-createdAt');
 
         res.json({
@@ -593,6 +656,7 @@ exports.accesoPaciente = async (req, res, next) => {
             .populate('estudio', 'nombre codigo categoria')
             .populate('medico', 'nombre apellido especialidad')
             .populate('validadoPor', 'nombre apellido')
+            .populate('firmadoPor', 'nombre apellido')
             .sort('-createdAt');
 
         res.json({
@@ -648,6 +712,7 @@ exports.getResultadosPorFactura = async (req, res, next) => {
             .populate('estudio', 'nombre codigo categoria')
             .populate('medico', 'nombre apellido especialidad')
             .populate('validadoPor', 'nombre apellido')
+            .populate('firmadoPor', 'nombre apellido')
             .sort('-createdAt');
 
         // Intento 2: por cita (si tiene cita y no encontró resultados por factura._id)
@@ -659,6 +724,7 @@ exports.getResultadosPorFactura = async (req, res, next) => {
                 .populate('estudio', 'nombre codigo categoria')
                 .populate('medico', 'nombre apellido especialidad')
                 .populate('validadoPor', 'nombre apellido')
+                .populate('firmadoPor', 'nombre apellido')
                 .sort('-createdAt');
         }
 
@@ -678,6 +744,7 @@ exports.getResultadosPorFactura = async (req, res, next) => {
                 .populate('estudio', 'nombre codigo categoria')
                 .populate('medico', 'nombre apellido especialidad')
                 .populate('validadoPor', 'nombre apellido')
+                .populate('firmadoPor', 'nombre apellido')
                 .sort('-createdAt');
         }
 
@@ -757,6 +824,7 @@ exports.accesoQR = async (req, res, next) => {
             .populate('estudio', 'nombre codigo categoria')
             .populate('medico', 'nombre apellido especialidad')
             .populate('validadoPor', 'nombre apellido')
+            .populate('firmadoPor', 'nombre apellido')
             .sort('-createdAt');
 
         res.json({
@@ -956,20 +1024,39 @@ exports.diagnosticoDicom = async (req, res, next) => {
 // @route   PUT /api/resultados/:id/firma
 exports.firmarResultado = async (req, res, next) => {
     try {
-        const { firmaDigital } = req.body;
-        if (!firmaDigital) {
-            return res.status(400).json({ success: false, message: 'Se requiere la firma digital' });
+        const firmaSesion = req.user?.firmaDigital;
+        const firmaPayload = req.body?.firmaDigital;
+        const firmaFinal = firmaPayload || firmaSesion;
+
+        if (!req.user?._id) {
+            return res.status(401).json({ success: false, message: 'Debe iniciar sesión para firmar resultados' });
         }
 
-        const resultado = await Resultado.findByIdAndUpdate(req.params.id, {
-            firmaDigital,
-            firmadoPor: req.user?.id,
-            fechaFirma: new Date()
-        }, { new: true });
+        if (!firmaFinal) {
+            return res.status(400).json({ success: false, message: 'El médico no tiene una firma guardada' });
+        }
+
+        const resultado = await Resultado.findById(req.params.id);
 
         if (!resultado) {
             return res.status(404).json({ success: false, message: 'Resultado no encontrado' });
         }
+
+        resultado.firmaDigital = firmaFinal;
+        resultado.firmadoPor = req.user._id;
+        resultado.fechaFirma = new Date();
+
+        if (!resultado.validadoPor) {
+            resultado.validadoPor = req.user._id;
+        }
+
+        if (!resultado.fechaValidacion) {
+            resultado.fechaValidacion = new Date();
+        }
+
+        await resultado.save();
+        await resultado.populate('firmadoPor', 'nombre apellido especialidad');
+        await resultado.populate('validadoPor', 'nombre apellido especialidad');
 
         // Registrar auditoría
         try {

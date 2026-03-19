@@ -56,7 +56,7 @@ function StarfieldCanvas() {
     return <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }} />;
 }
 
-const Login = ({ onLogin, empresaConfig = {} }) => {
+const Login = ({ onLogin, empresaConfig = {}, authNotice = '' }) => {
     const empresaNombre = empresaConfig.nombre || empresaConfig.empresa_nombre || 'MedicCore';
     const [credentials, setCredentials] = useState(() => {
         const savedEmail = localStorage.getItem('rememberedEmail') || '';
@@ -68,7 +68,8 @@ const Login = ({ onLogin, empresaConfig = {} }) => {
     const navigate = useNavigate();
 
     const handleChange = (e) => {
-        setCredentials({ ...credentials, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setCredentials((prev) => ({ ...prev, [name]: value }));
     };
 
     const handleSubmit = async (e) => {
@@ -120,8 +121,15 @@ const Login = ({ onLogin, empresaConfig = {} }) => {
                         <p className="text-gray-400 text-sm mt-2 font-medium uppercase tracking-widest">Diagnóstico Inteligente</p>
                     </div>
 
+                    {authNotice && !error && (
+                        <div role="status" className="bg-amber-500/10 border border-amber-500/20 text-amber-200 p-4 rounded-2xl mb-6 text-sm flex items-center gap-3">
+                            <span className="material-icons-round text-lg">info</span>
+                            {authNotice}
+                        </div>
+                    )}
+
                     {error && (
-                        <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-2xl mb-6 text-sm flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+                        <div role="alert" className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-2xl mb-6 text-sm flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
                             <span className="material-icons-round text-lg">error_outline</span>
                             {error}
                         </div>
@@ -129,15 +137,18 @@ const Login = ({ onLogin, empresaConfig = {} }) => {
 
                     <form className="space-y-6" onSubmit={handleSubmit}>
                         <div className="space-y-2">
-                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Credenciales</label>
+                            <label htmlFor="login-identity" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Credenciales</label>
                             <div className="relative group">
                                 <span className="material-icons-round absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors text-xl">person</span>
                                 <input
                                     type="text"
+                                    id="login-identity"
                                     name="email"
                                     value={credentials.email}
                                     onChange={handleChange}
                                     placeholder="Usuario o Correo"
+                                    autoComplete="username"
+                                    aria-invalid={Boolean(error)}
                                     className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 transition-all font-medium"
                                     required
                                 />
@@ -145,15 +156,18 @@ const Login = ({ onLogin, empresaConfig = {} }) => {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Clave de Seguridad</label>
+                            <label htmlFor="login-password" className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Clave de Seguridad</label>
                             <div className="relative group">
                                 <span className="material-icons-round absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors text-xl">lock</span>
                                 <input
                                     type="password"
+                                    id="login-password"
                                     name="password"
                                     value={credentials.password}
                                     onChange={handleChange}
                                     placeholder="••••••••••••"
+                                    autoComplete="current-password"
+                                    aria-invalid={Boolean(error)}
                                     className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 transition-all font-medium"
                                     required
                                 />
@@ -161,8 +175,9 @@ const Login = ({ onLogin, empresaConfig = {} }) => {
                         </div>
 
                         <div className="flex items-center justify-between px-1">
-                            <label className="flex items-center gap-3 cursor-pointer group">
+                            <label htmlFor="remember-session" className="flex items-center gap-3 cursor-pointer group">
                                 <input
+                                    id="remember-session"
                                     type="checkbox"
                                     checked={rememberMe}
                                     onChange={(e) => setRememberMe(e.target.checked)}

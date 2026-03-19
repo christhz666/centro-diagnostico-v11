@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { FaWhatsapp, FaPaperPlane, FaUsers, FaSpinner, FaCheckCircle, FaExclamationTriangle, FaEye } from 'react-icons/fa';
+import { FaWhatsapp, FaPaperPlane, FaSpinner, FaCheckCircle, FaExclamationTriangle, FaEye } from 'react-icons/fa';
+
+const theme = {
+  surface: 'var(--legacy-surface)',
+  surfaceMuted: 'var(--legacy-surface-muted)',
+  panel: 'var(--legacy-surface-panel)',
+  border: 'var(--legacy-border)',
+  borderSoft: 'var(--legacy-border-soft)',
+  text: 'var(--legacy-text)',
+  textStrong: 'var(--legacy-text-strong)',
+  textMuted: 'var(--legacy-text-muted)'
+};
 
 const CampanaWhatsApp = () => {
   // Estado para credenciales
@@ -108,22 +119,22 @@ const CampanaWhatsApp = () => {
 
   return (
     <div style={{ padding: 20, maxWidth: 900, margin: '0 auto' }}>
-      <h2 style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#1b262c', marginBottom: 5 }}>
+      <h2 style={{ display: 'flex', alignItems: 'center', gap: 10, color: theme.textStrong, marginBottom: 5 }}>
         <FaWhatsapp style={{ color: colorWA }} /> Campañas de WhatsApp
       </h2>
-      <p style={{ color: '#666', marginBottom: 25 }}>Envíe promociones y ofertas a su base de datos de pacientes</p>
+      <p style={{ color: theme.textMuted, marginBottom: 25 }}>Envíe promociones y ofertas a su base de datos de pacientes</p>
 
       {/* Estadísticas */}
       {stats && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 15, marginBottom: 25 }}>
           {[
             { label: 'Total Pacientes', value: stats.total, color: '#3498db' },
-            { label: 'Con Teléfono', value: stats.conTelefono, color: colorWA },
-            { label: 'Sin Teléfono', value: stats.sinTelefono, color: '#e74c3c' }
+          { label: 'Con Teléfono', value: stats.conTelefono, color: colorWA },
+          { label: 'Sin Teléfono', value: stats.sinTelefono, color: '#e74c3c' }
           ].map(s => (
-            <div key={s.label} style={{ background: 'white', borderRadius: 12, padding: 20, textAlign: 'center', boxShadow: '0 2px 10px rgba(0,0,0,0.08)', borderTop: `4px solid ${s.color}` }}>
+            <div key={s.label} style={{ background: theme.surface, borderRadius: 12, padding: 20, textAlign: 'center', boxShadow: '0 2px 10px rgba(0,0,0,0.08)', borderTop: `4px solid ${s.color}`, border: `1px solid ${theme.border}` }}>
               <div style={{ fontSize: 30, fontWeight: 'bold', color: s.color }}>{s.value}</div>
-              <div style={{ fontSize: 13, color: '#666' }}>{s.label}</div>
+              <div style={{ fontSize: 13, color: theme.textMuted }}>{s.label}</div>
             </div>
           ))}
         </div>
@@ -131,31 +142,31 @@ const CampanaWhatsApp = () => {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
         {/* Panel izquierdo: configurar */}
-        <div style={{ background: 'white', borderRadius: 15, padding: 25, boxShadow: '0 2px 10px rgba(0,0,0,0.08)' }}>
+        <div style={{ background: theme.surface, borderRadius: 15, padding: 25, boxShadow: '0 2px 10px rgba(0,0,0,0.08)', border: `1px solid ${theme.border}` }}>
                     {/* Botón y formulario SIEMPRE visibles para todos */}
                     <>
-                        <button onClick={() => setMostrarCredenciales(v => !v)} style={{ marginBottom: 15, background: '#f0f0f0', border: 'none', borderRadius: 8, padding: 8, cursor: 'pointer', fontWeight: 'bold' }}>
+                        <button onClick={() => setMostrarCredenciales(v => !v)} style={{ marginBottom: 15, background: theme.surfaceMuted, color: theme.text, border: `1px solid ${theme.border}`, borderRadius: 8, padding: 8, cursor: 'pointer', fontWeight: 'bold' }}>
                           {mostrarCredenciales ? 'Ocultar' : 'Configurar credenciales WhatsApp'}
                         </button>
                         {mostrarCredenciales && (
-                          <form onSubmit={guardarCredenciales} style={{ background: '#f8f9fa', borderRadius: 10, padding: 15, marginBottom: 15, border: '1px solid #e1e1e1' }}>
-                            <h4 style={{ margin: '0 0 10px', color: '#2c3e50' }}>Credenciales Twilio</h4>
-                            <input name="accountSid" data-tipo="twilio" placeholder="Account SID" value={credenciales.twilio.accountSid} onChange={handleCredencialesChange} style={{ width: '100%', marginBottom: 8, padding: 8, borderRadius: 6, border: '1px solid #ccc' }} />
-                            <input name="authToken" data-tipo="twilio" placeholder="Auth Token" value={credenciales.twilio.authToken} onChange={handleCredencialesChange} style={{ width: '100%', marginBottom: 8, padding: 8, borderRadius: 6, border: '1px solid #ccc' }} />
-                            <input name="from" data-tipo="twilio" placeholder="WhatsApp From (ej: whatsapp:+14155238886)" value={credenciales.twilio.from} onChange={handleCredencialesChange} style={{ width: '100%', marginBottom: 12, padding: 8, borderRadius: 6, border: '1px solid #ccc' }} />
-                            <h4 style={{ margin: '10px 0 10px', color: '#2c3e50' }}>Credenciales Meta WhatsApp</h4>
-                            <input name="phoneNumberId" data-tipo="meta" placeholder="Phone Number ID" value={credenciales.meta.phoneNumberId} onChange={handleCredencialesChange} style={{ width: '100%', marginBottom: 8, padding: 8, borderRadius: 6, border: '1px solid #ccc' }} />
-                            <input name="accessToken" data-tipo="meta" placeholder="Access Token" value={credenciales.meta.accessToken} onChange={handleCredencialesChange} style={{ width: '100%', marginBottom: 12, padding: 8, borderRadius: 6, border: '1px solid #ccc' }} />
+                          <form onSubmit={guardarCredenciales} style={{ background: theme.surfaceMuted, borderRadius: 10, padding: 15, marginBottom: 15, border: `1px solid ${theme.border}` }}>
+                            <h4 style={{ margin: '0 0 10px', color: theme.textStrong }}>Credenciales Twilio</h4>
+                            <input name="accountSid" data-tipo="twilio" placeholder="Account SID" value={credenciales.twilio.accountSid} onChange={handleCredencialesChange} style={{ width: '100%', marginBottom: 8, padding: 8, borderRadius: 6, border: `1px solid ${theme.border}`, background: theme.surface, color: theme.text }} />
+                            <input name="authToken" data-tipo="twilio" placeholder="Auth Token" value={credenciales.twilio.authToken} onChange={handleCredencialesChange} style={{ width: '100%', marginBottom: 8, padding: 8, borderRadius: 6, border: `1px solid ${theme.border}`, background: theme.surface, color: theme.text }} />
+                            <input name="from" data-tipo="twilio" placeholder="WhatsApp From (ej: whatsapp:+14155238886)" value={credenciales.twilio.from} onChange={handleCredencialesChange} style={{ width: '100%', marginBottom: 12, padding: 8, borderRadius: 6, border: `1px solid ${theme.border}`, background: theme.surface, color: theme.text }} />
+                            <h4 style={{ margin: '10px 0 10px', color: theme.textStrong }}>Credenciales Meta WhatsApp</h4>
+                            <input name="phoneNumberId" data-tipo="meta" placeholder="Phone Number ID" value={credenciales.meta.phoneNumberId} onChange={handleCredencialesChange} style={{ width: '100%', marginBottom: 8, padding: 8, borderRadius: 6, border: `1px solid ${theme.border}`, background: theme.surface, color: theme.text }} />
+                            <input name="accessToken" data-tipo="meta" placeholder="Access Token" value={credenciales.meta.accessToken} onChange={handleCredencialesChange} style={{ width: '100%', marginBottom: 12, padding: 8, borderRadius: 6, border: `1px solid ${theme.border}`, background: theme.surface, color: theme.text }} />
                             <button type="submit" style={{ background: colorWA, color: 'white', border: 'none', borderRadius: 8, padding: 10, fontWeight: 'bold', cursor: 'pointer', width: '100%' }}>Guardar Credenciales</button>
                             {credencialesMsg && <div style={{ marginTop: 10, color: credencialesMsg.includes('correctamente') ? 'green' : 'red', fontSize: 13 }}>{credencialesMsg}</div>}
                           </form>
                         )}
                       </>
-          <h3 style={{ margin: '0 0 20px', color: '#2c3e50' }}>⚙️ Configurar Campaña</h3>
+          <h3 style={{ margin: '0 0 20px', color: theme.textStrong }}>⚙️ Configurar Campaña</h3>
           
           <div style={{ marginBottom: 15 }}>
-            <label style={{ fontSize: 13, color: '#555', marginBottom: 6, display: 'block', fontWeight: 'bold' }}>Segmento de Destinatarios</label>
-            <select value={segmento} onChange={e => setSegmento(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 8, border: '1px solid #ddd' }}>
+            <label style={{ fontSize: 13, color: theme.text, marginBottom: 6, display: 'block', fontWeight: 'bold' }}>Segmento de Destinatarios</label>
+            <select value={segmento} onChange={e => setSegmento(e.target.value)} style={{ width: '100%', padding: 10, borderRadius: 8, border: `1px solid ${theme.border}`, background: theme.surface, color: theme.text }}>
               <option value="todos">🌐 Todos los pacientes</option>
               <option value="con_seguro">🏥 Pacientes con seguro</option>
               <option value="sin_seguro">👤 Pacientes sin seguro</option>
@@ -163,20 +174,20 @@ const CampanaWhatsApp = () => {
           </div>
 
           <div style={{ marginBottom: 15 }}>
-            <label style={{ fontSize: 13, color: '#555', marginBottom: 6, display: 'block', fontWeight: 'bold' }}>Mensaje</label>
+            <label style={{ fontSize: 13, color: theme.text, marginBottom: 6, display: 'block', fontWeight: 'bold' }}>Mensaje</label>
             <textarea
               value={mensaje}
               onChange={e => setMensaje(e.target.value)}
               rows={10}
-              style={{ width: '100%', padding: 12, borderRadius: 8, border: '1px solid #ddd', fontSize: 13, boxSizing: 'border-box', fontFamily: 'monospace', resize: 'vertical' }}
+              style={{ width: '100%', padding: 12, borderRadius: 8, border: `1px solid ${theme.border}`, fontSize: 13, boxSizing: 'border-box', fontFamily: 'monospace', resize: 'vertical', background: theme.surface, color: theme.text }}
             />
-            <div style={{ fontSize: 11, color: '#888', marginTop: 5 }}>
-              Variables: <code style={{ background: '#f0f0f0', padding: '2px 4px', borderRadius: 3 }}>{'{nombre}'}</code>, <code style={{ background: '#f0f0f0', padding: '2px 4px', borderRadius: 3 }}>{'{apellido}'}</code>, <code style={{ background: '#f0f0f0', padding: '2px 4px', borderRadius: 3 }}>{'{nombreCompleto}'}</code>
+            <div style={{ fontSize: 11, color: theme.textMuted, marginTop: 5 }}>
+              Variables: <code style={{ background: theme.surfaceMuted, padding: '2px 4px', borderRadius: 3 }}>{'{nombre}'}</code>, <code style={{ background: theme.surfaceMuted, padding: '2px 4px', borderRadius: 3 }}>{'{apellido}'}</code>, <code style={{ background: theme.surfaceMuted, padding: '2px 4px', borderRadius: 3 }}>{'{nombreCompleto}'}</code>
             </div>
           </div>
 
           <div style={{ display: 'flex', gap: 10 }}>
-            <button onClick={verPreview} disabled={loading} style={{ flex: 1, padding: '10px', background: '#ecf0f1', border: 'none', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontWeight: 'bold' }}>
+            <button onClick={verPreview} disabled={loading} style={{ flex: 1, padding: '10px', background: theme.surfaceMuted, color: theme.text, border: `1px solid ${theme.border}`, borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontWeight: 'bold' }}>
               <FaEye /> Preview
             </button>
             <button onClick={enviarCampana} disabled={loading} style={{ flex: 2, padding: '10px', background: colorWA, color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontWeight: 'bold' }}>
@@ -190,16 +201,16 @@ const CampanaWhatsApp = () => {
         <div>
           {/* Preview */}
           {preview && (
-            <div style={{ background: 'white', borderRadius: 15, padding: 25, marginBottom: 20, boxShadow: '0 2px 10px rgba(0,0,0,0.08)' }}>
+            <div style={{ background: theme.surface, borderRadius: 15, padding: 25, marginBottom: 20, boxShadow: '0 2px 10px rgba(0,0,0,0.08)', border: `1px solid ${theme.border}` }}>
               <h4 style={{ margin: '0 0 15px', color: '#27ae60' }}>👥 {preview.total} destinatarios</h4>
               {preview.muestra.map((p, i) => (
-                <div key={i} style={{ padding: '8px 0', borderBottom: '1px solid #f0f0f0', fontSize: 13 }}>
+                <div key={i} style={{ padding: '8px 0', borderBottom: `1px solid ${theme.borderSoft}`, fontSize: 13 }}>
                   <strong>{p.nombre} {p.apellido}</strong><br />
-                  <span style={{ color: '#888' }}>📱 {p.telefono}</span>
+                  <span style={{ color: theme.textMuted }}>📱 {p.telefono}</span>
                 </div>
               ))}
               {preview.total > preview.muestra.length && (
-                <div style={{ fontSize: 12, color: '#888', marginTop: 10 }}>y {preview.total - preview.muestra.length} más...</div>
+                <div style={{ fontSize: 12, color: theme.textMuted, marginTop: 10 }}>y {preview.total - preview.muestra.length} más...</div>
               )}
             </div>
           )}
@@ -218,7 +229,7 @@ const CampanaWhatsApp = () => {
                 </div>
               )}
               {resultado.data && (
-                <div style={{ fontSize: 13, color: '#555' }}>
+                <div style={{ fontSize: 13, color: theme.text }}>
                   <div>✅ Enviados: {resultado.data.enviados}</div>
                   <div>❌ Fallidos: {resultado.data.fallidos}</div>
                 </div>
@@ -228,9 +239,9 @@ const CampanaWhatsApp = () => {
 
           {/* Instrucciones de configuración */}
           {!preview && !resultado && (
-            <div style={{ background: '#f0f8ff', borderRadius: 15, padding: 25, boxShadow: '0 2px 10px rgba(0,0,0,0.08)' }}>
+            <div style={{ background: theme.panel, borderRadius: 15, padding: 25, boxShadow: '0 2px 10px rgba(0,0,0,0.08)', border: `1px solid ${theme.border}` }}>
               <h4 style={{ margin: '0 0 15px', color: '#1a5276' }}>📋 Configuración Requerida</h4>
-              <p style={{ fontSize: 13, color: '#555', lineHeight: 1.6 }}>Para habilitar el envío real de mensajes, configure en el archivo <code>.env</code>:</p>
+              <p style={{ fontSize: 13, color: theme.text, lineHeight: 1.6 }}>Para habilitar el envío real de mensajes, configure en el archivo <code>.env</code>:</p>
               <div style={{ background: '#2c3e50', color: '#ecf0f1', padding: 15, borderRadius: 8, fontSize: 12, fontFamily: 'monospace', marginTop: 10 }}>
                 <div style={{ color: '#95a5a6' }}># Opción 1: Twilio</div>
                 <div>WHATSAPP_MODE=twilio</div>

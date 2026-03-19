@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   FaPalette, FaSave, FaSpinner, FaBuilding, FaImage,
-  FaUpload, FaCheck, FaEye, FaTrash, FaCogs, FaXRay
+  FaUpload, FaCheck, FaEye, FaTrash, FaCogs
 } from 'react-icons/fa';
-import { MdOutlineRadiology } from 'react-icons/md';
 import api from '../services/api';
 import AdminSucursales from './AdminSucursales';
 

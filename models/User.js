@@ -16,7 +16,7 @@ const userSchema = new mongoose.Schema({
     },
     apellido: {
         type: String,
-        required: [true, 'El apellido es requerido'],
+        required: false,
         trim: true,
         maxlength: [50, 'El apellido no puede exceder 50 caracteres']
     },
@@ -69,6 +69,9 @@ const userSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
+    firmaDigital: {
+        type: String
+    },
     avatar: {
         type: String,
         default: 'default-avatar.png'
@@ -88,6 +91,19 @@ const userSchema = new mongoose.Schema({
 // Virtual: nombre completo
 userSchema.virtual('nombreCompleto').get(function () {
     return `${this.nombre} ${this.apellido}`;
+});
+
+// Pre-validate: limpiar email/username vacíos para que sparse index funcione
+// Se elimina la clave directamente de _doc para asegurar que Mongoose no la serialice como null en MongoDB
+// Nota: 'null' como string puede llegar de clientes antiguos o campos no sanitizados en el frontend
+userSchema.pre('validate', function (next) {
+    if (this.email !== undefined && (!this.email || this.email === 'null' || (typeof this.email === 'string' && this.email.trim() === ''))) {
+        delete this._doc.email;
+    }
+    if (this.username !== undefined && (!this.username || this.username === 'null' || (typeof this.username === 'string' && this.username.trim() === ''))) {
+        delete this._doc.username;
+    }
+    next();
 });
 
 // Pre-save: encriptar contraseña

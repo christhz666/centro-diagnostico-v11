@@ -1,0 +1,49 @@
+﻿
+Centro Diagnostico v11 - Suite de Tests con Playwright
+=======================================================
+
+=== TEST: Pagina de Login ===
+  -> Abriendo http://localhost:5000 ...
+  [ERROR] No se pudo cargar la pagina: Page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5000/
+Call log:
+  - navigating to "http://localhost:5000/", waiting until "networkidle"
+
+
+=== TEST: Formulario AdminUsuarios (accesibilidad) ===
+  [OK] 'u-nombre': label+input asociados
+  [OK] 'u-apellido': label+input asociados
+  [OK] 'u-username': label+input asociados
+  [OK] 'u-email': label+input asociados
+  [OK] 'u-password': label+input asociados
+  [OK] 'u-telefono': label+input asociados
+  [OK] 'u-rol': label+input asociados
+  [OK] Email marcado como Opcional
+  [OK] inputStyle con transiciones suaves
+
+=== TEST: Mejoras CSS ===
+  [OK]   [index.css] Dark mode bordes inputs (0.2)
+  [OK]   [index.css] Dark mode labels contraste (#cbd5e1)
+  [OK]   [App.css] Cursor pointer global
+  [OK]   [App.css] Focus visible WCAG 2.1 AA
+  [OK]   [App.css] Transiciones globales botones
+  [OK]   [App.css] Dark mode inputs (0.07)
+  [OK]   [App.css] Dark mode focus glow ring
+
+=======================================================
+RESUMEN DE TESTS
+=======================================================
+  [FAIL] Pagina carga correctamente
+  [OK]   Accesibilidad labels AdminUsuarios
+  [OK]   Email marcado como Opcional
+  [OK]   Transiciones en inputs
+  [OK]   index.css: Dark mode bordes inputs (0.2)
+  [OK]   index.css: Dark mode labels contraste (#cbd5e1)
+  [OK]   App.css: Cursor pointer global
+  [OK]   App.css: Focus visible WCAG 2.1 AA
+  [OK]   App.css: Transiciones globales botones
+  [OK]   App.css: Dark mode inputs (0.07)
+  [OK]   App.css: Dark mode focus glow ring
+
+  Total: 11 | OK: 10 | FAIL: 1 | WARN: 0
+
+  1 test(s) fallaron.

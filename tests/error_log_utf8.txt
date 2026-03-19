@@ -1,0 +1,74 @@
+﻿
+Centro Diagnostico v11 - Suite de Tests con Playwright
+python : Traceback (most 
+recent call last):
+En línea: 1 Carácter: 1
++ python tests/test_login.py > 
+tests/error_log.txt 2>&1
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          :  
+   NotSpecified: (Traceback (  
+  most recent call last)::St   
+ ring) [], RemoteException
+    + FullyQualifiedErrorId :  
+   NativeCommandError
+ 
+=======================================================
+
+  File "C:\Users\rossy\Download
+s\centro-diagnostico-v11-main\t
+ests\test_login.py", line 202, 
+in <module>
+=== TEST: Pagina de Login ===
+    all_results += 
+test_login_page()
+                   
+^^^^^^^^^^^^^^^^^
+  File "C:\Users\rossy\Download
+s\centro-diagnostico-v11-main\t
+ests\test_login.py", line 21, 
+in test_login_page
+    browser = p.chromium.launch
+(headless=True)
+              ^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^
+  File "C:\Users\rossy\AppData\
+Local\Programs\Python\Python312
+\Lib\site-packages\playwright\s
+ync_api\_generated.py", line 
+14566, in launch
+    self._sync(
+  File "C:\Users\rossy\AppData\
+Local\Programs\Python\Python312
+\Lib\site-packages\playwright\_
+impl\_sync_base.py", line 115, 
+in _sync
+    return task.result()
+           ^^^^^^^^^^^^^
+  File "C:\Users\rossy\AppData\
+Local\Programs\Python\Python312
+\Lib\site-packages\playwright\_
+impl\_browser_type.py", line 
+97, in launch
+    await self._channel.send(
+  File "C:\Users\rossy\AppData\
+Local\Programs\Python\Python312
+\Lib\site-packages\playwright\_
+impl\_connection.py", line 69, 
+in send
+    return await 
+self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^
+  File "C:\Users\rossy\AppData\
+Local\Programs\Python\Python312
+\Lib\site-packages\playwright\_
+impl\_connection.py", line 
+559, in wrap_api_call
+    raise rewrite_error(error, 
+f"{parsed_st['apiName']}: 
+{error}") from None
+Exception: BrowserType.launch: 
+Connection closed while 
+reading from the driver

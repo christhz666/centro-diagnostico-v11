@@ -1,8 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { FaFlask, FaSearch, FaPlus, FaEdit, FaCheck, FaSpinner, FaEye } from 'react-icons/fa';
+import React, { useState, useEffect, useCallback } from 'react';
+import { FaFlask, FaPlus, FaEdit, FaCheck, FaSpinner } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
+const theme = {
+  surface: 'var(--legacy-surface)',
+  surfaceMuted: 'var(--legacy-surface-muted)',
+  border: 'var(--legacy-border)',
+  text: 'var(--legacy-text)',
+  textStrong: 'var(--legacy-text-strong)',
+  textMuted: 'var(--legacy-text-muted)',
+  panel: 'var(--legacy-surface-panel)'
+};
+
 const Resultados = () => {
+  const navigate = useNavigate();
   const [resultados, setResultados] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filtroEstado, setFiltroEstado] = useState('');
@@ -19,6 +31,29 @@ const Resultados = () => {
     conclusion: ''
   });
 
+  const fetchResultados = useCallback(async (isSilent = false, estado = filtroEstado) => {
+    try {
+      if (!isSilent) setLoading(true);
+      const params = estado ? { estado } : {};
+      const response = await api.getResultados(params);
+      setResultados(Array.isArray(response) ? response : (response.data || []));
+    } catch (err) {
+      console.error(err);
+      if (!isSilent) setResultados([]);
+    } finally {
+      if (!isSilent) setLoading(false);
+    }
+  }, [filtroEstado]);
+
+  const fetchCitasPendientes = useCallback(async (_isSilent = false) => {
+    try {
+      const response = await api.getCitas({ estado: 'completada' });
+      setCitas(Array.isArray(response) ? response : (response.data || []));
+    } catch (err) {
+      console.error(err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchResultados();
     fetchCitasPendientes();
@@ -30,30 +65,7 @@ const Resultados = () => {
     }, 20000);
 
     return () => clearInterval(interval);
-  }, [filtroEstado]);
-
-  const fetchResultados = async (isSilent = false) => {
-    try {
-      if (!isSilent) setLoading(true);
-      const params = filtroEstado ? { estado: filtroEstado } : {};
-      const response = await api.getResultados(params);
-      setResultados(Array.isArray(response) ? response : (response.data || []));
-    } catch (err) {
-      console.error(err);
-      if (!isSilent) setResultados([]);
-    } finally {
-      if (!isSilent) setLoading(false);
-    }
-  };
-
-  const fetchCitasPendientes = async () => {
-    try {
-      const response = await api.getCitas({ estado: 'completada' });
-      setCitas(Array.isArray(response) ? response : (response.data || []));
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  }, [fetchResultados, fetchCitasPendientes]);
 
   const abrirModalNuevo = (cita) => {
     setCitaSeleccionada(cita);
@@ -95,8 +107,24 @@ const Resultados = () => {
     setNuevoResultado({ ...nuevoResultado, valores: nuevosValores });
   };
 
+  const asegurarFirmaDeSesion = () => {
+    try {
+      const raw = localStorage.getItem('user') || sessionStorage.getItem('user');
+      const usuario = raw ? JSON.parse(raw) : null;
+      if (usuario?.firmaDigital) return true;
+    } catch (err) {
+      console.error('No se pudo leer la firma en sesion:', err);
+    }
+
+    alert('Debe registrar su firma en Mi Perfil antes de guardar un resultado como completado.');
+    navigate('/perfil');
+    return false;
+  };
+
   const guardarResultado = async () => {
     try {
+      if (!asegurarFirmaDeSesion()) return;
+
       if (resultadoEditar) {
         await api.updateResultado(resultadoEditar._id, {
           ...nuevoResultado,
@@ -134,7 +162,7 @@ const Resultados = () => {
   return (
     <div style={{ padding: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <h1 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+        <h1 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 10, color: theme.textStrong }}>
           <FaFlask style={{ color: '#9b59b6' }} /> Gestión de Resultados
         </h1>
       </div>
@@ -144,7 +172,7 @@ const Resultados = () => {
         <select
           value={filtroEstado}
           onChange={e => setFiltroEstado(e.target.value)}
-          style={{ padding: 10, borderRadius: 8, border: '1px solid #ddd', minWidth: 200 }}
+          style={{ padding: 10, borderRadius: 8, border: `1px solid ${theme.border}`, background: theme.surface, color: theme.text, minWidth: 200 }}
         >
           <option value="">Todos los estados</option>
           <option value="pendiente">Pendientes</option>
@@ -155,7 +183,7 @@ const Resultados = () => {
 
       {/* Citas sin resultado (para crear nuevos) */}
       {citas.filter(c => !resultados.find(r => r.cita?._id === c._id || r.cita === c._id)).length > 0 && (
-        <div style={{ background: '#fff3cd', padding: 15, borderRadius: 10, marginBottom: 20 }}>
+        <div style={{ background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.28)', padding: 15, borderRadius: 10, marginBottom: 20 }}>
           <h4 style={{ margin: '0 0 10px', color: '#856404' }}>?? Citas pendientes de resultado:</h4>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             {citas.filter(c => !resultados.find(r => r.cita?._id === c._id || r.cita === c._id)).slice(0, 5).map(cita => (
@@ -182,10 +210,10 @@ const Resultados = () => {
       )}
 
       {/* Tabla de resultados */}
-      <div style={{ background: 'white', borderRadius: 10, overflow: 'hidden', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
+      <div style={{ background: theme.surface, borderRadius: 10, overflow: 'hidden', border: `1px solid ${theme.border}`, boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
-            <tr style={{ background: '#f8f9fa' }}>
+            <tr style={{ background: theme.surfaceMuted }}>
               <th style={{ padding: 15, textAlign: 'left' }}>Fecha</th>
               <th style={{ padding: 15, textAlign: 'left' }}>Paciente</th>
               <th style={{ padding: 15, textAlign: 'left' }}>Estudio</th>
@@ -196,20 +224,20 @@ const Resultados = () => {
           <tbody>
             {resultados.length === 0 ? (
               <tr>
-                <td colSpan="5" style={{ padding: 30, textAlign: 'center', color: '#999' }}>
+                <td colSpan="5" style={{ padding: 30, textAlign: 'center', color: theme.textMuted }}>
                   No hay resultados registrados
                 </td>
               </tr>
             ) : (
               resultados.map(r => (
-                <tr key={r._id} style={{ borderBottom: '1px solid #eee' }}>
-                  <td style={{ padding: 15 }}>
+                <tr key={r._id} style={{ borderBottom: `1px solid ${theme.border}` }} className="hover-row">
+                  <td style={{ padding: 15, color: theme.text }}>
                     {new Date(r.createdAt).toLocaleDateString('es-DO')}
                   </td>
-                  <td style={{ padding: 15 }}>
+                  <td style={{ padding: 15, color: theme.text }}>
                     {r.paciente?.nombre} {r.paciente?.apellido}
                   </td>
-                  <td style={{ padding: 15 }}>
+                  <td style={{ padding: 15, color: theme.text }}>
                     {r.estudio?.nombre || 'N/A'}
                   </td>
                   <td style={{ padding: 15, textAlign: 'center' }}>
@@ -246,50 +274,50 @@ const Resultados = () => {
           background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'flex-start',
           padding: '50px 20px', overflow: 'auto', zIndex: 1000
         }}>
-          <div style={{ background: 'white', padding: 30, borderRadius: 15, width: '100%', maxWidth: 800 }}>
-            <h2 style={{ marginTop: 0 }}>
+          <div style={{ background: theme.surface, padding: 30, borderRadius: 15, width: '100%', maxWidth: 800, border: `1px solid ${theme.border}` }}>
+            <h2 style={{ marginTop: 0, color: theme.textStrong }}>
               {resultadoEditar ? 'Editar Resultado' : 'Nuevo Resultado'}
             </h2>
 
             {citaSeleccionada && (
-              <div style={{ background: '#f8f9fa', padding: 15, borderRadius: 8, marginBottom: 20 }}>
+              <div style={{ background: theme.surfaceMuted, color: theme.text, padding: 15, borderRadius: 8, marginBottom: 20 }}>
                 <strong>Paciente:</strong> {citaSeleccionada.paciente?.nombre} {citaSeleccionada.paciente?.apellido}<br />
                 <strong>Estudio:</strong> {citaSeleccionada.estudios?.[0]?.estudio?.nombre}
               </div>
             )}
 
             {/* Valores */}
-            <h4>Valores del Resultado:</h4>
+            <h4 style={{ color: theme.textStrong }}>Valores del Resultado:</h4>
             {nuevoResultado.valores.map((v, index) => (
               <div key={index} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 2fr 1fr auto', gap: 10, marginBottom: 10 }}>
                 <input
                   placeholder="Parámetro"
                   value={v.parametro}
                   onChange={e => actualizarValor(index, 'parametro', e.target.value)}
-                  style={{ padding: 10, borderRadius: 6, border: '1px solid #ddd' }}
+                  style={{ padding: 10, borderRadius: 6, border: `1px solid ${theme.border}`, background: theme.surface, color: theme.text }}
                 />
                 <input
                   placeholder="Valor"
                   value={v.valor}
                   onChange={e => actualizarValor(index, 'valor', e.target.value)}
-                  style={{ padding: 10, borderRadius: 6, border: '1px solid #ddd' }}
+                  style={{ padding: 10, borderRadius: 6, border: `1px solid ${theme.border}`, background: theme.surface, color: theme.text }}
                 />
                 <input
                   placeholder="Unidad"
                   value={v.unidad}
                   onChange={e => actualizarValor(index, 'unidad', e.target.value)}
-                  style={{ padding: 10, borderRadius: 6, border: '1px solid #ddd' }}
+                  style={{ padding: 10, borderRadius: 6, border: `1px solid ${theme.border}`, background: theme.surface, color: theme.text }}
                 />
                 <input
                   placeholder="Valor Referencia"
                   value={v.valorReferencia}
                   onChange={e => actualizarValor(index, 'valorReferencia', e.target.value)}
-                  style={{ padding: 10, borderRadius: 6, border: '1px solid #ddd' }}
+                  style={{ padding: 10, borderRadius: 6, border: `1px solid ${theme.border}`, background: theme.surface, color: theme.text }}
                 />
                 <select
                   value={v.estado}
                   onChange={e => actualizarValor(index, 'estado', e.target.value)}
-                  style={{ padding: 10, borderRadius: 6, border: '1px solid #ddd' }}
+                  style={{ padding: 10, borderRadius: 6, border: `1px solid ${theme.border}`, background: theme.surface, color: theme.text }}
                 >
                   <option value="normal">Normal</option>
                   <option value="alto">Alto</option>
@@ -313,33 +341,33 @@ const Resultados = () => {
 
             {/* Interpretación */}
             <div style={{ marginBottom: 15 }}>
-              <label style={{ fontWeight: 'bold', display: 'block', marginBottom: 5 }}>Interpretación:</label>
+              <label style={{ fontWeight: 'bold', display: 'block', marginBottom: 5, color: theme.text }}>Interpretación:</label>
               <textarea
                 value={nuevoResultado.interpretacion}
                 onChange={e => setNuevoResultado({ ...nuevoResultado, interpretacion: e.target.value })}
-                style={{ width: '100%', padding: 12, borderRadius: 8, border: '1px solid #ddd', minHeight: 80, resize: 'vertical' }}
+                style={{ width: '100%', padding: 12, borderRadius: 8, border: `1px solid ${theme.border}`, background: theme.surface, color: theme.text, minHeight: 80, resize: 'vertical' }}
                 placeholder="Escriba la interpretación de los resultados..."
               />
             </div>
 
             {/* Observaciones */}
             <div style={{ marginBottom: 15 }}>
-              <label style={{ fontWeight: 'bold', display: 'block', marginBottom: 5 }}>Observaciones:</label>
+              <label style={{ fontWeight: 'bold', display: 'block', marginBottom: 5, color: theme.text }}>Observaciones:</label>
               <textarea
                 value={nuevoResultado.observaciones}
                 onChange={e => setNuevoResultado({ ...nuevoResultado, observaciones: e.target.value })}
-                style={{ width: '100%', padding: 12, borderRadius: 8, border: '1px solid #ddd', minHeight: 60, resize: 'vertical' }}
+                style={{ width: '100%', padding: 12, borderRadius: 8, border: `1px solid ${theme.border}`, background: theme.surface, color: theme.text, minHeight: 60, resize: 'vertical' }}
                 placeholder="Observaciones adicionales..."
               />
             </div>
 
             {/* Conclusión */}
             <div style={{ marginBottom: 20 }}>
-              <label style={{ fontWeight: 'bold', display: 'block', marginBottom: 5 }}>Conclusión:</label>
+              <label style={{ fontWeight: 'bold', display: 'block', marginBottom: 5, color: theme.text }}>Conclusión:</label>
               <textarea
                 value={nuevoResultado.conclusion}
                 onChange={e => setNuevoResultado({ ...nuevoResultado, conclusion: e.target.value })}
-                style={{ width: '100%', padding: 12, borderRadius: 8, border: '1px solid #ddd', minHeight: 60, resize: 'vertical' }}
+                style={{ width: '100%', padding: 12, borderRadius: 8, border: `1px solid ${theme.border}`, background: theme.surface, color: theme.text, minHeight: 60, resize: 'vertical' }}
                 placeholder="Conclusión final..."
               />
             </div>

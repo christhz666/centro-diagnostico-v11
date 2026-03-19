@@ -146,9 +146,15 @@ echo   INSTALACION COMPLETADA
 echo ==================================================
 echo.
 echo   Acceso:  http://localhost:5000
-echo   Admin:   admin / Admin1234!
+echo   Credenciales por defecto del seed:
+echo   Usuario: admin
+echo   Email:   admin@miesperanza.com
+echo   Clave:   Admin123!
 echo.
+echo   Si el admin no existe o necesita restablecerlo:
+echo   node createAdmin.js
+echo.
+echo   Asegurese de que MongoDB este iniciado antes de entrar.
 echo   Accesos directos creados en el Escritorio.
-echo   Cambie la contrasena del admin en la primera sesion.
 echo.
 pause

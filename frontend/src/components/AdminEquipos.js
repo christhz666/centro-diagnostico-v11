@@ -35,6 +35,21 @@ const TIPO_COLORES = {
   otro: '#95a5a6'
 };
 
+const getAuthHeaders = () => ({
+  Authorization: `Bearer ${localStorage.getItem('token') || sessionStorage.getItem('token') || ''}`
+});
+
+const theme = {
+  surface: 'var(--legacy-surface)',
+  surfaceMuted: 'var(--legacy-surface-muted)',
+  panel: 'var(--legacy-surface-panel)',
+  border: 'var(--legacy-border)',
+  borderSoft: 'var(--legacy-border-soft)',
+  text: 'var(--legacy-text)',
+  textStrong: 'var(--legacy-text-strong)',
+  textMuted: 'var(--legacy-text-muted)'
+};
+
 /* ═══════════════════════════════════════════════════════════════ */
 const AdminEquipos = () => {
   const [equipos, setEquipos] = useState([]);
@@ -58,12 +73,10 @@ const AdminEquipos = () => {
   });
   const [guardandoRis, setGuardandoRis] = useState(false);
 
-  const token = localStorage.getItem('token');
-  const headers = { Authorization: `Bearer ${token}` };
-
   const cargarEquipos = useCallback(async () => {
     try {
       setLoading(true); setError(null);
+      const headers = getAuthHeaders();
       const [respEquipos, respEstados] = await Promise.all([
         axios.get('/api/equipos', { headers }),
         axios.get('/api/equipos/estados', { headers }).catch(() => ({ data: [] }))
@@ -84,6 +97,7 @@ const AdminEquipos = () => {
 
   const cargarResultadosRecientes = useCallback(async () => {
     try {
+      const headers = getAuthHeaders();
       const resp = await axios.get('/api/equipos/resultados-recientes', { headers }).catch(() => ({ data: [] }));
       const data = Array.isArray(resp.data) ? resp.data : (resp.data?.data || []);
       setResultadosRecientes(data);
@@ -95,8 +109,7 @@ const AdminEquipos = () => {
     cargarEquipos();
     cargarResultadosRecientes();
     // Load RIS config
-    const tkn = localStorage.getItem('token');
-    axios.get('/api/configuracion/', { headers: { Authorization: `Bearer ${tkn}` } }).then(resp => {
+    axios.get('/api/configuracion/', { headers: getAuthHeaders() }).then(resp => {
       const cfg = resp.data?.configuracion || resp.data || {};
       if (cfg.ris_config) {
         try { setRisConfig(JSON.parse(cfg.ris_config)); } catch { }
@@ -107,7 +120,7 @@ const AdminEquipos = () => {
   const guardarRisConfig = async () => {
     setGuardandoRis(true);
     try {
-      await axios.put('/api/configuracion/', { ris_config: JSON.stringify(risConfig) }, { headers });
+      await axios.put('/api/configuracion/', { ris_config: JSON.stringify(risConfig) }, { headers: getAuthHeaders() });
       alert('Configuración RIS/PACS guardada correctamente');
     } catch (err) { alert('Error: ' + (err.response?.data?.message || err.message)); }
     finally { setGuardandoRis(false); }
@@ -117,7 +130,7 @@ const AdminEquipos = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       cargarResultadosRecientes();
-      axios.get('/api/equipos/estados', { headers }).then(r => {
+      axios.get('/api/equipos/estados', { headers: getAuthHeaders() }).then(r => {
         const estados = Array.isArray(r.data) ? r.data : (r.data?.data || []);
         setEstadosLive(estados);
       }).catch(() => { });
@@ -129,7 +142,7 @@ const AdminEquipos = () => {
 
   const procesarCola = async () => {
     try {
-      await axios.post('/api/equipos/procesar-cola', {}, { headers });
+      await axios.post('/api/equipos/procesar-cola', {}, { headers: getAuthHeaders() });
       alert('Cola procesada exitosamente');
       cargarResultadosRecientes();
     } catch (err) { alert('Error: ' + (err.response?.data?.message || err.message)); }
@@ -138,6 +151,7 @@ const AdminEquipos = () => {
   const guardarEquipo = async (e) => {
     e.preventDefault();
     try {
+      const headers = getAuthHeaders();
       if (editando) {
         await axios.put(`/api/equipos/${editando._id}`, formData, { headers });
         alert('Equipo actualizado');
@@ -152,7 +166,7 @@ const AdminEquipos = () => {
 
   const toggleEquipo = async (id, accion) => {
     try {
-      await axios.post(`/api/equipos/${id}/${accion}`, {}, { headers });
+      await axios.post(`/api/equipos/${id}/${accion}`, {}, { headers: getAuthHeaders() });
       cargarEquipos();
     } catch (err) { alert('Error: ' + (err.response?.data?.message || err.message)); }
   };
@@ -160,7 +174,7 @@ const AdminEquipos = () => {
   const eliminarEquipo = async (id) => {
     if (!window.confirm('¿Eliminar este equipo?')) return;
     try {
-      await axios.delete(`/api/equipos/${id}`, { headers });
+      await axios.delete(`/api/equipos/${id}`, { headers: getAuthHeaders() });
       cargarEquipos();
     } catch (err) { alert('Error: ' + (err.response?.data?.message || err.message)); }
   };
@@ -176,19 +190,21 @@ const AdminEquipos = () => {
   };
 
   const getEstadoLive = (id) => estadosLive.find(e => e.id === id);
+  const controlStyle = { width: '100%', padding: '10px 12px', borderRadius: 10, border: `1.5px solid ${theme.border}`, fontSize: 14, boxSizing: 'border-box', background: theme.surface, color: theme.text };
+  const compactControlStyle = { width: '100%', padding: '8px 10px', borderRadius: 8, border: `1.5px solid ${theme.border}`, fontSize: 13, boxSizing: 'border-box', background: theme.surface, color: theme.text };
 
   if (loading) return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: 16 }}>
       <FaFlask style={{ fontSize: 50, color: '#3498db', animation: 'spin 1s linear infinite' }} />
-      <p style={{ color: '#888', fontSize: 16 }}>Cargando equipos de laboratorio...</p>
+      <p style={{ color: theme.textMuted, fontSize: 16 }}>Cargando equipos de laboratorio...</p>
     </div>
   );
 
   if (error) return (
-    <div style={{ padding: 40, textAlign: 'center', background: '#fff3f3', borderRadius: 16, maxWidth: 500, margin: '40px auto' }}>
+    <div style={{ padding: 40, textAlign: 'center', background: 'rgba(239, 68, 68, 0.14)', borderRadius: 16, maxWidth: 500, margin: '40px auto', border: '1px solid rgba(239, 68, 68, 0.24)' }}>
       <FaTimesCircle style={{ fontSize: 48, color: '#e74c3c', marginBottom: 16 }} />
       <h3 style={{ color: '#c0392b' }}>Error al cargar equipos</h3>
-      <p style={{ color: '#888' }}>{error}</p>
+      <p style={{ color: theme.textMuted }}>{error}</p>
       <button onClick={cargarEquipos} style={{ padding: '10px 24px', background: '#3498db', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 14 }}>Reintentar</button>
     </div>
   );
@@ -199,17 +215,17 @@ const AdminEquipos = () => {
       {/* ── Header ────────────────────────────────────────────── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: '#1b262c', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: theme.textStrong, display: 'flex', alignItems: 'center', gap: 10 }}>
             <FaFlask style={{ color: '#3498db' }} /> Equipos LIS
           </h1>
-          <p style={{ margin: '4px 0 0', color: '#888', fontSize: 14 }}>
+          <p style={{ margin: '4px 0 0', color: theme.textMuted, fontSize: 14 }}>
             Sistema de integración con equipos de laboratorio — {equipos.length} equipo(s) registrado(s)
           </p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={refresh} disabled={refreshing} style={{
-            padding: '10px 16px', background: '#f0f4f8', border: '1.5px solid #dde3ed',
-            borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13
+            padding: '10px 16px', background: theme.surfaceMuted, border: `1.5px solid ${theme.border}`,
+            borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: theme.text
           }}>
             <FaSync style={{ animation: refreshing ? 'spin 0.5s linear infinite' : 'none' }} /> Actualizar
           </button>
@@ -230,11 +246,11 @@ const AdminEquipos = () => {
           { label: 'Cola Pendiente', value: colaPendiente, color: colaPendiente > 0 ? '#e74c3c' : '#27ae60', icon: <FaDatabase /> },
           { label: 'Últ. Resultado', value: resultadosRecientes.length > 0 ? 'Hoy' : '—', color: '#8e44ad', icon: <FaClock /> },
         ].map((item, i) => (
-          <div key={i} style={{ background: 'white', borderRadius: 14, padding: '16px 18px', boxShadow: '0 2px 10px rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', gap: 14, border: '1px solid #f0f0f0' }}>
+          <div key={i} style={{ background: theme.surface, borderRadius: 14, padding: '16px 18px', boxShadow: '0 2px 10px rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', gap: 14, border: `1px solid ${theme.border}` }}>
             <div style={{ width: 42, height: 42, borderRadius: 12, background: `${item.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: item.color, fontSize: 18 }}>{item.icon}</div>
             <div>
-              <div style={{ fontSize: 22, fontWeight: 700, color: '#1b262c' }}>{item.value}</div>
-              <div style={{ fontSize: 11, color: '#888', fontWeight: 500 }}>{item.label}</div>
+              <div style={{ fontSize: 22, fontWeight: 700, color: theme.textStrong }}>{item.value}</div>
+              <div style={{ fontSize: 11, color: theme.textMuted, fontWeight: 500 }}>{item.label}</div>
             </div>
           </div>
         ))}
@@ -242,10 +258,10 @@ const AdminEquipos = () => {
 
       {/* ── Tarjetas de equipos ───────────────────────────────── */}
       {equipos.length === 0 ? (
-        <div style={{ padding: 50, textAlign: 'center', background: '#f8f9ff', borderRadius: 16, border: '2px dashed #dde3ed' }}>
+        <div style={{ padding: 50, textAlign: 'center', background: theme.surfaceMuted, borderRadius: 16, border: `2px dashed ${theme.border}` }}>
           <FaFlask style={{ fontSize: 48, color: '#bbb', marginBottom: 16 }} />
-          <h3 style={{ color: '#555' }}>No hay equipos registrados</h3>
-          <p style={{ color: '#999' }}>Registra tu primer equipo de laboratorio para comenzar a recibir resultados automáticamente.</p>
+          <h3 style={{ color: theme.text }}>No hay equipos registrados</h3>
+          <p style={{ color: theme.textMuted }}>Registra tu primer equipo de laboratorio para comenzar a recibir resultados automáticamente.</p>
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16, marginBottom: 28 }}>
@@ -255,16 +271,16 @@ const AdminEquipos = () => {
             const tipoColor = TIPO_COLORES[eq.tipo] || '#95a5a6';
             return (
               <div key={eq._id} style={{
-                background: 'white', borderRadius: 16, overflow: 'hidden',
-                boxShadow: '0 2px 12px rgba(0,0,0,0.07)', border: '1px solid #f0f0f0',
+                background: theme.surface, borderRadius: 16, overflow: 'hidden',
+                boxShadow: '0 2px 12px rgba(0,0,0,0.07)', border: `1px solid ${theme.border}`,
                 transition: 'transform 0.2s, box-shadow 0.2s'
               }}>
                 {/* Header del equipo */}
                 <div style={{ padding: '16px 20px', background: `linear-gradient(135deg, ${tipoColor}15, ${tipoColor}08)`, borderBottom: `3px solid ${tipoColor}` }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
-                      <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#1b262c' }}>{eq.nombre}</h3>
-                      <p style={{ margin: '4px 0 0', fontSize: 12, color: '#888' }}>{eq.marca} — {eq.modelo}</p>
+                      <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: theme.textStrong }}>{eq.nombre}</h3>
+                      <p style={{ margin: '4px 0 0', fontSize: 12, color: theme.textMuted }}>{eq.marca} — {eq.modelo}</p>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 20, background: `${estadoInfo.color}15`, color: estadoInfo.color, fontSize: 11, fontWeight: 600 }}>
                       {estadoInfo.icon} {estadoInfo.label}
@@ -275,12 +291,12 @@ const AdminEquipos = () => {
                 {/* Detalles */}
                 <div style={{ padding: '14px 20px' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 16px', fontSize: 13 }}>
-                    <div><span style={{ color: '#aaa', fontWeight: 500 }}>Tipo:</span> <span style={{ fontWeight: 600, color: tipoColor, textTransform: 'capitalize' }}>{eq.tipo}</span></div>
-                    <div><span style={{ color: '#aaa', fontWeight: 500 }}>Protocolo:</span> <span style={{ fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}>{PROTO_ICONO[eq.protocolo]} {eq.protocolo}</span></div>
-                    {eq.configuracion?.ip && <div><span style={{ color: '#aaa', fontWeight: 500 }}>IP:</span> <code style={{ background: '#f0f4f8', padding: '2px 6px', borderRadius: 4, fontSize: 12 }}>{eq.configuracion.ip}:{eq.configuracion.puertoTcp}</code></div>}
-                    {eq.configuracion?.puerto && <div><span style={{ color: '#aaa', fontWeight: 500 }}>Puerto:</span> <code style={{ background: '#f0f4f8', padding: '2px 6px', borderRadius: 4, fontSize: 12 }}>{eq.configuracion.puerto}</code></div>}
-                    <div><span style={{ color: '#aaa', fontWeight: 500 }}>Resultados:</span> <span style={{ fontWeight: 700, color: '#1b262c' }}>{eq.estadisticas?.resultadosRecibidos || 0}</span></div>
-                    <div><span style={{ color: '#aaa', fontWeight: 500 }}>Errores:</span> <span style={{ fontWeight: 600, color: (eq.estadisticas?.errores || 0) > 0 ? '#e74c3c' : '#27ae60' }}>{eq.estadisticas?.errores || 0}</span></div>
+                    <div><span style={{ color: theme.textMuted, fontWeight: 500 }}>Tipo:</span> <span style={{ fontWeight: 600, color: tipoColor, textTransform: 'capitalize' }}>{eq.tipo}</span></div>
+                    <div><span style={{ color: theme.textMuted, fontWeight: 500 }}>Protocolo:</span> <span style={{ fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4, color: theme.text }}>{PROTO_ICONO[eq.protocolo]} {eq.protocolo}</span></div>
+                    {eq.configuracion?.ip && <div><span style={{ color: theme.textMuted, fontWeight: 500 }}>IP:</span> <code style={{ background: theme.surfaceMuted, padding: '2px 6px', borderRadius: 4, fontSize: 12, color: theme.textStrong }}>{eq.configuracion.ip}:{eq.configuracion.puertoTcp}</code></div>}
+                    {eq.configuracion?.puerto && <div><span style={{ color: theme.textMuted, fontWeight: 500 }}>Puerto:</span> <code style={{ background: theme.surfaceMuted, padding: '2px 6px', borderRadius: 4, fontSize: 12, color: theme.textStrong }}>{eq.configuracion.puerto}</code></div>}
+                    <div><span style={{ color: theme.textMuted, fontWeight: 500 }}>Resultados:</span> <span style={{ fontWeight: 700, color: theme.textStrong }}>{eq.estadisticas?.resultadosRecibidos || 0}</span></div>
+                    <div><span style={{ color: theme.textMuted, fontWeight: 500 }}>Errores:</span> <span style={{ fontWeight: 600, color: (eq.estadisticas?.errores || 0) > 0 ? '#e74c3c' : '#27ae60' }}>{eq.estadisticas?.errores || 0}</span></div>
                   </div>
                   {eq.ultimoError && (
                     <div style={{ marginTop: 10, padding: '8px 10px', background: '#fff3f3', borderRadius: 8, fontSize: 11, color: '#c0392b', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -310,7 +326,7 @@ const AdminEquipos = () => {
             <FaExclamationTriangle style={{ color: '#f57f17', fontSize: 20 }} />
             <div>
               <strong style={{ color: '#e65100' }}>{colaPendiente} resultado(s) en cola</strong>
-              <p style={{ margin: '2px 0 0', fontSize: 12, color: '#888' }}>Resultados recibidos de equipos pero sin paciente vinculado. Pueden ser códigos LIS aún no facturados.</p>
+              <p style={{ margin: '2px 0 0', fontSize: 12, color: theme.textMuted }}>Resultados recibidos de equipos pero sin paciente vinculado. Pueden ser códigos LIS aún no facturados.</p>
             </div>
           </div>
           <button onClick={procesarCola} style={{ padding: '8px 16px', background: '#f57f17', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
@@ -320,33 +336,33 @@ const AdminEquipos = () => {
       )}
 
       {resultadosRecientes.length > 0 && (
-        <div style={{ background: 'white', borderRadius: 16, padding: '20px 24px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', border: '1px solid #f0f0f0', marginBottom: 28 }}>
-          <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700, color: '#1b262c', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ background: theme.surface, borderRadius: 16, padding: '20px 24px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', border: `1px solid ${theme.border}`, marginBottom: 28 }}>
+          <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700, color: theme.textStrong, display: 'flex', alignItems: 'center', gap: 8 }}>
             <FaClock style={{ color: '#8e44ad' }} /> Últimos Resultados Recibidos
           </h3>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
-                <tr style={{ background: '#f8f9ff', textAlign: 'left' }}>
-                  <th style={{ padding: '10px 14px', color: '#888', fontWeight: 600, fontSize: 12 }}>Equipo</th>
-                  <th style={{ padding: '10px 14px', color: '#888', fontWeight: 600, fontSize: 12 }}>Paciente</th>
-                  <th style={{ padding: '10px 14px', color: '#888', fontWeight: 600, fontSize: 12 }}>Código LIS</th>
-                  <th style={{ padding: '10px 14px', color: '#888', fontWeight: 600, fontSize: 12 }}>Parámetros</th>
-                  <th style={{ padding: '10px 14px', color: '#888', fontWeight: 600, fontSize: 12 }}>Fecha</th>
+                <tr style={{ background: theme.surfaceMuted, textAlign: 'left' }}>
+                  <th style={{ padding: '10px 14px', color: theme.textMuted, fontWeight: 600, fontSize: 12 }}>Equipo</th>
+                  <th style={{ padding: '10px 14px', color: theme.textMuted, fontWeight: 600, fontSize: 12 }}>Paciente</th>
+                  <th style={{ padding: '10px 14px', color: theme.textMuted, fontWeight: 600, fontSize: 12 }}>Código LIS</th>
+                  <th style={{ padding: '10px 14px', color: theme.textMuted, fontWeight: 600, fontSize: 12 }}>Parámetros</th>
+                  <th style={{ padding: '10px 14px', color: theme.textMuted, fontWeight: 600, fontSize: 12 }}>Fecha</th>
                 </tr>
               </thead>
               <tbody>
                 {resultadosRecientes.map((r, i) => (
-                  <tr key={i} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                    <td style={{ padding: '10px 14px', fontWeight: 600 }}>{r.equipo || '—'}</td>
-                    <td style={{ padding: '10px 14px' }}>{r.paciente || '—'}</td>
+                  <tr key={i} style={{ borderBottom: `1px solid ${theme.borderSoft}` }} className="hover-row">
+                    <td style={{ padding: '10px 14px', fontWeight: 600, color: theme.textStrong }}>{r.equipo || '—'}</td>
+                    <td style={{ padding: '10px 14px', color: theme.text }}>{r.paciente || '—'}</td>
                     <td style={{ padding: '10px 14px' }}>
                       {r.codigoLIS ? (
-                        <span style={{ background: '#eef2f5', padding: '3px 10px', borderRadius: 6, fontWeight: 700, fontFamily: 'monospace', fontSize: 14, color: '#1a3a5c' }}>{r.codigoLIS}</span>
+                        <span style={{ background: theme.surfaceMuted, padding: '3px 10px', borderRadius: 6, fontWeight: 700, fontFamily: 'monospace', fontSize: 14, color: theme.textStrong }}>{r.codigoLIS}</span>
                       ) : '—'}
                     </td>
-                    <td style={{ padding: '10px 14px', color: '#555' }}>{r.parametros || '—'}</td>
-                    <td style={{ padding: '10px 14px', color: '#888', fontSize: 12 }}>{r.fecha ? new Date(r.fecha).toLocaleString() : '—'}</td>
+                    <td style={{ padding: '10px 14px', color: theme.text }}>{r.parametros || '—'}</td>
+                    <td style={{ padding: '10px 14px', color: theme.textMuted, fontSize: 12 }}>{r.fecha ? new Date(r.fecha).toLocaleString() : '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -470,8 +486,8 @@ const AdminEquipos = () => {
       {/* ── Modal Crear/Editar ─────────────────────────────────── */}
       {showForm && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-          <div style={{ background: 'white', borderRadius: 20, padding: 30, width: '100%', maxWidth: 550, maxHeight: '90vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.25)' }}>
-            <h2 style={{ margin: '0 0 20px', fontSize: 20, fontWeight: 700, color: '#1b262c' }}>
+          <div style={{ background: theme.surface, borderRadius: 20, padding: 30, width: '100%', maxWidth: 550, maxHeight: '90vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.25)', border: `1px solid ${theme.border}` }}>
+            <h2 style={{ margin: '0 0 20px', fontSize: 20, fontWeight: 700, color: theme.textStrong }}>
               {editando ? '✏️ Editar Equipo' : '➕ Nuevo Equipo'}
             </h2>
             <form onSubmit={guardarEquipo}>
@@ -482,58 +498,58 @@ const AdminEquipos = () => {
                   { label: 'Modelo', key: 'modelo', placeholder: 'BC-6800' },
                 ].map(f => (
                   <div key={f.key} style={{ gridColumn: f.span === 2 ? '1/-1' : undefined }}>
-                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#555', marginBottom: 4 }}>{f.label}</label>
+                    <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: theme.text, marginBottom: 4 }}>{f.label}</label>
                     <input value={formData[f.key]} placeholder={f.placeholder} onChange={e => setFormData({ ...formData, [f.key]: e.target.value })} required
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14, boxSizing: 'border-box' }} />
+                      style={controlStyle} />
                   </div>
                 ))}
 
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#555', marginBottom: 4 }}>Tipo</label>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: theme.text, marginBottom: 4 }}>Tipo</label>
                   <select value={formData.tipo} onChange={e => setFormData({ ...formData, tipo: e.target.value })}
-                    style={{ width: '100%', padding: '10px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14 }}>
+                    style={controlStyle}>
                     {Object.keys(TIPO_COLORES).map(t => <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>)}
                   </select>
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#555', marginBottom: 4 }}>Protocolo</label>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: theme.text, marginBottom: 4 }}>Protocolo</label>
                   <select value={formData.protocolo} onChange={e => setFormData({ ...formData, protocolo: e.target.value })}
-                    style={{ width: '100%', padding: '10px', borderRadius: 10, border: '1.5px solid #e5e7eb', fontSize: 14 }}>
+                    style={controlStyle}>
                     {['ASTM', 'HL7', 'SERIAL', 'TCP', 'FILE'].map(p => <option key={p} value={p}>{p}</option>)}
                   </select>
                 </div>
               </div>
 
               {/* Configuración según protocolo */}
-              <div style={{ marginTop: 16, padding: '14px 16px', background: '#f8f9ff', borderRadius: 12, border: '1px solid #e8eaf6' }}>
-                <h4 style={{ margin: '0 0 12px', fontSize: 13, color: '#555' }}>⚙️ Configuración de Conexión</h4>
+              <div style={{ marginTop: 16, padding: '14px 16px', background: theme.surfaceMuted, borderRadius: 12, border: `1px solid ${theme.border}` }}>
+                <h4 style={{ margin: '0 0 12px', fontSize: 13, color: theme.text }}>⚙️ Configuración de Conexión</h4>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 16px' }}>
                   {(formData.protocolo === 'TCP' || formData.protocolo === 'HL7' || formData.protocolo === 'ASTM') && (
                     <>
                       <div>
-                        <label style={{ fontSize: 11, color: '#888' }}>Dirección IP</label>
+                        <label style={{ fontSize: 11, color: theme.textMuted }}>Dirección IP</label>
                         <input value={formData.configuracion.ip || ''} placeholder="192.168.1.100" onChange={e => setFormData({ ...formData, configuracion: { ...formData.configuracion, ip: e.target.value } })}
-                          style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 13, boxSizing: 'border-box' }} />
+                          style={compactControlStyle} />
                       </div>
                       <div>
-                        <label style={{ fontSize: 11, color: '#888' }}>Puerto TCP</label>
+                        <label style={{ fontSize: 11, color: theme.textMuted }}>Puerto TCP</label>
                         <input type="number" value={formData.configuracion.puertoTcp || ''} placeholder="2575" onChange={e => setFormData({ ...formData, configuracion: { ...formData.configuracion, puertoTcp: parseInt(e.target.value) || '' } })}
-                          style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 13, boxSizing: 'border-box' }} />
+                          style={compactControlStyle} />
                       </div>
                     </>
                   )}
                   {formData.protocolo === 'SERIAL' && (
                     <>
                       <div>
-                        <label style={{ fontSize: 11, color: '#888' }}>Puerto COM</label>
+                        <label style={{ fontSize: 11, color: theme.textMuted }}>Puerto COM</label>
                         <input value={formData.configuracion.puerto || ''} placeholder="COM3" onChange={e => setFormData({ ...formData, configuracion: { ...formData.configuracion, puerto: e.target.value } })}
-                          style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 13, boxSizing: 'border-box' }} />
+                          style={compactControlStyle} />
                       </div>
                       <div>
-                        <label style={{ fontSize: 11, color: '#888' }}>Baud Rate</label>
+                        <label style={{ fontSize: 11, color: theme.textMuted }}>Baud Rate</label>
                         <select value={formData.configuracion.baudRate || 9600} onChange={e => setFormData({ ...formData, configuracion: { ...formData.configuracion, baudRate: parseInt(e.target.value) } })}
-                          style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 13 }}>
+                          style={compactControlStyle}>
                           {[2400, 4800, 9600, 19200, 38400, 57600, 115200].map(b => <option key={b} value={b}>{b}</option>)}
                         </select>
                       </div>
@@ -541,16 +557,16 @@ const AdminEquipos = () => {
                   )}
                   {formData.protocolo === 'FILE' && (
                     <div style={{ gridColumn: '1/-1' }}>
-                      <label style={{ fontSize: 11, color: '#888' }}>Ruta de Archivos</label>
+                      <label style={{ fontSize: 11, color: theme.textMuted }}>Ruta de Archivos</label>
                       <input value={formData.configuracion.rutaArchivos || ''} placeholder="C:\lab\resultados" onChange={e => setFormData({ ...formData, configuracion: { ...formData.configuracion, rutaArchivos: e.target.value } })}
-                        style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 13, boxSizing: 'border-box' }} />
+                        style={compactControlStyle} />
                     </div>
                   )}
                 </div>
               </div>
 
               <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-                <button type="button" onClick={() => { setShowForm(false); setEditando(null); }} style={{ flex: 1, padding: '12px', background: '#f0f4f8', border: '1px solid #dde3ed', borderRadius: 12, cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>Cancelar</button>
+                <button type="button" onClick={() => { setShowForm(false); setEditando(null); }} style={{ flex: 1, padding: '12px', background: theme.surfaceMuted, border: `1px solid ${theme.border}`, borderRadius: 12, cursor: 'pointer', fontSize: 14, fontWeight: 600, color: theme.text }}>Cancelar</button>
                 <button type="submit" style={{ flex: 2, padding: '12px', background: 'linear-gradient(135deg,#0f4c75,#1a6ba8)', color: 'white', border: 'none', borderRadius: 12, cursor: 'pointer', fontSize: 14, fontWeight: 700 }}>
                   {editando ? 'Actualizar' : 'Crear Equipo'}
                 </button>

@@ -330,18 +330,63 @@ exports.buscarPacienteHistorial = async (req, res, next) => {
             return res.status(400).json({ success: false, message: 'query requerido (mínimo 2 caracteres)' });
         }
 
-        const rx = new RegExp(query, 'i');
+        const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const tokens = query
+            .replace(/\s+/g, ' ')
+            .split(' ')
+            .map(token => token.trim())
+            .filter(Boolean)
+            .slice(0, 5);
+
+        const filtros = tokens.map(token => {
+            const regexTexto = new RegExp(escapeRegex(token), 'i');
+            const digitos = token.replace(/\D/g, '');
+            const condiciones = [
+                { nombre: regexTexto },
+                { apellido: regexTexto },
+                { email: regexTexto }
+            ];
+
+            if (digitos.length >= 2) {
+                const regexFlexible = new RegExp(
+                    digitos
+                        .split('')
+                        .map(digito => escapeRegex(digito))
+                        .join('\\D*'),
+                    'i'
+                );
+
+                condiciones.push({ telefono: regexFlexible }, { cedula: regexFlexible });
+            } else {
+                condiciones.push({ telefono: regexTexto }, { cedula: regexTexto });
+            }
+
+            return { $or: condiciones };
+        });
+
         const pacientes = await Paciente.find({
-            $or: [{ nombre: rx }, { apellido: rx }, { telefono: rx }, { cedula: rx }]
-        }).limit(20);
+            activo: { $ne: false },
+            ...(filtros.length > 0 ? { $and: filtros } : {})
+        })
+            .sort('-createdAt')
+            .limit(20);
 
         const ids = pacientes.map(p => p._id);
-        const citas = await Cita.find({ paciente: { $in: ids } })
-            .populate('paciente', 'nombre apellido cedula telefono')
-            .populate('estudios.estudio', 'nombre codigo categoria')
-            .sort('-createdAt');
+        const citas = ids.length > 0
+            ? await Cita.find({ paciente: { $in: ids } })
+                .populate('paciente', 'nombre apellido cedula telefono')
+                .populate('estudios.estudio', 'nombre codigo categoria')
+                .sort('-createdAt')
+            : [];
 
-        res.json({ success: true, count: citas.length, data: citas });
+        res.json({
+            success: true,
+            count: pacientes.length,
+            data: {
+                pacientes,
+                citas
+            }
+        });
     } catch (error) {
         next(error);
     }

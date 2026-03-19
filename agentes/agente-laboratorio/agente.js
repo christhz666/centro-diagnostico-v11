@@ -272,7 +272,15 @@ function conectarSerial(equipo) {
     const { comPort, baudRate, nombre } = equipo;
 
     try {
-        const { SerialPort } = require('serialport');
+        let serialModule;
+        if (process.pkg) {
+            const m = require('module');
+            const req = m.createRequire(path.join(process.cwd(), 'dummy.js'));
+            serialModule = req('serialport');
+        } else {
+            serialModule = require('serialport');
+        }
+        const { SerialPort } = serialModule;
         const { ReadlineParser } = require('@serialport/parser-readline');
 
         const port = new SerialPort({

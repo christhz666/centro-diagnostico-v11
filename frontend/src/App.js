@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { Suspense, lazy, useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, NavLink, useLocation } from 'react-router-dom';
 import Joyride, { STATUS } from 'react-joyride';
 import './App.css';
@@ -7,28 +7,31 @@ import { FaHeartbeat } from 'react-icons/fa';
 
 import api from './services/api';
 import Login from './components/Login';
-import Dashboard from './components/Dashboard';
-import RegistroInteligente from './components/RegistroInteligente';
-import Facturas from './components/Facturas';
-import PortalMedico from './components/PortalMedico';
-import AdminPanel from './components/AdminPanel';
-import AdminUsuarios from './components/AdminUsuarios';
-import GestionEstudios from './components/GestionEstudios';
-import Resultados from './components/Resultados';
-import ConsultaRapida from './components/ConsultaRapida';
-import AdminEquipos from './components/AdminEquipos';
-import Contabilidad from './components/Contabilidad';
-import DeployAgentes from './components/DeployAgentes';
-import DescargarApp from './components/DescargarApp';
-import CampanaWhatsApp from './components/CampanaWhatsApp';
-import Imagenologia from './components/Imagenologia';
 import OfflineScreen from './components/OfflineScreen';
 import PortalPaciente from './components/PortalPaciente';
+
+const Dashboard = lazy(() => import('./components/Dashboard'));
+const RegistroInteligente = lazy(() => import('./components/RegistroInteligente'));
+const Facturas = lazy(() => import('./components/Facturas'));
+const PortalMedico = lazy(() => import('./components/PortalMedico'));
+const AdminPanel = lazy(() => import('./components/AdminPanel'));
+const AdminUsuarios = lazy(() => import('./components/AdminUsuarios'));
+const GestionEstudios = lazy(() => import('./components/GestionEstudios'));
+const Resultados = lazy(() => import('./components/Resultados'));
+const ConsultaRapida = lazy(() => import('./components/ConsultaRapida'));
+const AdminEquipos = lazy(() => import('./components/AdminEquipos'));
+const Contabilidad = lazy(() => import('./components/Contabilidad'));
+const DeployAgentes = lazy(() => import('./components/DeployAgentes'));
+const DescargarApp = lazy(() => import('./components/DescargarApp'));
+const CampanaWhatsApp = lazy(() => import('./components/CampanaWhatsApp'));
+const Imagenologia = lazy(() => import('./components/Imagenologia'));
+const Perfil = lazy(() => import('./components/Perfil'));
 
 function App() {
   const [user, setUser] = useState(null);
   const [, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [authNotice, setAuthNotice] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches));
@@ -91,11 +94,31 @@ function App() {
     api.forceLogin(u, t, persist);
     setToken(t);
     setUser(u);
+    setAuthNotice('');
     // Show guided tour on first login
     const tourKey = `tour_done_${u?.email || u?.username || 'user'}`;
     if (!localStorage.getItem(tourKey)) {
       setTimeout(() => setRunTour(true), 1500);
     }
+  };
+
+  const handleUserUpdate = (updatedUser) => {
+    if (!updatedUser) return;
+
+    setUser((prev) => {
+      const nextUser = { ...(prev || {}), ...updatedUser };
+      [window.localStorage, window.sessionStorage].forEach((storage) => {
+        try {
+          const raw = storage.getItem('user');
+          if (!raw) return;
+          const parsed = JSON.parse(raw);
+          storage.setItem('user', JSON.stringify({ ...parsed, ...nextUser }));
+        } catch (err) {
+          console.error('No se pudo actualizar el usuario en sesión:', err);
+        }
+      });
+      return nextUser;
+    });
   };
 
   const handleLogout = () => {
@@ -106,6 +129,17 @@ function App() {
     setUser(null);
     setToken(null);
   };
+
+  useEffect(() => {
+    const onSessionExpired = (event) => {
+      const reason = event?.detail?.reason || 'Su sesión expiró. Inicie sesión nuevamente.';
+      setAuthNotice(reason);
+      handleLogout();
+    };
+
+    window.addEventListener('session-expired', onSessionExpired);
+    return () => window.removeEventListener('session-expired', onSessionExpired);
+  }, []);
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-background-dark">
@@ -125,6 +159,7 @@ function App() {
     { path: '/medico', icon: 'medical_services', label: 'Médico', roles: ['admin', 'medico'] },
     { path: '/resultados', icon: 'science', label: 'Resultados', roles: ['admin', 'medico', 'laboratorio'] },
     { path: '/imagenologia', icon: 'settings_overscan', label: 'Imágenes', roles: ['admin', 'medico', 'laboratorio', 'recepcion'] },
+    { path: '/perfil', icon: 'badge', label: 'Mi Perfil', roles: ['admin', 'medico', 'recepcion', 'laboratorio'] },
     { path: '/admin', icon: 'settings', label: 'Panel Admin', roles: ['admin'] },
   ];
 
@@ -158,7 +193,7 @@ function App() {
           {/* Portal Paciente — ruta PÚBLICA (no requiere login de empleado) */}
           <PortalPacienteRoute>
             {!user ? (
-              <Login onLogin={handleLogin} empresaConfig={empresaConfig} />
+              <Login onLogin={handleLogin} empresaConfig={empresaConfig} authNotice={authNotice} />
             ) : (
               <>
                 <Joyride
@@ -185,7 +220,7 @@ function App() {
                   <div className="flex items-center gap-4">
                     <div className="hidden md:flex flex-col items-end">
                       <span className="text-[10px] text-primary font-bold uppercase tracking-widest">{rol}</span>
-                      <span className="text-sm font-semibold text-gray-900 dark:text-white">{user.nombre}</span>
+                      <span className="text-sm font-semibold text-gray-900 dark:text-white">{user.nombre || user.username || 'Usuario'}</span>
                     </div>
 
                     {/* Theme Toggle */}
@@ -207,7 +242,7 @@ function App() {
                     <div
                       onClick={() => setSidebarOpen(false)}
                       style={{
-                        position: 'fixed', inset: 0, zIndex: 39,
+                        position: 'fixed', inset: '4rem 0 0 0', zIndex: 39,
                         background: 'rgba(0,0,0,0.5)',
                         backdropFilter: 'blur(2px)'
                       }}
@@ -215,7 +250,7 @@ function App() {
                   )}
 
                   {/* Sidebar */}
-                  <aside className={`fixed inset-y-0 left-0 z-40 transition-all duration-300 ease-in-out bg-white dark:bg-background-dark border-r border-gray-200 dark:border-white/5 flex flex-col
+                  <aside className={`fixed top-16 bottom-0 left-0 z-40 transition-all duration-300 ease-in-out bg-white dark:bg-background-dark border-r border-gray-200 dark:border-white/5 flex flex-col
                   ${isMobile
                       ? (sidebarOpen ? 'w-72 translate-x-0 shadow-2xl' : '-translate-x-full w-72')
                       : (sidebarOpen ? 'w-64 translate-x-0' : 'w-20 translate-x-0')}
@@ -300,26 +335,29 @@ function App() {
                   ${!isMobile && sidebarOpen ? 'ml-64' : (!isMobile ? 'ml-20' : 'ml-0')}
                 `}>
                     <div className="fixed top-20 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl pointer-events-none -z-10"></div>
-                    <Routes>
-                      <Route path="/" element={<Dashboard />} />
-                      <Route path="/dashboard" element={<Navigate to="/" />} />
-                      <Route path="/registro" element={<RegistroInteligente />} />
-                      <Route path="/consulta" element={<ConsultaRapida />} />
-                      <Route path="/facturas" element={<Facturas />} />
-                      <Route path="/medico" element={<PortalMedico />} />
-                      <Route path="/admin" element={<AdminPanel />} />
-                      <Route path="/admin/usuarios" element={<AdminUsuarios />} />
-                      <Route path="/admin/equipos" element={<AdminEquipos />} />
-                      <Route path="/admin/estudios" element={<GestionEstudios />} />
-                      <Route path="/contabilidad" element={<Contabilidad />} />
-                      <Route path="/resultados" element={<Resultados />} />
-                      <Route path="/imagenologia" element={<Imagenologia />} />
-                      <Route path="/deploy" element={<DeployAgentes />} />
-                      <Route path="/descargar-app" element={<DescargarApp />} />
-                      <Route path="/campana-whatsapp" element={<CampanaWhatsApp />} />
-                      <Route path="/login" element={<Navigate to="/" />} />
-                      <Route path="*" element={<Navigate to="/" />} />
-                    </Routes>
+                    <Suspense fallback={<RouteLoader />}>
+                      <Routes>
+                        <Route path="/" element={<Dashboard />} />
+                        <Route path="/dashboard" element={<Navigate to="/" />} />
+                        <Route path="/registro" element={<RegistroInteligente />} />
+                        <Route path="/consulta" element={<ConsultaRapida />} />
+                        <Route path="/facturas" element={<Facturas />} />
+                        <Route path="/medico" element={<PortalMedico />} />
+                        <Route path="/perfil" element={<Perfil user={user} onUserUpdate={handleUserUpdate} />} />
+                        <Route path="/admin" element={<AdminPanel />} />
+                        <Route path="/admin/usuarios" element={<AdminUsuarios />} />
+                        <Route path="/admin/equipos" element={<AdminEquipos />} />
+                        <Route path="/admin/estudios" element={<GestionEstudios />} />
+                        <Route path="/contabilidad" element={<Contabilidad />} />
+                        <Route path="/resultados" element={<Resultados />} />
+                        <Route path="/imagenologia" element={<Imagenologia />} />
+                        <Route path="/deploy" element={<DeployAgentes />} />
+                        <Route path="/descargar-app" element={<DescargarApp />} />
+                        <Route path="/campana-whatsapp" element={<CampanaWhatsApp />} />
+                        <Route path="/login" element={<Navigate to="/" />} />
+                        <Route path="*" element={<Navigate to="/" />} />
+                      </Routes>
+                    </Suspense>
                   </main>
                 </div>
               </>
@@ -334,6 +372,17 @@ function App() {
   );
 }
 
+function RouteLoader() {
+  return (
+    <div className="min-h-[60vh] flex items-center justify-center">
+      <div className="relative">
+        <div className="absolute inset-0 rounded-full border-4 border-primary/20 animate-ping"></div>
+        <FaHeartbeat className="text-5xl text-primary relative animate-pulse" />
+      </div>
+    </div>
+  );
+}
+
 
 /* ── Título de la página actual ─────────────────────────── */
 function PageTitle() {
@@ -344,6 +393,7 @@ function PageTitle() {
     '/consulta': 'Consulta Rápida',
     '/facturas': 'Facturas',
     '/medico': 'Portal Médico',
+    '/perfil': 'Mi Perfil',
     '/resultados': 'Resultados',
     '/imagenologia': 'Imagenología',
     '/admin': 'Personalización',

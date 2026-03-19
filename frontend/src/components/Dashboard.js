@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { startTransition, useEffect, useState } from 'react';
 import api from '../services/api';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -8,6 +8,19 @@ import {
 
 /* ── Paleta para gráficos ──────────────────────────────────── */
 const CHART_COLORS = ['#2563eb', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6'];
+
+const readStoredUser = () => {
+    try {
+        return JSON.parse(localStorage.getItem('user')) || {};
+    } catch {
+        return {};
+    }
+};
+
+const getPayload = (result) => {
+    if (result.status !== 'fulfilled') return null;
+    return result.value?.data || result.value || null;
+};
 
 const StatCard = ({ title, value, subtext, icon, colorClass, index }) => {
     return (
@@ -49,47 +62,46 @@ const Dashboard = () => {
     const [citasGrafica, setCitasGrafica] = useState([]);
     const [topEstudios, setTopEstudios] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [user] = useState(JSON.parse(localStorage.getItem('user')) || {});
+    const [user] = useState(readStoredUser);
 
     const fetchDashboardData = async () => {
         setLoading(true);
+        const fechaActual = new Date().toISOString().split('T')[0];
+
         try {
-            // Stats principales
-            const d = await api.getDashboardStats();
-            const data = d?.data || d;
-            if (data) {
-                setStats({
-                    citasHoy: data.citas?.hoy ?? 0,
-                    estudiosRealizados: data.resultados?.completadosMes ?? 0,
-                    ingresosHoy: data.facturacion?.hoy?.total ?? 0,
-                    facturacionMes: data.facturacion?.mes?.total ?? 0,
-                    pacientesNuevos: data.pacientes?.nuevosMes ?? 0,
-                    resultadosPendientes: data.resultados?.pendientes ?? 0,
-                    totalPacientes: data.pacientes?.total ?? 0,
-                });
-            }
+            const [statsResult, citasResult, graficaResult, estudiosResult] = await Promise.allSettled([
+                api.getDashboardStats(),
+                api.getCitas({ fecha: fechaActual }),
+                api.getCitasGrafica(),
+                api.getTopEstudios()
+            ]);
 
-            // Citas del día
-            const c = await api.getCitas({ fecha: new Date().toISOString().split('T')[0] });
-            setCitasHoy(Array.isArray(c) ? c.slice(0, 6) : (c.data?.slice(0, 6) || []));
+            const statsData = getPayload(statsResult);
+            const citasData = getPayload(citasResult);
+            const graficaData = getPayload(graficaResult);
+            const estudiosData = getPayload(estudiosResult);
 
-            // Gráfica de citas (últimos 30 días)
-            try {
-                const cg = await api.getCitasGrafica();
-                const chartData = (cg?.data || cg || []).map(item => ({
-                    fecha: item._id?.split('-').slice(1).join('/'),  // "2026-03-01" -> "03/01"
+            startTransition(() => {
+                if (statsData) {
+                    setStats({
+                        citasHoy: statsData.citas?.hoy ?? 0,
+                        estudiosRealizados: statsData.resultados?.completadosMes ?? 0,
+                        ingresosHoy: statsData.facturacion?.hoy?.total ?? 0,
+                        facturacionMes: statsData.facturacion?.mes?.total ?? 0,
+                        pacientesNuevos: statsData.pacientes?.nuevosMes ?? 0,
+                        resultadosPendientes: statsData.resultados?.pendientes ?? 0,
+                        totalPacientes: statsData.pacientes?.total ?? 0,
+                    });
+                }
+
+                setCitasHoy(Array.isArray(citasData) ? citasData.slice(0, 6) : (citasData?.slice(0, 6) || []));
+                setCitasGrafica((Array.isArray(graficaData) ? graficaData : []).map((item) => ({
+                    fecha: item._id?.split('-').slice(1).join('/') || item.fecha || '--/--',
                     total: item.total || 0,
                     completadas: item.completadas || 0,
-                }));
-                setCitasGrafica(chartData);
-            } catch { }
-
-            // Top estudios
-            try {
-                const te = await api.getTopEstudios();
-                setTopEstudios((te?.data || te || []).slice(0, 6));
-            } catch { }
-
+                })));
+                setTopEstudios((Array.isArray(estudiosData) ? estudiosData : []).slice(0, 6));
+            });
         } catch (error) {
             console.error('Dashboard error:', error);
         } finally {

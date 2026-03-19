@@ -4,6 +4,15 @@ const VERSION = '1.1.5-PREMIUM';
 class ApiService {
     getToken() { return localStorage.getItem('token') || sessionStorage.getItem('token'); }
 
+    getStoredUser() { return localStorage.getItem('user') || sessionStorage.getItem('user'); }
+
+    clearSession() {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('user');
+    }
+
     getHeaders() {
         const headers = { 'Content-Type': 'application/json' };
         try {
@@ -13,7 +22,7 @@ class ApiService {
             }
 
             // Inyectar sucursalId si existe
-            const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+            const userStr = this.getStoredUser();
             if (userStr && userStr !== 'undefined' && userStr !== 'null') {
                 const user = JSON.parse(userStr);
                 if (user && user.sucursal) {
@@ -55,8 +64,7 @@ class ApiService {
 
             console.error(`[API ${VERSION}] 401 UNAUTHORIZED for ${endpoint}:`, { detail });
 
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
+            this.clearSession();
             window.dispatchEvent(new CustomEvent('session-expired', { detail: { reason: detail } }));
             throw new Error(`Sesión expirada: ${detail}`);
         }
@@ -136,7 +144,6 @@ class ApiService {
             const user = data.usuario || data.user || data.data?.usuario || data.data?.user;
 
             if (token && typeof token === 'string' && token !== 'undefined') {
-                this.forceLogin(user, token);
                 return { ...data, user, token };
             } else {
                 console.error(`[API ${VERSION}] Login failed: Valid token not found in response`, data);
@@ -165,19 +172,25 @@ class ApiService {
     }
 
     logout() {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        this.clearSession();
         window.location.href = '/';
     }
 
     isAuthenticated() { return !!this.getToken(); }
 
     getUser() {
-        const u = localStorage.getItem('user');
+        const u = this.getStoredUser();
         try { return u ? JSON.parse(u) : null; } catch { return null; }
     }
 
     async getMe() { return this.request('/auth/me'); }
+    async updateProfile(data) { return this.request('/auth/profile', { method: 'PUT', body: JSON.stringify(data) }); }
+    async changePassword(currentPassword, newPassword) {
+        return this.request('/auth/change-password', {
+            method: 'PUT',
+            body: JSON.stringify({ currentPassword, newPassword })
+        });
+    }
 
     // DASHBOARD
     async getDashboardStats() {
@@ -339,6 +352,12 @@ class ApiService {
             method: 'PATCH', body: JSON.stringify(data)
         });
     }
+    async firmarResultado(id, data = {}) {
+        return this.request('/resultados/' + id + '/firma', {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        });
+    }
 
     // IMAGENOLOGÍA
     async getImagenologiaLista(params = {}) {
@@ -365,9 +384,10 @@ class ApiService {
     async getRoles() { return this.request('/admin/roles'); }
     async createUsuario(data) {
         const d = { ...data, role: data.role || data.rol || 'recepcion' };
-        // No enviar email/username vacíos o "null" - evita error 11000 en MongoDB
+        // No enviar email/username/apellido vacíos o "null" - evita errores de validación
         if (!d.email || d.email === 'null' || String(d.email).trim() === '') delete d.email;
         if (!d.username || d.username === 'null' || String(d.username).trim() === '') delete d.username;
+        if (!d.apellido || String(d.apellido).trim() === '') delete d.apellido;
         return this.request('/admin/usuarios', { method: 'POST', body: JSON.stringify(d) });
     }
     async updateUsuario(id, data) {

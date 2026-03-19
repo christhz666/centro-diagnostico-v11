@@ -1,0 +1,145 @@
+﻿python : 
+En línea: 1 Carácter: 1
++ python tests/test_login.py > 
+tests/error_log2.txt 2>&1; 
+Get-Content t ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          :  
+   NotSpecified: (:String) []  
+  , RemoteException
+    + FullyQualifiedErrorId :  
+   NativeCommandError
+ 
+<--- Last few GCs --->
+
+[11132:000001A0D3C0B000]      
+152 ms: Scavenge 5.6 (8.1) -> 
+5.2 (10.6) MB, pooled: 0 MB, 
+0.74 / 0.00 ms  (average mu = 
+1.000, current mu = 1.000) 
+allocation failure; 
+
+FATAL ERROR: Zone Allocation 
+failed - process out of memory
+----- Native stack trace -----
+
+ 1: 00007FF65C28AE1F 
+ 2: 00007FF65CED37B7 
+ 3: 00007FF65C84E556 
+ 4: 00007FF65C9896DB 
+ 5: 00007FF65C98A5ED 
+ 6: 00007FF65C97F895 
+ 7: 00007FF65C990640 
+ 8: 00007FF65C98F964 
+ 9: 00007FF65C9A17F2 
+10: 00007FF65C9812C5 
+11: 00007FF65C989ECB 
+12: 00007FF65C97F90A 
+13: 00007FF65C990640 
+14: 00007FF65C98F964 
+15: 00007FF65C996182 
+16: 00007FF65C992BA3 
+17: 00007FF65C990798 
+18: 00007FF65C98F91E 
+19: 00007FF65C9A17F2 
+20: 00007FF65C9812C5 
+21: 00007FF65C989ECB 
+22: 00007FF65C9893CA 
+23: 00007FF65C97CAC7 
+24: 00007FF65C97BC94 
+25: 00007FF65C97AF82 
+26: 00007FF65C97AC2A 
+27: 00007FF65C976259 
+28: 00007FF65CE5115F 
+29: 00007FF65CE53F61 
+30: 00007FF65CEDCC73 
+31: 00007FF65C2A7B13 
+32: 00007FF65C2A62AD 
+33: 000001A09FDCF64D 
+
+Centro Diagnostico v11 - Suite de Tests con Playwright
+=======================================================
+
+=== TEST: Pagina de Login ===
+Traceback (most recent call 
+last):
+  File "C:\Users\rossy\Download
+s\centro-diagnostico-v11-main\t
+ests\test_login.py", line 202, 
+in <module>
+    all_results += 
+test_login_page()
+                   
+^^^^^^^^^^^^^^^^^
+  File "C:\Users\rossy\Download
+s\centro-diagnostico-v11-main\t
+ests\test_login.py", line 20, 
+in test_login_page
+    with sync_playwright() as 
+p:
+         ^^^^^^^^^^^^^^^^^
+  File "C:\Users\rossy\AppData\
+Local\Programs\Python\Python312
+\Lib\site-packages\playwright\s
+ync_api\_context_manager.py", 
+line 79, in __enter__
+    playwright = 
+self._playwright
+                 
+^^^^^^^^^^^^^^^^
+AttributeError: 
+'PlaywrightContextManager' 
+object has no attribute 
+'_playwright'
+Task exception was never 
+retrieved
+future: <Task finished 
+name='Task-3' coro=<Connection.
+run.<locals>.init() done, 
+defined at C:\Users\rossy\AppDa
+ta\Local\Programs\Python\Python
+312\Lib\site-packages\playwrigh
+t\_impl\_connection.py:309> exc
+eption=Exception('Connection.in
+it: Connection closed while 
+reading from the driver')>
+Traceback (most recent call 
+last):
+  File "C:\Users\rossy\AppData\
+Local\Programs\Python\Python312
+\Lib\site-packages\playwright\_
+impl\_connection.py", line 
+310, in init
+    self.playwright_future.set_
+result(await 
+self._root_object.initialize())
+                               
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^
+  File "C:\Users\rossy\AppData\
+Local\Programs\Python\Python312
+\Lib\site-packages\playwright\_
+impl\_connection.py", line 
+251, in initialize
+    await self._channel.send(
+  File "C:\Users\rossy\AppData\
+Local\Programs\Python\Python312
+\Lib\site-packages\playwright\_
+impl\_connection.py", line 69, 
+in send
+    return await 
+self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^
+  File "C:\Users\rossy\AppData\
+Local\Programs\Python\Python312
+\Lib\site-packages\playwright\_
+impl\_connection.py", line 
+559, in wrap_api_call
+    raise rewrite_error(error, 
+f"{parsed_st['apiName']}: 
+{error}") from None
+Exception: Connection.init: 
+Connection closed while 
+reading from the driver

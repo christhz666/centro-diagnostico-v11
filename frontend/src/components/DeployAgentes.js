@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FaNetworkWired, FaDesktop, FaUpload, FaCheck, FaTimes, FaSpinner, FaSync, FaDownload, FaExclamationTriangle } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
@@ -22,11 +22,7 @@ const DeployAgentes = () => {
     light: '#f0f8ff'
   };
 
-  useEffect(() => {
-    cargarDatos();
-  }, []);
-
-  const cargarDatos = async () => {
+  const cargarDatos = useCallback(async () => {
     setLoading(true);
     try {
       // Cargar PCs en la red
@@ -42,7 +38,11 @@ const DeployAgentes = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    cargarDatos();
+  }, [cargarDatos]);
 
   const escanearRed = async () => {
     setLoading(true);
@@ -77,15 +77,6 @@ const DeployAgentes = () => {
       mostrarMensaje('danger', `Error desplegando agente: ${error.message}`);
     } finally {
       setDeploying({ ...deploying, [pc.ip]: false });
-    }
-  };
-
-  const verificarEstado = async (ip) => {
-    try {
-      const response = await api.verificarAgenteEstado(ip);
-      return response.data || response;
-    } catch (error) {
-      return { estado: 'desconocido', error: error.message };
     }
   };
 

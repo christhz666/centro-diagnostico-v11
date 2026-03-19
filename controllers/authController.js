@@ -1,23 +1,32 @@
 const User = require('../models/User');
 const AuditLog = require('../models/AuditLog');
 const { AppError } = require('../middleware/errorHandler');
+const mongoose = require('mongoose');
 
 // @desc    Login
 // @route   POST /api/auth/login
 exports.login = async (req, res, next) => {
     try {
         const { email, username, password } = req.body;
-        const loginIdentifier = email || username;
+        const loginIdentifier = (email || username || '').trim();
+        const loginIdentifierNormalized = loginIdentifier.toLowerCase();
 
         if (!loginIdentifier || !password) {
             return res.status(400).json({ success: false, message: 'Por favor provea usuario/correo y contraseña' });
         }
 
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({
+                success: false,
+                message: 'La base de datos no esta disponible. Verifique MongoDB e intente nuevamente.'
+            });
+        }
+
         // Buscar usuario con password
         const user = await User.findOne({
             $or: [
-                { email: loginIdentifier },
-                { username: loginIdentifier }
+                { email: loginIdentifierNormalized },
+                { username: loginIdentifierNormalized }
             ]
         }).select('+password');
 
@@ -56,10 +65,13 @@ exports.login = async (req, res, next) => {
             id: user._id,
             nombre: user.nombre,
             apellido: user.apellido,
+            username: user.username,
             email: user.email,
             role: user.role,
             rol: user.role,
             nombreCompleto: user.nombreCompleto,
+            especialidad: user.especialidad,
+            firmaDigital: user.firmaDigital,
             avatar: user.avatar,
             sucursal: user.sucursal ? user.sucursal.toString() : null
         };
@@ -173,10 +185,12 @@ exports.getMe = async (req, res, next) => {
                 id: user._id,
                 nombre: user.nombre,
                 apellido: user.apellido,
+                username: user.username,
                 email: user.email,
                 role: user.role,
                 telefono: user.telefono,
                 especialidad: user.especialidad,
+                firmaDigital: user.firmaDigital,
                 nombreCompleto: user.nombreCompleto,
                 avatar: user.avatar,
                 ultimoAcceso: user.ultimoAcceso,
@@ -226,7 +240,7 @@ exports.changePassword = async (req, res, next) => {
 // @route   PUT /api/auth/profile
 exports.updateProfile = async (req, res, next) => {
     try {
-        const allowedFields = ['nombre', 'apellido', 'telefono'];
+        const allowedFields = ['nombre', 'apellido', 'telefono', 'firmaDigital'];
         const updates = {};
 
         allowedFields.forEach(field => {
@@ -247,9 +261,12 @@ exports.updateProfile = async (req, res, next) => {
                 id: user._id,
                 nombre: user.nombre,
                 apellido: user.apellido,
+                username: user.username,
                 email: user.email,
                 role: user.role,
                 telefono: user.telefono,
+                especialidad: user.especialidad,
+                firmaDigital: user.firmaDigital,
                 nombreCompleto: user.nombreCompleto
             }
         });
