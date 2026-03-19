@@ -537,24 +537,68 @@ router.post('/recibir-json', async (req, res) => {
 
     console.log('? Valores formateados:', valoresFormateados.length);
 
-    // Crear resultado (codigoMuestra se auto-genera en el pre-validate hook)
-    const resultadoData = {
-      paciente: paciente._id,
-      cita: cita ? cita._id : citaVinculada,
-      estudio: estudio._id,
-      valores: valoresFormateados,
-      estado: 'completado',
-      observaciones: `Recibido desde ${equipment_name} (${station_name}) - ${timestamp || new Date().toISOString()}`
-    };
+    const citaIdFinal = cita ? cita._id : citaVinculada;
+    
+    // Buscar si ya existe un resultado previo para esta cita y este estudio específico
+    let resultado = await Resultado.findOne({ 
+      cita: citaIdFinal, 
+      estudio: estudio._id 
+    });
 
-    if (facturaVinculada) {
-      resultadoData.factura = facturaVinculada;
+    if (!resultado) {
+      // Búsqueda inteligente: si el usuario creó la orden con otro nombre de estudio (ej: "Hemograma" en vez de "AUTO-HEMATOLOGIA")
+      const resultadosDeCita = await Resultado.find({ cita: citaIdFinal }).populate('estudio');
+      resultado = resultadosDeCita.find(r => {
+        if (!r.estudio || r.estado === 'entregado' || r.estado === 'anulado') return false;
+        
+        const n = (r.estudio.nombre || '').toLowerCase();
+        const cat = (r.estudio.categoria || '').toLowerCase();
+        const te = (tipo_estudio || '').toLowerCase();
+        const eqt = (equipment_type || '').toLowerCase();
+        
+        if (te === 'hematologia' && (n.includes('hemo') || n.includes('hema') || n.includes('bhc') || n.includes('biometria'))) return true;
+        if (te === 'quimica' && (n.includes('quimica') || n.includes('gluc') || n.includes('colest') || n.includes('perfil'))) return true;
+        
+        return n.includes(te) || n.includes(eqt) || cat.includes(te) || cat.includes(eqt);
+      });
     }
 
-    const resultado = await Resultado.create(resultadoData);
+    if (resultado) {
+      // Si la secretaria o el médico ya habían creado el "cascarón" del resultado, lo rellenamos
+      resultado.valores = valoresFormateados;
+      resultado.estado = 'completado';
+      
+      const notaAñadida = `Actualizado automáticamente desde ${equipment_name} (${station_name}) - ${timestamp || new Date().toISOString()}`;
+      resultado.observaciones = resultado.observaciones 
+        ? `${resultado.observaciones}\n${notaAñadida}`
+        : notaAñadida;
+        
+      if (facturaVinculada && !resultado.factura) {
+        resultado.factura = facturaVinculada;
+      }
+      
+      await resultado.save();
+      console.log('🔄 Resultado existente actualizado:', resultado._id);
+    } else {
+      // Crear resultado nuevo desde cero
+      const resultadoData = {
+        paciente: paciente._id,
+        cita: citaIdFinal,
+        estudio: estudio._id,
+        valores: valoresFormateados,
+        estado: 'completado',
+        observaciones: `Recibido automáticamente desde ${equipment_name} (${station_name}) - ${timestamp || new Date().toISOString()}`
+      };
 
-    console.log('? Resultado creado:', resultado._id);
-    console.log('? Código de muestra:', resultado.codigoMuestra);
+      if (facturaVinculada) {
+        resultadoData.factura = facturaVinculada;
+      }
+
+      resultado = await Resultado.create(resultadoData);
+      console.log('🆕 Resultado nuevo creado:', resultado._id);
+    }
+
+    console.log('📍 Código de muestra final:', resultado.codigoMuestra);
 
     res.json({
       success: true,
