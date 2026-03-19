@@ -539,15 +539,24 @@ router.post('/recibir-json', async (req, res) => {
 
     const citaIdFinal = cita ? cita._id : citaVinculada;
     
-    // Buscar si ya existe un resultado previo para esta cita y este estudio específico
-    let resultado = await Resultado.findOne({ 
-      cita: citaIdFinal, 
-      estudio: estudio._id 
-    });
+    const busquedaFiltro = [];
+    if (citaIdFinal) busquedaFiltro.push({ cita: citaIdFinal });
+    if (facturaVinculada) busquedaFiltro.push({ factura: facturaVinculada });
+    
+    // Buscar si ya existe un resultado previo para esta cita/factura y este estudio específico
+    let resultado = null;
+    if (busquedaFiltro.length > 0) {
+      resultado = await Resultado.findOne({ 
+        $or: busquedaFiltro, 
+        estudio: estudio._id 
+      });
+    }
 
-    if (!resultado) {
+    if (!resultado && busquedaFiltro.length > 0) {
       // Búsqueda inteligente: si el usuario creó la orden con otro nombre de estudio (ej: "Hemograma" en vez de "AUTO-HEMATOLOGIA")
-      const resultadosDeCita = await Resultado.find({ cita: citaIdFinal }).populate('estudio');
+      const queryParams = { $or: busquedaFiltro };
+      const resultadosDeCita = await Resultado.find(queryParams).populate('estudio');
+      
       resultado = resultadosDeCita.find(r => {
         if (!r.estudio || r.estado === 'entregado' || r.estado === 'anulado') return false;
         
