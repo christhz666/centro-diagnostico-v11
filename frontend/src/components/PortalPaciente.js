@@ -171,11 +171,11 @@ const PortalPaciente = () => {
       // Si hay QR, primero validar credenciales y luego usar el QR para obtener resultados
       if (qrParam) {
         console.log('[PortalPaciente] Login con QR:', qrParam);
-        // Validar credenciales primero
+        // Validar credenciales primero, enviando el QR para asegurar que pertenezcan al mismo dueño
         const authRes = await fetch('/api/resultados/acceso-paciente', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
+          body: JSON.stringify({ username, password, qrCode: qrParam })
         });
         const authData = await authRes.json();
 

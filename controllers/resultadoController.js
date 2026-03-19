@@ -614,6 +614,17 @@ exports.accesoPaciente = async (req, res, next) => {
             });
         }
 
+        // --- VERIFICACIÓN DE SEGURIDAD PARA QR (NUEVO) ---
+        if (req.body.qrCode) {
+            const facturaQr = await Factura.findOne({ codigoQR: req.body.qrCode });
+            if (!facturaQr || facturaQr.paciente.toString() !== factura.paciente._id.toString()) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Las credenciales ingresadas no pertenecen a la factura escaneada. Por favor, utilice los datos del paciente correcto.'
+                });
+            }
+        }
+
         // Verificar si hay monto pendiente
         const montoPendiente = Math.max(0, (factura.total || 0) - (factura.montoPagado || 0));
         const facturaPagada = factura.pagado || factura.estado === 'pagada' || montoPendiente === 0;
