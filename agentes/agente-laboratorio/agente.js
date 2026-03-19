@@ -149,6 +149,15 @@ function parsearASTM(datos) {
     let identificador = null;
     const resultados = [];
 
+    // Función para formatear las unidades feas de las máquinas
+    const limpiarUnidad = (u) => {
+        if (!u) return '';
+        let limpia = u.trim();
+        if (limpia === '10^3/uL' || limpia === '10e3/uL') return 'x 10³/µL';
+        if (limpia === '10^6/uL' || limpia === '10e6/uL') return 'x 10⁶/µL';
+        return limpia;
+    };
+
     for (const linea of lineas) {
         const campos = linea.split('|');
         const tipo = campos[0]?.replace(/[\x02\x03\x05\x06]/g, '').trim();
@@ -163,7 +172,8 @@ function parsearASTM(datos) {
             case 'R':
                 const codigo = campos[2]?.split('^')[3] || campos[2]?.trim();
                 const valor = campos[3]?.trim();
-                const unidad = campos[4]?.trim();
+                const unidadObj = campos[4]?.trim();
+                const unidad = limpiarUnidad(unidadObj);
                 const flag = campos[8]?.trim();
                 if (codigo && valor) {
                     resultados.push({
@@ -188,6 +198,15 @@ function parsearHL7(datos) {
     let identificador = null;
     const resultados = [];
 
+    // Función para formatear las unidades feas de las máquinas
+    const limpiarUnidad = (u) => {
+        if (!u) return '';
+        let limpia = u.trim();
+        if (limpia === '10^3/uL' || limpia === '10e3/uL') return 'x 10³/µL';
+        if (limpia === '10^6/uL' || limpia === '10e6/uL') return 'x 10⁶/µL';
+        return limpia;
+    };
+
     for (const seg of segmentos) {
         const campos = seg.split('|');
         const tipo = campos[0]?.trim();
@@ -199,7 +218,8 @@ function parsearHL7(datos) {
             case 'OBX':
                 const codigo = campos[3]?.split('^')[0]?.trim();
                 const valor = campos[5]?.trim();
-                const unidad = campos[6]?.trim();
+                const unidadObj = campos[6]?.trim();
+                const unidad = limpiarUnidad(unidadObj);
                 const refRange = campos[7]?.trim();
                 const flag = campos[8]?.trim();
                 if (codigo && valor) {
