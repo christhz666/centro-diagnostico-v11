@@ -564,65 +564,88 @@ exports.accesoPaciente = async (req, res, next) => {
         const userNorm = username.trim().toLowerCase().replace(/[^a-záéíóúñü]/g, '');
         const passNorm = password.trim().toLowerCase().replace(/[^a-záéíóúñü]/g, '');
 
-        // 1) Buscar factura por pacienteUsername exacto
-        let factura = await Factura.findOne({
-            pacienteUsername: userNorm
-        }).populate('paciente', 'nombre apellido cedula fechaNacimiento sexo').sort('-createdAt');
+        let factura;
 
-        // 2) Si no se encontró, buscar por nombre del paciente directamente
-        if (!factura) {
-            const pacientes = await Paciente.find({
-                nombre: { $regex: new RegExp('^' + userNorm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') }
-            }).select('_id');
+        if (req.body.qrCode) {
+            // MODO ESTRICTO: Si viene de un QR, buscar exactamente y únicamente esa factura
+            factura = await Factura.findOne({ codigoQR: req.body.qrCode })
+                .populate('paciente', 'nombre apellido cedula fechaNacimiento sexo');
 
-            if (pacientes.length > 0) {
-                const pacienteIds = pacientes.map(p => p._id);
-                factura = await Factura.findOne({
-                    paciente: { $in: pacienteIds },
-                    pacientePassword: { $exists: true, $ne: null }
-                }).populate('paciente', 'nombre apellido cedula fechaNacimiento sexo').sort('-createdAt');
+            if (!factura) {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Código QR no encontrado en el sistema'
+                });
             }
-        }
 
-        // 3) Si aún no se encontró, buscar por cédula del paciente
-        if (!factura) {
-            const pacByCedula = await Paciente.findOne({
-                cedula: { $regex: new RegExp(username.trim().replace(/[^0-9]/g, ''), 'i') }
-            }).select('_id');
+            // Validar que el usuario ingresado corresponda al paciente de ESTA factura específica
+            const nombrePacienteNorm = factura.paciente.nombre ? factura.paciente.nombre.toLowerCase().replace(/[^a-záéíóúñü]/g, '') : '';
+            const cedulaNorm = username.trim().replace(/[^0-9]/g, '');
+            const cedulaPacienteNorm = factura.paciente.cedula ? factura.paciente.cedula.replace(/[^0-9]/g, '') : '';
 
-            if (pacByCedula) {
-                factura = await Factura.findOne({
-                    paciente: pacByCedula._id,
-                    pacientePassword: { $exists: true, $ne: null }
-                }).populate('paciente', 'nombre apellido cedula fechaNacimiento sexo').sort('-createdAt');
+            const isUsernameMatch = 
+                factura.pacienteUsername === userNorm || 
+                (nombrePacienteNorm && nombrePacienteNorm.startsWith(userNorm)) ||
+                (cedulaNorm && cedulaPacienteNorm && cedulaPacienteNorm === cedulaNorm);
+
+            if (!isUsernameMatch) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'El usuario ingresado no corresponde a la factura de este código QR.'
+                });
+            }
+
+        } else {
+            // MODO GENÉRICO (Sin QR): Buscar la factura más reciente del paciente
+            // 1) Buscar factura por pacienteUsername exacto
+            factura = await Factura.findOne({
+                pacienteUsername: userNorm
+            }).populate('paciente', 'nombre apellido cedula fechaNacimiento sexo').sort('-createdAt');
+
+            // 2) Si no se encontró, buscar por nombre del paciente directamente
+            if (!factura) {
+                const pacientes = await Paciente.find({
+                    nombre: { $regex: new RegExp('^' + userNorm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') }
+                }).select('_id');
+
+                if (pacientes.length > 0) {
+                    const pacienteIds = pacientes.map(p => p._id);
+                    factura = await Factura.findOne({
+                        paciente: { $in: pacienteIds },
+                        pacientePassword: { $exists: true, $ne: null }
+                    }).populate('paciente', 'nombre apellido cedula fechaNacimiento sexo').sort('-createdAt');
+                }
+            }
+
+            // 3) Si aún no se encontró, buscar por cédula del paciente
+            if (!factura) {
+                const pacByCedula = await Paciente.findOne({
+                    cedula: { $regex: new RegExp(username.trim().replace(/[^0-9]/g, ''), 'i') }
+                }).select('_id');
+
+                if (pacByCedula) {
+                    factura = await Factura.findOne({
+                        paciente: pacByCedula._id,
+                        pacientePassword: { $exists: true, $ne: null }
+                    }).populate('paciente', 'nombre apellido cedula fechaNacimiento sexo').sort('-createdAt');
+                }
             }
         }
 
         if (!factura) {
             return res.status(401).json({
                 success: false,
-                message: 'Credenciales incorrectas'
+                message: 'Usuario no encontrado o credenciales incorrectas'
             });
         }
 
-        // Comparar contraseña con bcrypt
+        // Ya sea en modo estricto o genérico, autenticar contra la contraseña de esa factura
         const isMatch = await factura.comparePassword(passNorm);
         if (!isMatch) {
             return res.status(401).json({
                 success: false,
-                message: 'Credenciales incorrectas'
+                message: 'Contraseña incorrecta'
             });
-        }
-
-        // --- VERIFICACIÓN DE SEGURIDAD PARA QR (NUEVO) ---
-        if (req.body.qrCode) {
-            const facturaQr = await Factura.findOne({ codigoQR: req.body.qrCode });
-            if (!facturaQr || facturaQr.paciente.toString() !== factura.paciente._id.toString()) {
-                return res.status(403).json({
-                    success: false,
-                    message: 'Las credenciales ingresadas no pertenecen a la factura escaneada. Por favor, utilice los datos del paciente correcto.'
-                });
-            }
         }
 
         // Verificar si hay monto pendiente
