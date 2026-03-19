@@ -543,7 +543,7 @@ router.post('/recibir-json', async (req, res) => {
       cita: cita ? cita._id : citaVinculada,
       estudio: estudio._id,
       valores: valoresFormateados,
-      estado: 'en_proceso',
+      estado: 'completado',
       observaciones: `Recibido desde ${equipment_name} (${station_name}) - ${timestamp || new Date().toISOString()}`
     };
 
