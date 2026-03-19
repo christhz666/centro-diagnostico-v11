@@ -417,8 +417,24 @@ router.post('/recibir-json', async (req, res) => {
 
     // Buscar paciente por cédula o ID
     let paciente;
+    let facturaVinculada = null;
+    let citaVinculada = null;
+
     if (cedula) {
+      // 1. Intentar buscar por cédula exacta
       paciente = await Paciente.findOne({ cedula });
+      
+      // 2. Si no es cédula, intentar buscar por LIS ID (codigoLIS) de Factura
+      if (!paciente && !isNaN(cedula)) {
+        const Factura = require('../models/Factura');
+        const factura = await Factura.findOne({ codigoLIS: parseInt(cedula) }).populate('paciente');
+        if (factura && factura.paciente) {
+          paciente = factura.paciente;
+          facturaVinculada = factura._id;
+          citaVinculada = factura.cita;
+          console.log(`🔗 Paciente encontrado por LIS ID ${cedula} → Factura: ${factura.numero}`);
+        }
+      }
     } else if (paciente_id) {
       paciente = await Paciente.findById(paciente_id).catch(() => null);
       if (!paciente) {
@@ -427,14 +443,14 @@ router.post('/recibir-json', async (req, res) => {
     }
 
     if (!paciente) {
-      console.log('? Paciente no encontrado:', cedula || paciente_id);
+      console.log('❌ Paciente no encontrado ni por cédula ni por LIS ID:', cedula || paciente_id);
       return res.status(404).json({
         success: false,
-        message: `Paciente no encontrado`
+        message: `Paciente no encontrado. Verifique la Cédula o el ID LIS.`
       });
     }
 
-    console.log('? Paciente encontrado:', paciente.nombre, paciente.apellido);
+    console.log('✅ Paciente encontrado:', paciente.nombre, paciente.apellido);
 
     // Buscar estudio por tipo
     let estudio = await Estudio.findOne({
@@ -522,14 +538,20 @@ router.post('/recibir-json', async (req, res) => {
     console.log('? Valores formateados:', valoresFormateados.length);
 
     // Crear resultado (codigoMuestra se auto-genera en el pre-validate hook)
-    const resultado = await Resultado.create({
+    const resultadoData = {
       paciente: paciente._id,
-      cita: cita._id,
+      cita: cita ? cita._id : citaVinculada,
       estudio: estudio._id,
       valores: valoresFormateados,
       estado: 'en_proceso',
       observaciones: `Recibido desde ${equipment_name} (${station_name}) - ${timestamp || new Date().toISOString()}`
-    });
+    };
+
+    if (facturaVinculada) {
+      resultadoData.factura = facturaVinculada;
+    }
+
+    const resultado = await Resultado.create(resultadoData);
 
     console.log('? Resultado creado:', resultado._id);
     console.log('? Código de muestra:', resultado.codigoMuestra);
