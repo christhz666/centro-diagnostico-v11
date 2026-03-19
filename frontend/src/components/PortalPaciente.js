@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { FaFlask, FaLock, FaUser, FaSpinner, FaCheckCircle, FaClock, FaQrcode, FaExclamationTriangle, FaHospital, FaArrowLeft, FaPrint } from 'react-icons/fa';
+import { FaFlask, FaLock, FaUser, FaSpinner, FaCheckCircle, FaClock, FaQrcode, FaExclamationTriangle, FaHospital, FaArrowLeft, FaPrint, FaDownload } from 'react-icons/fa';
+import html2pdf from 'html2pdf.js';
 
 /* ─── Paleta de colores mejorada ─────────────────────────────────────── */
 const C = {
@@ -301,6 +302,58 @@ const PortalPaciente = () => {
     win.document.close();
   };
 
+  /* ── Descargar un resultado como PDF ── */
+  const descargarPDF = (r) => {
+    const firmaHtml = r.firmaDigital
+      ? `<div style="text-align:center;margin-top:25px;margin-bottom:8px"><img src="${r.firmaDigital}" alt="Firma del médico" style="max-width:220px;max-height:70px;object-fit:contain" /></div>`
+      : '';
+    const valorCards = (r.valores || []).map(v => `
+      <div style="background:white;border:1px solid #e0e0e0;border-left:4px solid ${getEstadoColor(v.estado || 'normal')};border-radius:8px;padding:15px;margin-bottom:10px;break-inside:avoid">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <strong style="font-size:14px;text-transform:uppercase">${fmtParametro(v.parametro)}</strong>
+          <span style="background:${getEstadoColor(v.estado || 'normal')};color:white;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:bold">${(v.estado || 'N/A').toUpperCase()}</span>
+        </div>
+        <div style="font-size:22px;font-weight:bold;color:#2c3e50;margin-bottom:4px">${v.valor || ''} <span style="font-size:14px;color:#999;font-weight:normal">${v.unidad || ''}</span></div>
+        <div style="font-size:12px;color:#888">Rango: ${v.valorReferencia || '-'}</div>
+      </div>`).join('');
+    
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <div style="font-family:'Segoe UI',Arial,sans-serif;padding:30px;color:#2c3e50;background:white">
+        <div style="text-align:center;border-bottom:3px solid #2c3e50;padding-bottom:15px;margin-bottom:25px">
+          <h1 style="color:#2c3e50;margin:0 0 5px;font-size:24px">${empresaNombre}</h1>
+          <p style="color:#666;margin:0;font-size:13px">Análisis de Laboratorio Clínico</p>
+        </div>
+        <div style="background:#f0f8ff;padding:20px;border-radius:10px;margin-bottom:25px;border:1px solid #bee5eb">
+          <h4 style="margin:0 0 12px;color:#2c3e50;font-size:14px">👤 Información del Paciente</h4>
+          <div style="display:flex;flex-wrap:wrap;gap:15px;font-size:14px">
+            <div style="flex:1;min-width:200px"><strong>Nombre:</strong> ${datos?.paciente?.nombre || ''} ${datos?.paciente?.apellido || ''}</div>
+            <div style="flex:1;min-width:150px"><strong>Cédula:</strong> ${datos?.paciente?.cedula || 'N/A'}</div>
+            <div style="flex:1;min-width:150px"><strong>Sexo:</strong> ${datos?.paciente?.sexo === 'M' ? 'Masculino' : 'Femenino'}</div>
+            <div style="flex:1;min-width:150px"><strong>Fecha:</strong> ${new Date(r.createdAt).toLocaleDateString('es-DO')}</div>
+          </div>
+        </div>
+        <h3 style="color:#2c3e50;border-bottom:2px solid #eee;padding-bottom:8px;margin-bottom:15px">🔬 ${r.estudio?.nombre || 'Resultado'}</h3>
+        <div style="display:grid;gap:10px">${valorCards || '<p style="text-align:center;padding:20px;color:#888">Sin valores registrados</p>'}</div>
+        ${r.interpretacion ? `<div style="background:#fff3e0;border-left:4px solid #FF9800;padding:15px;margin-top:20px;border-radius:5px">
+          <h4 style="margin:0 0 8px;color:#e65100;font-size:14px">📋 Interpretación Médica</h4><p style="margin:0;font-size:14px">${r.interpretacion}</p></div>` : ''}
+        ${firmaHtml}
+        ${(r.firmadoPor || r.validadoPor) ? `<p style="margin-top:8px;text-align:center;font-size:14px;color:#555">✅ Firmado por: Dr. ${r.firmadoPor?.nombre || r.validadoPor?.nombre || ''} ${r.firmadoPor?.apellido || r.validadoPor?.apellido || ''}</p>` : ''}
+        <div style="text-align:center;margin-top:30px;padding:12px;background:#2c3e50;color:white;border-radius:8px;font-size:13px"><strong>Gracias por confiar en nosotros</strong> · Su salud es nuestra prioridad</div>
+      </div>
+    `;
+
+    const opt = {
+      margin:       5,
+      filename:     `Resultado_${datos?.paciente?.nombre?.replace(/\\s+/g,'_') || 'Paciente'}_${r.estudio?.nombre?.replace(/\\s+/g,'_') || 'Estudio'}.pdf`,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().from(container).set(opt).save();
+  };
+
   /* ================================ RENDER ================================ */
 
   /* Pantalla de carga inicial (QR param) */
@@ -418,9 +471,14 @@ const PortalPaciente = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <EstadoBadge estado={r.estado} />
                   {(r.estado === 'completado' || r.estado === 'entregado') && (
-                    <button onClick={() => imprimirResultado(r)} style={styles.btnPrint}>
-                      <FaPrint /> Imprimir
-                    </button>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button onClick={() => descargarPDF(r)} style={{ ...styles.btnPrint, background: `linear-gradient(135deg, ${C.green}, ${C.greenLight})` }}>
+                        <FaDownload /> Descargar
+                      </button>
+                      <button onClick={() => imprimirResultado(r)} style={styles.btnPrint}>
+                        <FaPrint /> Imprimir
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
