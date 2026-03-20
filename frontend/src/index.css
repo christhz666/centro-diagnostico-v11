@@ -3,6 +3,35 @@
 @tailwind utilities;
 
 @layer base {
+    :root {
+        --legacy-surface: #ffffff;
+        --legacy-surface-muted: #f8fafc;
+        --legacy-surface-hover: #f1f5f9;
+        --legacy-surface-panel: #f8fafc;
+        --legacy-border: #e2e8f0;
+        --legacy-border-soft: #f1f5f9;
+        --legacy-text: #1e293b;
+        --legacy-text-strong: #0f172a;
+        --legacy-text-muted: #64748b;
+        --legacy-accent-strong: #2563eb;
+        --legacy-info-bg: #eff6ff;
+        --legacy-info-border: #bfdbfe;
+    }
+    .dark {
+        --legacy-surface: #1e293b;
+        --legacy-surface-muted: #0f172a;
+        --legacy-surface-hover: #334155;
+        --legacy-surface-panel: rgba(59, 130, 246, 0.1);
+        --legacy-border: #334155;
+        --legacy-border-soft: #1e293b;
+        --legacy-text: #cbd5e1;
+        --legacy-text-strong: #f8fafc;
+        --legacy-text-muted: #94a3b8;
+        --legacy-accent-strong: #3b82f6;
+        --legacy-info-bg: rgba(59, 130, 246, 0.1);
+        --legacy-info-border: rgba(59, 130, 246, 0.2);
+    }
+
     body {
         @apply antialiased text-slate-800 dark:text-slate-200 bg-background-light dark:bg-background-dark font-body;
     }
