@@ -11,6 +11,25 @@ const API_URL = process.env.REACT_APP_API_URL ||
   (isTauri ? 'https://miesperanzalab.duckdns.org/api' : '/api');
 const VERSION = '1.1.5-PREMIUM';
 
+// ── Interceptor global de fetch ──────────────────────────────────────────────
+// Redirige cualquier petición a /api/... hacia la URL absoluta del VPS
+// cuando la app corre dentro de Tauri (desktop). Esto soluciona todos los
+// componentes que usan fetch('/api/...') nativo sin modificarlos individualmente.
+if (isTauri || process.env.REACT_APP_API_URL) {
+  const _originalFetch = window.fetch.bind(window);
+  const VPS_BASE = (process.env.REACT_APP_API_URL || 'https://miesperanzalab.duckdns.org/api')
+    .replace(/\/api$/, ''); // quitar /api al final para tener solo la base
+  window.fetch = (input, init) => {
+    let url = typeof input === 'string' ? input : (input instanceof URL ? input.toString() : input.url);
+    if (typeof url === 'string' && url.startsWith('/api')) {
+      url = VPS_BASE + url;
+      input = typeof input === 'string' ? url : new Request(url, input);
+    }
+    return _originalFetch(input, init);
+  };
+}
+
+
 class ApiService {
     getToken() { return localStorage.getItem('token') || sessionStorage.getItem('token'); }
 
@@ -438,6 +457,7 @@ class ApiService {
     async getConfiguracion() { return this.request('/configuracion/'); }
     async updateConfiguracion(data) { return this.request('/configuracion/', { method: 'PUT', body: JSON.stringify(data) }); }
     async getEmpresaInfo() { return this.request('/configuracion/empresa'); }
+    async getEmpresaConfig() { return this.request('/configuracion/empresa'); }
 
     // DEPLOY
     async escanearRed() { return this.request('/deploy/scan'); }

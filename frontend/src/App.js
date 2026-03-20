@@ -41,11 +41,9 @@ function App() {
 
   // Load empresa config (public endpoint, no auth needed)
   useEffect(() => {
-    fetch('/api/configuracion/empresa')
-      .then(r => r.json())
+    api.getEmpresaConfig()
       .then(data => {
         setEmpresaConfig(data || {});
-        // Update page title if empresa_nombre is set
         const nombre = data?.nombre || data?.empresa_nombre;
         if (nombre) document.title = nombre;
       })
