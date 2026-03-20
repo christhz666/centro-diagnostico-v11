@@ -67,9 +67,23 @@ router.get('/info', (req, res) => {
     }
 });
 
-// @desc    Descargar instalador 1-click (BAT) para Agente de Laboratorio
+// @desc    Descargar instalador .exe del Agente de Laboratorio (Tauri App)
 // @route   GET /api/downloads/agente-laboratorio
 router.get('/agente-laboratorio', (req, res) => {
+    // Intentar servir el instalador .exe compilado de Tauri primero
+    const exeDir = path.join(__dirname, '../downloads');
+    const possibleExe = fs.existsSync(exeDir)
+        ? (fs.readdirSync(exeDir).find(f => f.toLowerCase().includes('agente') && f.endsWith('.exe')))
+        : null;
+
+    if (possibleExe) {
+        const exePath = path.join(exeDir, possibleExe);
+        res.setHeader('Content-Type', 'application/x-msdownload');
+        res.setHeader('Content-Disposition', `attachment; filename="${possibleExe}"`);
+        return fs.createReadStream(exePath).pipe(res);
+    }
+
+    // Fallback: generar el instalador BAT 1-Click si no existe el .exe
     const batContent = generateOneClickInstaller('laboratorio');
     res.setHeader('Content-Type', 'application/x-bat');
     res.setHeader('Content-Disposition', 'attachment; filename="Instalar_Agente_Laboratorio_1Click.bat"');
