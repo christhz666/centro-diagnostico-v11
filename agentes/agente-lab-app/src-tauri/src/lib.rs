@@ -29,17 +29,17 @@ fn iniciar_agente(app: AppHandle, state: tauri::State<'_, SharedState>) -> Resul
     }
 
     let app_dir = get_app_dir();
-    // Busca agente.js junto al .exe de la app o en la carpeta resources
-    let agente_path = app_dir.join("agente.js");
+    // Usa el binario sidecar que Tauri empaquetó automáticamente (agente-lab.exe)
+    let agente_path = app_dir.join("agente-lab.exe");
     
-    let mut cmd = Command::new("node");
-    cmd.arg(&agente_path)
-       .stdout(Stdio::piped())
+    let mut cmd = Command::new(&agente_path);
+    // Configura el directorio de trabajo para que el agente encuentre config.json
+    cmd.stdout(Stdio::piped())
        .stderr(Stdio::piped())
        .current_dir(&app_dir);
 
     let mut child = cmd.spawn()
-        .map_err(|e| format!("No se pudo iniciar el agente: {}. ¿Está Node.js instalado?", e))?;
+        .map_err(|e| format!("No se pudo iniciar el ejecutable nativo del agente ({}): {}", agente_path.display(), e))?;
 
     let stdout = child.stdout.take().unwrap();
     let stderr = child.stderr.take().unwrap();
