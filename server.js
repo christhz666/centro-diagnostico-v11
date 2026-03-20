@@ -43,18 +43,25 @@ const getLocalIps = () => {
 };
 
 const parseCorsOrigins = () => {
+    let origins = [];
     if (!process.env.CORS_ORIGINS) {
-        return [
+        origins = [
             'http://localhost:3000',
             'http://localhost:5000',
             process.env.FRONTEND_URL
         ].filter(Boolean);
+    } else {
+        origins = process.env.CORS_ORIGINS
+            .split(',')
+            .map(s => s.trim())
+            .filter(Boolean);
     }
-
-    return process.env.CORS_ORIGINS
-        .split(',')
-        .map(s => s.trim())
-        .filter(Boolean);
+    
+    // Siempe permitir las aplicaciones nativas de escritorio (Tauri)
+    origins.push('http://tauri.localhost');
+    origins.push('tauri://localhost');
+    
+    return origins;
 };
 
 const corsOrigins = parseCorsOrigins();

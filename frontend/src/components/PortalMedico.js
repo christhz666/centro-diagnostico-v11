@@ -291,11 +291,10 @@ const PortalMedico = () => {
     }
     if (!resultadoActivo) return;
 
-    const ventana = window.open('', 'Resultado', 'width=800,height=1000');
-    if (!ventana) {
-      alert('El navegador bloqueo la ventana de impresion.');
-      return;
-    }
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    const ventana = iframe.contentWindow;
 
     const valoresHTML = (resultadoActivo.valores || []).map(v => {
       const estadoColor = v.estado === 'normal' ? '#d4edda' : v.estado === 'alto' ? '#f8d7da' : '#fff3cd';
@@ -388,6 +387,12 @@ const PortalMedico = () => {
 
     ventana.document.write(htmlContent);
     ventana.document.close();
+    
+    setTimeout(() => {
+      if (document.body.contains(iframe)) {
+        document.body.removeChild(iframe);
+      }
+    }, 10000);
   };
 
   useEffect(() => {

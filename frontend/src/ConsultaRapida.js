@@ -118,7 +118,10 @@ const ConsultaRapida = () => {
   };
 
   const imprimirResultado = (resultado) => {
-    const ventana = window.open('', 'Resultado', 'width=600,height=800');
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    const ventana = iframe.contentWindow;
     
     const valoresHTML = (resultado.valores || []).map(v => `
       <tr>
@@ -217,6 +220,12 @@ const ConsultaRapida = () => {
     `);
     
     ventana.document.close();
+    
+    setTimeout(() => {
+      if (document.body.contains(iframe)) {
+        document.body.removeChild(iframe);
+      }
+    }, 10000);
   };
 
   const calcularEdad = (fecha) => {
@@ -620,8 +629,5 @@ const ConsultaRapida = () => {
     </div>
   );
 };
-
-export default ConsultaRapida;
-
 
 export default ConsultaRapida;

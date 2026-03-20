@@ -249,7 +249,10 @@ const PortalPaciente = () => {
 
   /* ── Imprimir un resultado ── */
   const imprimirResultado = (r) => {
-    const win = window.open('', 'print', 'width=800,height=900');
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    const win = iframe.contentWindow;
     const firmaHtml = r.firmaDigital
       ? `<div style="text-align:center;margin-top:25px;margin-bottom:8px"><img src="${r.firmaDigital}" alt="Firma del médico" style="max-width:220px;max-height:70px;object-fit:contain" /></div>`
       : '';
@@ -298,8 +301,15 @@ const PortalPaciente = () => {
             window.close();
           }, 150);
         });
-      </script></body></html>`);
+      </script>
+    </body></html>`);
     win.document.close();
+    
+    setTimeout(() => {
+      if (document.body.contains(iframe)) {
+        document.body.removeChild(iframe);
+      }
+    }, 10000);
   };
 
   /* ── Descargar un resultado como PDF ── */
