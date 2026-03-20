@@ -89,6 +89,7 @@ class ApiService {
         // El nuevo backend usa: { success: true, data: {...} }
         if (raw && typeof raw === 'object') {
             if (raw.success && raw.data !== undefined) {
+                if (options.noUnwrap) return raw.data;
                 const d = raw.data;
                 if (d && typeof d === 'object' && !Array.isArray(d)) {
                     if (Array.isArray(d.pacientes)) return d.pacientes;
@@ -281,7 +282,7 @@ class ApiService {
     }
 
     async buscarHistorialPaciente(query) {
-        return this.request('/citas/busqueda/paciente?query=' + encodeURIComponent(query));
+        return this.request('/citas/busqueda/paciente?query=' + encodeURIComponent(query), { noUnwrap: true });
     }
 
     // FACTURAS
