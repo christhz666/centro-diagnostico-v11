@@ -42,7 +42,7 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "tauri:dev": "npx @tauri-apps/cli dev",
-    "tauri:build": "npx @tauri-apps/cli build"
+    "tauri:build": "cross-env REACT_APP_API_URL=https://miesperanzalab.duckdns.org/api npx @tauri-apps/cli build"
   },
   "eslintConfig": {
     "extends": [
@@ -64,6 +64,7 @@
   },
   "proxy": "http://localhost:5000",
   "devDependencies": {
-    "@tauri-apps/cli": "^2.10.0"
+    "@tauri-apps/cli": "^2.10.0",
+    "cross-env": "^10.1.0"
   }
 }

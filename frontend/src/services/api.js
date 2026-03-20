@@ -1,6 +1,14 @@
-// Detección de entorno Tauri para enrutar API al servidor VPS en la app de escritorio
-const isTauri = Boolean(window.__TAURI_INTERNALS__ || window.__TAURI__);
-const API_URL = isTauri ? 'https://miesperanzalab.duckdns.org/api' : '/api';
+// Detección robusta de entorno Tauri — funciona en dev y en producción
+const isTauri = Boolean(
+  window.__TAURI_INTERNALS__ ||
+  window.__TAURI__ ||
+  window.location.protocol === 'tauri:' ||
+  window.location.hostname === 'tauri.localhost'
+);
+// REACT_APP_API_URL se inyecta en compilación para builds de escritorio
+// Si no está definido, la detección de Tauri aplica como fallback
+const API_URL = process.env.REACT_APP_API_URL || 
+  (isTauri ? 'https://miesperanzalab.duckdns.org/api' : '/api');
 const VERSION = '1.1.5-PREMIUM';
 
 class ApiService {
