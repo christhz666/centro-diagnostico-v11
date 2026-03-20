@@ -245,7 +245,7 @@ const DescargarApp = () => {
               <li>Modo test incorporado</li>
             </ul>
             <button
-              onClick={() => window.location.href = '/api/downloads/agente-laboratorio'}
+              onClick={() => window.open('https://github.com/christhz666/centro-diagnostico-v11/releases/download/v1.0%2C0/Agente.de.Laboratorio_1.0.0_x64-setup.exe', '_blank')}
               style={{
                 width: '100%', padding: '12px', backgroundColor: colores.primary,
                 color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer',
