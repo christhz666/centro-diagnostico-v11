@@ -19,13 +19,13 @@ const ROL_COLORS = {
 };
 
 const theme = {
-  surface: 'var(--legacy-surface)',
-  surfaceMuted: 'var(--legacy-surface-muted)',
-  border: 'var(--legacy-border)',
-  text: 'var(--legacy-text)',
-  textStrong: 'var(--legacy-text-strong)',
-  textMuted: 'var(--legacy-text-muted)',
-  infoPanel: 'var(--legacy-surface-panel)'
+  surface: 'var(--background-drawer, #1e293b)',
+  surfaceMuted: 'var(--surface-muted, #0f172a)',
+  border: 'var(--border, #334155)',
+  text: 'var(--text, #f8fafc)',
+  textStrong: 'var(--text-strong, #ffffff)',
+  textMuted: 'var(--text-muted, #94a3b8)',
+  infoPanel: 'rgba(59, 130, 246, 0.1)'
 };
 
 const AdminUsuarios = () => {

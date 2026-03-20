@@ -219,6 +219,10 @@ class ApiService {
     async updatePaciente(id, data) { return this.request('/pacientes/' + id, { method: 'PUT', body: JSON.stringify(data) }); }
     async deletePaciente(id) { return this.request('/pacientes/' + id, { method: 'DELETE' }); }
     async getHistorialPaciente(id) { return this.request('/pacientes/' + id + '/historial'); }
+    async buscarHistorialPaciente(q) { 
+        const res = await this.getPacientes({ search: q });
+        return { pacientes: res?.data || res || [] };
+    }
 
     // ESTUDIOS
     async getEstudios(params = {}) {
