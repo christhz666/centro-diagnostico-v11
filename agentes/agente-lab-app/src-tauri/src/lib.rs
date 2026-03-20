@@ -13,13 +13,22 @@ struct AgentState {
 
 type SharedState = Arc<Mutex<AgentState>>;
 
-/// Obtiene la ruta al directorio donde está el ejecutable de la app
+/// Obtiene la ruta al directorio donde está el ejecutable de la app (para el agente-lab.exe)
 fn get_app_dir() -> PathBuf {
     std::env::current_exe()
         .unwrap_or_default()
         .parent()
         .unwrap_or(&PathBuf::new())
         .to_path_buf()
+}
+
+/// Obtiene la ruta de configuración en %APPDATA% (siempre escribible sin admin)
+fn get_config_dir() -> PathBuf {
+    let base = std::env::var("APPDATA")
+        .unwrap_or_else(|_| std::env::var("HOME").unwrap_or_else(|_| ".".to_string()));
+    let dir = PathBuf::from(base).join("AgenteLabCentroEsperanza");
+    let _ = std::fs::create_dir_all(&dir); // Crear si no existe
+    dir
 }
 
 /// Config por defecto — preconfigurado con el VPS
@@ -103,7 +112,6 @@ fn leer_config() -> Result<String, String> {
     let config_path = app_dir.join("config.json");
 
     if !config_path.exists() {
-        // Auto-crear config.json con valores por defecto
         let default = config_default();
         let contenido = serde_json::to_string_pretty(&default)
             .map_err(|e| format!("Error serializando config por defecto: {}", e))?;
@@ -121,11 +129,84 @@ fn guardar_config(contenido: String) -> Result<String, String> {
     let app_dir = get_app_dir();
     let config_path = app_dir.join("config.json");
     std::fs::write(&config_path, contenido)
-        .map_err(|e| format!("Error al guardar en {}: {}", app_dir.display(), e))?;
+        .map_err(|e| format!("Error al guardar config.json en {}: {}", app_dir.display(), e))?;
     Ok("Configuración guardada correctamente".to_string())
 }
 
-/// Lista todos los puertos COM disponibles en el sistema
+/// Registra la app en el Registro de Windows para que inicie con Windows
+#[tauri::command]
+fn registrar_autostart() -> Result<String, String> {
+    let exe_path = std::env::current_exe()
+        .map_err(|e| format!("No se pudo obtener la ruta del ejecutable: {}", e))?;
+    let exe_str = exe_path.to_string_lossy().to_string();
+
+    #[cfg(target_os = "windows")]
+    {
+        use std::process::Command;
+        let output = Command::new("reg")
+            .args([
+                "add",
+                r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run",
+                "/v", "AgenteLabCentroEsperanza",
+                "/t", "REG_SZ",
+                "/d", &exe_str,
+                "/f"
+            ])
+            .output()
+            .map_err(|e| format!("Error ejecutando reg.exe: {}", e))?;
+
+        if output.status.success() {
+            Ok(format!("Autostart registrado: {}", exe_str))
+        } else {
+            Err(format!("Error del registro: {}", String::from_utf8_lossy(&output.stderr)))
+        }
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        Ok(format!("Autostart solo disponible en Windows. Ruta: {}", exe_str))
+    }
+}
+
+/// Elimina el autostart del Registro de Windows
+#[tauri::command]
+fn eliminar_autostart() -> Result<String, String> {
+    #[cfg(target_os = "windows")]
+    {
+        use std::process::Command;
+        let output = Command::new("reg")
+            .args([
+                "delete",
+                r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run",
+                "/v", "AgenteLabCentroEsperanza",
+                "/f"
+            ])
+            .output()
+            .map_err(|e| format!("Error: {}", e))?;
+        // Si ya no existía (exit code 1 con mensaje de clave no encontrada), lo tratamos como éxito
+        Ok("Autostart eliminado".to_string())
+    }
+    #[cfg(not(target_os = "windows"))]
+    { Ok("Solo disponible en Windows".to_string()) }
+}
+
+/// Verifica si el autostart está habilitado
+#[tauri::command]
+fn autostart_habilitado() -> bool {
+    #[cfg(target_os = "windows")]
+    {
+        let output = Command::new("reg")
+            .args([
+                "query",
+                r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run",
+                "/v", "AgenteLabCentroEsperanza"
+            ])
+            .output();
+        output.map(|o| o.status.success()).unwrap_or(false)
+    }
+    #[cfg(not(target_os = "windows"))]
+    { false }
+}
 #[tauri::command]
 fn listar_puertos_com() -> Vec<String> {
     match serialport::available_ports() {
@@ -166,6 +247,30 @@ fn leer_puerto_com(puerto: String, baud_rate: u32, segundos: u64) -> Result<Stri
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // ── Verificar y solicitar elevación de admin al inicio ──────────────
+    #[cfg(target_os = "windows")]
+    {
+        let es_admin = Command::new("cmd")
+            .args(["/C", "net session >nul 2>&1"])
+            .status()
+            .map(|s| s.success())
+            .unwrap_or(false);
+
+        if !es_admin {
+            // Re-lanzar con privilegios de administrador (muestra UAC)
+            let exe = std::env::current_exe().unwrap_or_default();
+            let exe_str = exe.to_string_lossy();
+            let _ = Command::new("powershell")
+                .args([
+                    "-WindowStyle", "Hidden",
+                    "-Command",
+                    &format!("Start-Process '{}' -Verb RunAs", exe_str)
+                ])
+                .spawn();
+            std::process::exit(0); // Salir de la instancia sin admin
+        }
+    }
+
     let shared_state: SharedState = Arc::new(Mutex::new(AgentState {
         child: None,
         running: false,
@@ -184,7 +289,10 @@ pub fn run() {
             leer_config,
             guardar_config,
             listar_puertos_com,
-            leer_puerto_com
+            leer_puerto_com,
+            registrar_autostart,
+            eliminar_autostart,
+            autostart_habilitado
         ])
         .run(tauri::generate_context!())
         .expect("Error al iniciar la app del agente");

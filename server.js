@@ -7,6 +7,7 @@ const rateLimit = require('express-rate-limit');
 const dotenv = require('dotenv');
 const os = require('os');
 const mongoose = require('mongoose');
+const compression = require('compression');
 
 // Cargar variables de entorno
 dotenv.config();
@@ -19,6 +20,7 @@ const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 // Inicializar Express
 const app = express();
+app.use(compression()); // Comprimir respuestas
 app.set('trust proxy', 1);
 
 // Ruta raíz para evitar 404 en /

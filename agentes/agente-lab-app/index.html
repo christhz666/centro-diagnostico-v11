@@ -352,6 +352,10 @@
         <button class="btn btn-danger" id="btn-detener" onclick="detenerAgente()" disabled>
           ■ Detener
         </button>
+        <button class="btn" id="btn-autostart" onclick="toggleAutostart()"
+          style="background:var(--surface2);color:var(--muted);border:1px solid var(--border);">
+          ⏰ Inicio con Windows: ...
+        </button>
       </div>
     </div>
   </aside>
@@ -483,6 +487,54 @@
       addLog(`❌ ${e}`, 'error');
     }
   };
+
+  // Auto-arrancar el agente al abrir la app
+  window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+      invoke('estado_agente').then(corriendo => {
+        if (!corriendo) {
+          addLog('🔅 Iniciando agente automáticamente...', 'info');
+          window.iniciarAgente();
+        } else {
+          addLog('ℹ️ El agente ya estaba corriendo', 'info');
+          setEstado(true);
+        }
+      }).catch(() => window.iniciarAgente());
+    }, 800);
+  });
+
+  window.toggleAutostart = async () => {
+    const enabled = await invoke('autostart_habilitado');
+    try {
+      if (enabled) {
+        const msg = await invoke('eliminar_autostart');
+        addLog(`⏰ ${msg}`, 'warn');
+      } else {
+        const msg = await invoke('registrar_autostart');
+        addLog(`⏰ ${msg}`, 'ok');
+      }
+      actualizarBtnAutostart();
+    } catch (e) {
+      addLog(`❌ Error autostart: ${e}`, 'error');
+    }
+  };
+
+  async function actualizarBtnAutostart() {
+    const btn = document.getElementById('btn-autostart');
+    if (!btn) return;
+    try {
+      const enabled = await invoke('autostart_habilitado');
+      if (enabled) {
+        btn.textContent = '⏰ Inicio con Windows: ✅ Activo';
+        btn.style.color = 'var(--green)';
+        btn.style.borderColor = 'var(--green)';
+      } else {
+        btn.textContent = '⏰ Inicio con Windows: ❌ Inactivo';
+        btn.style.color = 'var(--muted)';
+        btn.style.borderColor = 'var(--border)';
+      }
+    } catch (_) {}
+  }
 
   window.detenerAgente = async () => {
     try {
@@ -701,6 +753,7 @@
     }
     // Escanear puertos COM automáticamente al iniciar
     escanearPuertos();
+    actualizarBtnAutostart();
   }
 
   cargarConfig();
