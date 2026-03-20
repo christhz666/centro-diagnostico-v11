@@ -40,7 +40,9 @@
     "start": "react-scripts start",
     "build": "node scripts/build.js",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "tauri:dev": "npx @tauri-apps/cli dev",
+    "tauri:build": "npx @tauri-apps/cli build"
   },
   "eslintConfig": {
     "extends": [
