@@ -381,6 +381,7 @@ class ApiService {
     async getResultadosPorFactura(num) { return this.request('/resultados/factura/' + num); }
     async createResultado(data) { return this.request('/resultados', { method: 'POST', body: JSON.stringify(data) }); }
     async updateResultado(id, data) { return this.request('/resultados/' + id, { method: 'PUT', body: JSON.stringify(data) }); }
+    async actualizarResultado(id, data) { return this.updateResultado(id, data); }
     async validarResultado(id, data) {
         return this.request('/resultados/' + id + '/validar', {
             method: 'PATCH', body: JSON.stringify(data)

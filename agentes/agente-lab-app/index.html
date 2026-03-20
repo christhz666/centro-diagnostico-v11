@@ -222,6 +222,58 @@
       margin-top: 8px;
     }
 
+    /* ─── COM PORTS ─── */
+    .com-port-list { display: grid; gap: 8px; margin: 10px 0; }
+    .com-port-item {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+    }
+    .com-port-item.selected { border-color: var(--accent2); }
+    .com-badge {
+      background: var(--accent); color: white;
+      font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 10px;
+      letter-spacing: .5px;
+    }
+    .com-name { font-weight: 600; font-size: 13px; flex: 1; }
+    .btn-test {
+      padding: 5px 12px;
+      background: var(--surface);
+      color: var(--accent2);
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      cursor: pointer; font-size: 12px; font-weight: 600;
+      transition: background .15s;
+    }
+    .btn-test:hover { background: var(--accent); color: white; }
+    .com-result {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+      font-family: monospace; font-size: 12px;
+      color: var(--green);
+      min-height: 80px;
+      max-height: 150px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .btn-scan {
+      padding: 7px 14px;
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer; font-size: 12px; font-weight: 600;
+      display: flex; align-items: center; gap: 6px;
+      transition: all .2s;
+    }
+    .btn-scan:hover { border-color: var(--accent2); color: var(--accent2); }
+
     /* ─── TABS ─── */
     .tab-bar {
       background: var(--surface);
@@ -335,19 +387,63 @@
         <input id="cfg-servidor-url" type="url" placeholder="https://miesperanzalab.duckdns.org" />
       </div>
 
-      <div class="section-title" style="margin-top:8px;">Equipos de laboratorio</div>
-      <div id="cfg-equipos-container"></div>
-
-      <div class="section-title" style="margin-top:8px;">Registro</div>
-      <div class="field"><label>Archivo de log</label><input id="cfg-log" type="text" placeholder="agente.log" /></div>
-      <div class="field">
-        <label>Nivel de log</label>
-        <select id="cfg-loglevel">
-          <option value="INFO">INFO</option>
-          <option value="DEBUG">DEBUG</option>
-          <option value="ERROR">ERROR</option>
-        </select>
+      <!-- PUERTOS COM -->
+      <div class="section-title" style="margin-top:16px;">
+        🔌 Puertos COM detectados
+        <button class="btn-scan" onclick="escanearPuertos()" style="float:right;margin-top:-4px;">🔍 Actualizar</button>
       </div>
+      <div id="com-ports-list" class="com-port-list">
+        <p style="color:var(--muted);font-size:12px">Escaneando puertos...</p>
+      </div>
+
+      <!-- PANEL DE PRUEBA -->
+      <div class="section-title" style="margin-top:16px;">🧪 Panel de Prueba de Puerto</div>
+      <div style="display:grid;gap:10px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;">
+          <div class="field">
+            <label>Puerto COM</label>
+            <select id="test-puerto"><option value="">-- Selecciona --</option></select>
+          </div>
+          <div class="field">
+            <label>Velocidad (baud)</label>
+            <select id="test-baud">
+              <option>9600</option><option>19200</option><option>38400</option>
+              <option selected>57600</option><option>115200</option>
+            </select>
+          </div>
+          <div class="field" style="justify-content:flex-end;">
+            <label>&nbsp;</label>
+            <button class="btn btn-primary" id="btn-leer" onclick="leerPuerto()" style="height:40px;padding:0 16px;">▶ Leer (5s)</button>
+          </div>
+        </div>
+        <div id="com-resultado" class="com-result">(Selecciona un puerto y haz clic en Leer)</div>
+        <div id="guardar-equipo-panel" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;">
+          <div style="font-size:12px;color:var(--green);margin-bottom:8px;">✅ Datos recibidos — Nombra el equipo para guardarlo</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;">
+            <div class="field"><label>Nombre del equipo</label><input id="equipo-nombre" type="text" placeholder="Mindray BC-6800" /></div>
+            <div class="field">
+              <label>Tipo</label>
+              <select id="equipo-tipo">
+                <option value="hematologia">Hematología</option>
+                <option value="quimica">Química Clínica</option>
+                <option value="orina">Uroanálisis</option>
+                <option value="coagulacion">Coagulación</option>
+                <option value="otro">Otro</option>
+              </select>
+            </div>
+            <div class="field" style="justify-content:flex-end;">
+              <label>&nbsp;</label>
+              <button class="btn btn-primary" onclick="guardarEquipoCOM()" style="height:40px;padding:0 14px;">💾 Guardar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title" style="margin-top:16px;">Equipos configurados</div>
+      <div id="cfg-equipos-container" style="margin-bottom:8px;"></div>
+
+      <div class="section-title" style="margin-top:16px;">Registro</div>
+      <div class="field"><label>Archivo de log</label><input id="cfg-log" type="text" placeholder="agente.log" /></div>
 
       <button class="btn btn-primary btn-save" onclick="guardarConfig()">💾 Guardar configuración</button>
     </div>
@@ -427,6 +523,113 @@
     }
   };
 
+  // ── Puertos COM ──────────────────────────────────────
+  let puertosDetectados = [];
+  let ultimoPuertoLeido = null;
+
+  window.escanearPuertos = async () => {
+    const listEl = document.getElementById('com-ports-list');
+    const selectEl = document.getElementById('test-puerto');
+    listEl.innerHTML = '<p style="color:var(--muted);font-size:12px">Escaneando...</p>';
+    try {
+      puertosDetectados = await invoke('listar_puertos_com');
+      if (puertosDetectados.length === 0) {
+        listEl.innerHTML = '<p style="color:var(--muted);font-size:12px">No se detectaron puertos COM. Conecta el equipo y haz clic en Actualizar.</p>';
+        selectEl.innerHTML = '<option value="">-- Sin puertos --</option>';
+      } else {
+        listEl.innerHTML = puertosDetectados.map(p => `
+          <div class="com-port-item">
+            <span class="com-badge">DETECTADO</span>
+            <span class="com-name">🔌 ${p}</span>
+            <button class="btn-test" onclick="seleccionarPuerto('${p}')">Seleccionar</button>
+          </div>`).join('');
+        selectEl.innerHTML = '<option value="">-- Selecciona --</option>' +
+          puertosDetectados.map(p => `<option value="${p}">${p}</option>`).join('');
+      }
+    } catch (e) {
+      listEl.innerHTML = `<p style="color:var(--red);font-size:12px">Error: ${e}</p>`;
+    }
+  };
+
+  window.seleccionarPuerto = (puerto) => {
+    document.getElementById('test-puerto').value = puerto;
+    document.querySelectorAll('.com-port-item').forEach(el => {
+      el.classList.toggle('selected', el.querySelector('.com-name').textContent.includes(puerto));
+    });
+  };
+
+  window.leerPuerto = async () => {
+    const puerto = document.getElementById('test-puerto').value;
+    const baud = parseInt(document.getElementById('test-baud').value);
+    if (!puerto) { addLog('⚠️ Selecciona un puerto COM primero', 'warn'); return; }
+    const btn = document.getElementById('btn-leer');
+    const resultEl = document.getElementById('com-resultado');
+    btn.disabled = true; btn.textContent = '⏳ Leyendo...';
+    resultEl.textContent = `Abriendo ${puerto} a ${baud} baud...`;
+    try {
+      const datos = await invoke('leer_puerto_com', { puerto, baudRate: baud, segundos: 5 });
+      resultEl.textContent = datos;
+      ultimoPuertoLeido = puerto;
+      document.getElementById('guardar-equipo-panel').style.display = 'block';
+      addLog(`✅ Lectura de ${puerto} completada (${datos.length} bytes)`, 'ok');
+    } catch (e) {
+      resultEl.textContent = `Error: ${e}`;
+      addLog(`❌ Error leyendo ${puerto}: ${e}`, 'error');
+    }
+    btn.disabled = false; btn.textContent = '▶ Leer (5s)';
+  };
+
+  window.guardarEquipoCOM = async () => {
+    const nombre = document.getElementById('equipo-nombre').value.trim();
+    const tipo = document.getElementById('equipo-tipo').value;
+    const baud = parseInt(document.getElementById('test-baud').value);
+    if (!nombre || !ultimoPuertoLeido) { addLog('⚠️ Ingresa el nombre del equipo primero', 'warn'); return; }
+    if (!config) config = { servidor: { url: '', apiKey: '' }, equipos: [], logArchivo: 'agente.log' };
+    if (!config.equipos) config.equipos = [];
+    // Remover si ya existe ese puerto
+    config.equipos = config.equipos.filter(e => e.comPort !== ultimoPuertoLeido);
+    config.equipos.push({ nombre, tipo, protocolo: 'SERIAL', comPort: ultimoPuertoLeido, baudRate: baud, activo: true });
+    try {
+      await invoke('guardar_config', { contenido: JSON.stringify(config, null, 2) });
+      addLog(`✅ Equipo "${nombre}" guardado en ${ultimoPuertoLeido}`, 'ok');
+      document.getElementById('guardar-equipo-panel').style.display = 'none';
+      document.getElementById('equipo-nombre').value = '';
+      renderEquiposConfig();
+    } catch (e) {
+      addLog(`❌ Error guardando equipo: ${e}`, 'error');
+    }
+  };
+
+  function renderEquiposConfig() {
+    const cont = document.getElementById('cfg-equipos-container');
+    const equipos = config?.equipos || [];
+    if (equipos.length === 0) {
+      cont.innerHTML = '<p style="color:var(--muted);font-size:12px;margin:8px 0;">Sin equipos guardados. Usa el panel de prueba arriba.</p>';
+    } else {
+      cont.innerHTML = equipos.map((eq, i) => `
+        <div style="display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;margin-bottom:6px;">
+          <div style="flex:1;">
+            <div style="font-weight:600;font-size:13px;">${eq.nombre}</div>
+            <div style="font-size:11px;color:var(--muted);">${eq.tipo?.toUpperCase()} · ${eq.comPort || eq.ip} · ${eq.baudRate || eq.puerto || ''} baud</div>
+          </div>
+          <button class="btn-test" style="color:var(--red);border-color:var(--red);" onclick="eliminarEquipo(${i})">🗑</button>
+        </div>`).join('');
+    }
+    // Actualizar también el sidebar
+    const lista = document.getElementById('equipos-list');
+    if (lista) {
+      lista.innerHTML = equipos.length === 0 ? '<p style="color:var(--muted);font-size:12px">Sin equipos configurados</p>' :
+        equipos.map(eq => `<div class="equipo-item"><div class="equipo-dot" style="background:var(--green)"></div><div><div class="equipo-name">${eq.nombre}</div><div class="equipo-type">${eq.tipo?.toUpperCase()} · ${eq.comPort || eq.ip}</div></div></div>`).join('');
+    }
+  }
+
+  window.eliminarEquipo = async (idx) => {
+    config.equipos.splice(idx, 1);
+    await invoke('guardar_config', { contenido: JSON.stringify(config, null, 2) });
+    renderEquiposConfig();
+    addLog('🗑 Equipo eliminado', 'warn');
+  };
+
   // ── Helpers UI ───────────────────────────────────────
 
   function setEstado(isRunning) {
@@ -486,31 +689,18 @@
 
   async function cargarConfig() {
     try {
+      // leer_config ahora auto-crea config.json si no existe
       const raw = await invoke('leer_config');
       config = JSON.parse(raw);
       document.getElementById('cfg-servidor-url').value = config.servidor?.url || '';
       document.getElementById('cfg-log').value = config.logArchivo || 'agente.log';
-
-      // Mostrar equipos
-      const lista = document.getElementById('equipos-list');
-      const equipos = config.equipos || [];
-      if (equipos.length === 0) {
-        lista.innerHTML = '<p style="color:var(--muted);font-size:12px">Sin equipos configurados</p>';
-      } else {
-        lista.innerHTML = equipos.map(eq => `
-          <div class="equipo-item">
-            <div class="equipo-dot" style="background:${eq.activo !== false ? 'var(--green)' : 'var(--red)'}"></div>
-            <div>
-              <div class="equipo-name">${eq.nombre || eq.id}</div>
-              <div class="equipo-type">${eq.tipo?.toUpperCase() || 'Desconocido'} · ${eq.conexion?.tipo || '?'}:${eq.conexion?.host || eq.conexion?.puerto || ''}</div>
-            </div>
-          </div>`).join('');
-      }
+      addLog('⚙️ Configuración cargada correctamente', 'ok');
+      renderEquiposConfig();
     } catch (e) {
-      document.getElementById('equipos-list').innerHTML =
-        '<p style="color:var(--red);font-size:12px">config.json no encontrado junto al ejecutable. Coloca el archivo ahí y recarga.</p>';
-      addLog(`⚠️ ${e}`, 'warn');
+      addLog(`⚠️ Error cargando config: ${e}`, 'warn');
     }
+    // Escanear puertos COM automáticamente al iniciar
+    escanearPuertos();
   }
 
   cargarConfig();

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FaBarcode, FaSearch, FaUser, FaFlask, FaPrint, FaCheckCircle, FaClock, FaTimes, FaSpinner } from 'react-icons/fa';
+import { FaBarcode, FaSearch, FaUser, FaFlask, FaPrint, FaCheckCircle, FaClock, FaTimes, FaSpinner, FaEdit, FaSave } from 'react-icons/fa';
 import api from '../services/api';
 
 const ConsultaRapida = () => {
@@ -9,6 +9,9 @@ const ConsultaRapida = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [resultadoSeleccionado, setResultadoSeleccionado] = useState(null);
+  const [editandoResultado, setEditandoResultado] = useState(null);
+  const [valoresEditados, setValoresEditados] = useState([]);
+  const [guardandoEdicion, setGuardandoEdicion] = useState(false);
   const inputRef = useRef(null);
 
   // Constantes para códigos
@@ -433,6 +436,26 @@ const ConsultaRapida = () => {
                         </button>
                       )}
                       <button
+                        onClick={() => {
+                          setEditandoResultado(r);
+                          setValoresEditados(JSON.parse(JSON.stringify(r.valores || [])));
+                        }}
+                        style={{
+                          padding: '8px 15px',
+                          background: '#e67e22',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: 6,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 5,
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        <FaEdit /> Editar
+                      </button>
+                      <button
                         onClick={() => setResultadoSeleccionado(r)}
                         style={{
                           padding: '8px 15px',
@@ -580,6 +603,122 @@ const ConsultaRapida = () => {
                 }}
               >
                 Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de EDICIÓN de resultado */}
+      {editandoResultado && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.75)', display: 'flex',
+          justifyContent: 'center', alignItems: 'center', zIndex: 1100, padding: 20
+        }}>
+          <div style={{
+            background: 'white', padding: 30, borderRadius: 15,
+            maxWidth: 750, width: '100%', maxHeight: '90vh', overflow: 'auto'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h2 style={{ margin: 0, color: '#e67e22', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <FaEdit /> Editar: {editandoResultado.estudio?.nombre}
+              </h2>
+              <button onClick={() => setEditandoResultado(null)} style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer' }}>×</button>
+            </div>
+
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 20 }}>
+              <thead>
+                <tr style={{ background: '#fff3e0' }}>
+                  <th style={{ padding: 10, textAlign: 'left', borderBottom: '2px solid #e67e22', fontSize: 13 }}>Parámetro</th>
+                  <th style={{ padding: 10, textAlign: 'center', borderBottom: '2px solid #e67e22', fontSize: 13 }}>Valor</th>
+                  <th style={{ padding: 10, textAlign: 'center', borderBottom: '2px solid #e67e22', fontSize: 13 }}>Unidad</th>
+                  <th style={{ padding: 10, textAlign: 'center', borderBottom: '2px solid #e67e22', fontSize: 13 }}>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {valoresEditados.map((v, i) => (
+                  <tr key={i} style={{ borderBottom: '1px solid #eee' }}>
+                    <td style={{ padding: 8, fontSize: 13, fontWeight: 600 }}>{v.parametro}</td>
+                    <td style={{ padding: 8 }}>
+                      <input
+                        type="text"
+                        value={v.valor || ''}
+                        onChange={e => {
+                          const copy = [...valoresEditados];
+                          copy[i] = { ...copy[i], valor: e.target.value };
+                          setValoresEditados(copy);
+                        }}
+                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #ddd', borderRadius: 6, textAlign: 'center', fontWeight: 'bold' }}
+                      />
+                    </td>
+                    <td style={{ padding: 8 }}>
+                      <input
+                        type="text"
+                        value={v.unidad || ''}
+                        onChange={e => {
+                          const copy = [...valoresEditados];
+                          copy[i] = { ...copy[i], unidad: e.target.value };
+                          setValoresEditados(copy);
+                        }}
+                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #ddd', borderRadius: 6, textAlign: 'center' }}
+                      />
+                    </td>
+                    <td style={{ padding: 8 }}>
+                      <select
+                        value={v.estado || 'normal'}
+                        onChange={e => {
+                          const copy = [...valoresEditados];
+                          copy[i] = { ...copy[i], estado: e.target.value };
+                          setValoresEditados(copy);
+                        }}
+                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #ddd', borderRadius: 6 }}
+                      >
+                        <option value="normal">Normal</option>
+                        <option value="alto">Alto</option>
+                        <option value="bajo">Bajo</option>
+                        <option value="critico">Crítico</option>
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+              <button
+                disabled={guardandoEdicion}
+                onClick={async () => {
+                  setGuardandoEdicion(true);
+                  try {
+                    await api.actualizarResultado(editandoResultado._id, { valores: valoresEditados });
+                    setResultados(prev => prev.map(r =>
+                      r._id === editandoResultado._id ? { ...r, valores: valoresEditados } : r
+                    ));
+                    setEditandoResultado(null);
+                  } catch (err) {
+                    alert('Error al guardar: ' + (err?.message || err));
+                  }
+                  setGuardandoEdicion(false);
+                }}
+                style={{
+                  flex: 1, padding: 12, background: guardandoEdicion ? '#aaa' : '#e67e22',
+                  color: 'white', border: 'none', borderRadius: 8,
+                  cursor: guardandoEdicion ? 'not-allowed' : 'pointer',
+                  fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
+                }}
+              >
+                {guardandoEdicion ? <FaSpinner className="spin" /> : <FaSave />}
+                {guardandoEdicion ? 'Guardando...' : 'Guardar cambios'}
+              </button>
+              <button
+                onClick={() => setEditandoResultado(null)}
+                style={{
+                  flex: 1, padding: 12, background: '#6c757d', color: 'white',
+                  border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 'bold'
+                }}
+              >
+                Cancelar
               </button>
             </div>
           </div>
