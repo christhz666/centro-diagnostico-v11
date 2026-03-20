@@ -357,7 +357,6 @@
 <script type="module">
   import { invoke } from '@tauri-apps/api/core';
   import { listen } from '@tauri-apps/api/event';
-  import { readTextFile, writeTextFile, BaseDirectory } from '@tauri-apps/plugin-fs';
 
   // ── Estado local ──────────────────────────────────────
 
@@ -421,8 +420,8 @@
     config.servidor.url = document.getElementById('cfg-servidor-url').value;
     config.logArchivo = document.getElementById('cfg-log').value;
     try {
-      await writeTextFile('config.json', JSON.stringify(config, null, 2), { baseDir: BaseDirectory.Resource });
-      addLog('✅ Configuración guardada. Reinicia el agente para aplicar los cambios.', 'ok');
+      const resp = await invoke('guardar_config', { contenido: JSON.stringify(config, null, 2) });
+      addLog(`✅ ${resp}. Reinicia el agente para aplicar los cambios.`, 'ok');
     } catch (e) {
       addLog(`❌ Error al guardar config: ${e}`, 'error');
     }
@@ -487,7 +486,7 @@
 
   async function cargarConfig() {
     try {
-      const raw = await readTextFile('config.json', { baseDir: BaseDirectory.Resource });
+      const raw = await invoke('leer_config');
       config = JSON.parse(raw);
       document.getElementById('cfg-servidor-url').value = config.servidor?.url || '';
       document.getElementById('cfg-log').value = config.logArchivo || 'agente.log';
@@ -509,8 +508,8 @@
       }
     } catch (e) {
       document.getElementById('equipos-list').innerHTML =
-        '<p style="color:var(--red);font-size:12px">No se pudo cargar config.json</p>';
-      addLog(`⚠️ config.json no encontrado: ${e}`, 'warn');
+        '<p style="color:var(--red);font-size:12px">config.json no encontrado junto al ejecutable. Coloca el archivo ahí y recarga.</p>';
+      addLog(`⚠️ ${e}`, 'warn');
     }
   }
 

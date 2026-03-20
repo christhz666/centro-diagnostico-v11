@@ -86,6 +86,23 @@ fn estado_agente(state: tauri::State<'_, SharedState>) -> bool {
     state.lock().unwrap().running
 }
 
+#[tauri::command]
+fn leer_config() -> Result<String, String> {
+    let app_dir = get_app_dir();
+    let config_path = app_dir.join("config.json");
+    std::fs::read_to_string(&config_path)
+        .map_err(|_| format!("config.json no encontrado en {}", app_dir.display()))
+}
+
+#[tauri::command]
+fn guardar_config(contenido: String) -> Result<String, String> {
+    let app_dir = get_app_dir();
+    let config_path = app_dir.join("config.json");
+    std::fs::write(&config_path, contenido)
+        .map_err(|e| format!("Error al guardar en {}: {}", app_dir.display(), e))?;
+    Ok("Configuración guardada correctamente".to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let shared_state: SharedState = Arc::new(Mutex::new(AgentState {
@@ -102,7 +119,9 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             iniciar_agente,
             detener_agente,
-            estado_agente
+            estado_agente,
+            leer_config,
+            guardar_config
         ])
         .run(tauri::generate_context!())
         .expect("Error al iniciar la app del agente");
