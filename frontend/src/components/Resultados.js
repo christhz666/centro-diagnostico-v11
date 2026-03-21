@@ -149,9 +149,38 @@ const Resultados = () => {
     const isMatch = term === '' || 
                     r.paciente?.nombre?.toLowerCase().includes(term) || 
                     r.paciente?.apellido?.toLowerCase().includes(term) || 
-                    r.estudio?.nombre?.toLowerCase().includes(term);
+                    r.estudio?.nombre?.toLowerCase().includes(term) ||
+                    r.codigoMuestra?.toLowerCase().includes(term) ||
+                    r.paciente?.cedula?.toLowerCase().includes(term);
     return isMatch;
   });
+
+  const buscarPorCodigoBarras = async (codigo) => {
+    try {
+      setLoading(true);
+      const res = await api.getResultadoPorCodigoMuestra(codigo);
+      if (res && res.data) {
+        abrirModalEditar(res.data);
+      } else {
+        alert('Código de muestra no encontrado o no tiene un resultado asociado.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('No se encontró ningún resultado para el código: ' + codigo);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter' && filtroPaciente.trim() !== '') {
+      // Se asume que si tiene un guión o prefijo L, o es alfanumérico largo, es un código de barras
+      const isBarcode = filtroPaciente.length > 3; 
+      if (isBarcode) {
+        buscarPorCodigoBarras(filtroPaciente.trim());
+      }
+    }
+  };
 
   const citasPendientesList = citas.filter(c => !resultados.find(r => r.cita?._id === c._id || r.cita === c._id));
   const countPendientes = citasPendientesList.length;
@@ -251,12 +280,13 @@ const Resultados = () => {
         <div className="relative flex-1 min-w-[300px]">
           <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 dark:text-[#bacac7]/50">search</span>
           <input 
-             className="w-full bg-white dark:bg-[#1d2027] border border-gray-200 dark:border-white/5 rounded-lg pl-12 pr-4 py-3 text-sm font-label text-gray-900 dark:text-[#e0e2ec] focus:ring-1 focus:ring-[#47fbed]/30 transition-all outline-none placeholder:text-gray-600 dark:text-[#bacac7]/50" 
-             placeholder="Buscar por paciente, estudio..." 
-             type="text"
-             value={filtroPaciente}
-             onChange={e => setFiltroPaciente(e.target.value)}
-          />
+              className="w-full bg-white dark:bg-[#1d2027] border border-gray-200 dark:border-white/5 rounded-lg pl-12 pr-4 py-3 text-sm font-label text-gray-900 dark:text-[#e0e2ec] focus:ring-1 focus:ring-[#47fbed]/30 transition-all outline-none placeholder:text-gray-600 dark:text-[#bacac7]/50" 
+              placeholder="Buscar paciente... o Escanea código de muestra y pulsa Enter" 
+              type="text"
+              value={filtroPaciente}
+              onChange={e => setFiltroPaciente(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
+           />
         </div>
         <div className="flex items-center gap-3">
           <select 
