@@ -340,9 +340,9 @@ const Resultados = () => {
 
       {/* Data Entry Modal Overlay */}
       {showModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-gray-100 dark:bg-[#32353c] w-full max-w-4xl rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.6)] border border-gray-200 dark:border-white/10 overflow-hidden my-8">
-            <div className="px-6 py-4 border-b border-gray-200 dark:border-white/5 flex items-center justify-between bg-white/5 sticky top-0 z-20 backdrop-blur-md">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+          <div className="bg-gray-100 dark:bg-[#32353c] w-full max-w-4xl max-h-[90vh] flex flex-col rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.6)] border border-gray-200 dark:border-white/10 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-white/5 flex items-center justify-between bg-white/5 z-20 backdrop-blur-md flex-none">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-[#47fbed]/10 flex items-center justify-center text-[#47fbed]">
                   <span className="material-symbols-outlined">science</span>
@@ -368,7 +368,7 @@ const Resultados = () => {
               </button>
             </div>
             
-            <div className="p-6 md:p-8 space-y-8">
+            <div className="p-6 md:p-8 space-y-8 overflow-y-auto flex-1 custom-scrollbar">
               {/* Parameter Table Inputs */}
               <div>
                   <h4 className="font-label text-xs uppercase tracking-widest text-gray-600 dark:text-[#bacac7] mb-4">Parámetros del Estudio</h4>
@@ -449,7 +449,7 @@ const Resultados = () => {
               </div>
             </div>
 
-            <div className="p-6 bg-gray-50 dark:bg-[#10131a]/80 border-t border-gray-200 dark:border-white/5 flex gap-4 justify-end sticky bottom-0 z-20 backdrop-blur-md">
+            <div className="p-6 bg-gray-50 dark:bg-[#10131a]/80 border-t border-gray-200 dark:border-white/5 flex gap-4 justify-end z-20 backdrop-blur-md flex-none">
               <button onClick={() => { setShowModal(false); setResultadoEditar(null); setCitaSeleccionada(null); }} className="px-6 py-2.5 rounded-lg font-headline text-sm font-bold text-gray-600 dark:text-[#bacac7] hover:bg-white/10 transition-all">
                   Cancelar
               </button>
