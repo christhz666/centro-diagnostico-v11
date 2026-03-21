@@ -36,6 +36,10 @@
         @apply antialiased text-slate-800 dark:text-slate-200 bg-background-light dark:bg-background-dark font-body;
     }
     
+    .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+
     .dark body {
         /* The Celestial Lab - Starry Pattern Background */
         background-color: #010413;
