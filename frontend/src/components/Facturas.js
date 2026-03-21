@@ -287,84 +287,99 @@ const Facturas = () => {
       </div>
 
       {/* ── Stat Tiles ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24, marginBottom: 44 }}>
-        <div className="glass-card" style={{ padding: 28 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-            <div style={{ fontSize: 11, fontWeight: 800, color: theme.textMuted, textTransform: 'uppercase' }}>Caja de Hoy</div>
-            <button onClick={turnoActivo ? cerrarTurnoManual : abrirTurnoManual} style={{ background: 'none', border: 'none', color: '#2563eb', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
-              {turnoActivo ? 'CERRAR CAJA' : 'ABRIR CAJA'}
-            </button>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-            <h2 style={{ margin: 0, fontSize: 34, fontWeight: 800, color: theme.textStrong }}>RD$ {calcularTotalHoy().toLocaleString()}</h2>
-            <span style={{ fontSize: 12, color: turnoActivo ? '#10b981' : '#ef4444', fontWeight: 800 }}>
-              {turnoActivo ? 'ACTIVA' : 'CERRADA'}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+        {/* Card 1 */}
+        <div className="bg-[#1a2235] rounded-2xl p-8 border border-slate-800/50 shadow-xl flex justify-between" data-purpose="stat-card">
+          <div>
+            <span className="text-slate-400 text-xs font-bold uppercase tracking-widest block mb-2">Caja de Hoy</span>
+            <div className="text-4xl font-bold text-white mb-4">RD$ {calcularTotalHoy().toLocaleString()}</div>
+            <span style={{ cursor: 'pointer' }} onClick={turnoActivo ? cerrarTurnoManual : abrirTurnoManual} className={`${turnoActivo ? 'bg-emerald-500/20 text-emerald-500' : 'bg-red-500/20 text-red-500'} text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest`}>
+              {turnoActivo ? 'ACTIVA (Cerrar)' : 'CERRADA (Abrir)'}
             </span>
+          </div>
+          <div className="w-12 h-12 rounded-xl bg-slate-800/60 flex items-center justify-center border border-slate-700">
+            <FaMoneyBillWave className="text-slate-400 w-6 h-6" />
           </div>
         </div>
 
-        <div className="glass-card" style={{ padding: 28 }}>
-          <div style={{ fontSize: 11, fontWeight: 800, color: theme.textMuted, textTransform: 'uppercase', marginBottom: 16 }}>Operaciones del Mes</div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-            <h2 style={{ margin: 0, fontSize: 34, fontWeight: 800, color: theme.textStrong }}>RD$ {facturas.reduce((sum, f) => sum + (f.total || 0), 0).toLocaleString()}</h2>
-            <div style={{ color: '#2563eb' }}><FaChartLine size={20} /></div>
+        {/* Card 2 */}
+        <div className="bg-[#1a2235] rounded-2xl p-8 border border-slate-800/50 shadow-xl flex justify-between" data-purpose="stat-card">
+          <div>
+            <span className="text-slate-400 text-xs font-bold uppercase tracking-widest block mb-2">Operaciones del Mes</span>
+            <div className="text-4xl font-bold text-white mb-4">RD$ {facturas.reduce((sum, f) => sum + (f.total || 0), 0).toLocaleString()}</div>
+          </div>
+          <div className="w-12 h-12 rounded-xl bg-slate-800/60 flex items-center justify-center border border-slate-700">
+            <FaChartLine className="text-emerald-500 w-6 h-6" />
           </div>
         </div>
       </div>
 
       {/* ── Tabla de Historial ── */}
-      <div className="glass-card overflow-hidden">
-        <div style={{ padding: '24px 32px', borderBottom: `1px solid ${theme.borderSoft}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: theme.textStrong }}>Registros Emitidos</h2>
-          <select value={filtroEstado} onChange={e => setFiltroEstado(e.target.value)} style={{ padding: '8px 12px', borderRadius: 8, border: `1px solid ${theme.border}`, outline: 'none', fontSize: 13, background: theme.surface, color: theme.text }}>
-            <option value="">Estados: Todos</option>
-            <option value="pagada">Pagadas</option>
-            <option value="emitida">Pendientes</option>
-            <option value="anulada">Anuladas</option>
-          </select>
+      <section className="bg-[#1a2235] rounded-2xl border border-slate-800/50 shadow-2xl overflow-hidden">
+        <div className="px-8 py-6 border-b border-slate-800/50 flex items-center justify-between">
+          <h4 className="text-lg font-bold text-white">Registros Emitidos</h4>
+          <div className="flex items-center">
+            <label className="text-xs text-slate-400 mr-2">Estados:</label>
+            <select value={filtroEstado} onChange={e => setFiltroEstado(e.target.value)} className="bg-slate-900 border border-slate-700 rounded-md text-sm text-white focus:ring-[#00e1ff] px-2 py-1 outline-none">
+              <option value="">Todos</option>
+              <option value="pagada">Pagadas</option>
+              <option value="emitida">Pendientes</option>
+              <option value="anulada">Anuladas</option>
+            </select>
+          </div>
         </div>
 
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ background: theme.surfaceMuted }}>
-                {['COMPROBANTE', 'FECHA', 'PACIENTE', 'TOTAL RD$', 'PAGADO', 'PENDIENTE', 'ESTADO', 'ACCIONES'].map(h => (
-                  <th key={h} style={{ padding: '16px 24px', textAlign: (h === 'TOTAL RD$' || h === 'PAGADO' || h === 'PENDIENTE') ? 'right' : 'left', color: theme.textMuted, fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>{h}</th>
-                ))}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-slate-900/40 text-[10px] uppercase tracking-widest text-slate-500 font-bold border-b border-slate-800/50">
+              <tr>
+                <th className="px-8 py-4">Comprobante</th>
+                <th className="px-4 py-4">Fecha</th>
+                <th className="px-4 py-4">Paciente</th>
+                <th className="px-4 py-4 text-right">Total RD$</th>
+                <th className="px-4 py-4 text-right">Pagado</th>
+                <th className="px-4 py-4 text-right">Pendiente</th>
+                <th className="px-4 py-4">Estado</th>
+                <th className="px-8 py-4 text-center">Acciones</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-800/30">
               {facturas.length === 0 ? (
-                <tr><td colSpan="8" style={{ padding: '60px', textAlign: 'center', color: theme.textMuted }}>Sin transacciones registradas</td></tr>
+                <tr><td colSpan="8" className="px-8 py-10 text-center text-slate-500 text-sm">Sin transacciones registradas</td></tr>
               ) : (
                 facturas.map(f => {
                   const pendiente = Math.max(0, (f.total || 0) - (f.montoPagado || 0));
                   const tienePendiente = pendiente > 0 && f.estado !== 'anulada';
                   return (
-                    <tr key={f._id} style={{ borderBottom: `1px solid ${theme.borderSoft}`, transition: 'all 0.1s' }} className="hover-row">
-                      <td style={{ padding: '20px 24px', color: '#2563eb', fontWeight: 700, fontSize: 13 }}>#{f.numero || f.numero_factura}</td>
-                      <td style={{ padding: '20px 24px', color: theme.textMuted, fontSize: 14 }}>{new Date(f.fecha_factura || f.createdAt).toLocaleDateString('es-DO')}</td>
-                      <td style={{ padding: '20px 24px', color: theme.text, fontWeight: 600, fontSize: 14 }}>{f.datosCliente?.nombre || f.paciente?.nombre || 'Paciente'}</td>
-                      <td style={{ padding: '20px 24px', textAlign: 'right', fontWeight: 800, color: theme.textStrong, fontSize: 15 }}>${(f.total || 0).toLocaleString()}</td>
-                      <td style={{ padding: '20px 24px', textAlign: 'right', fontWeight: 600, color: '#10b981', fontSize: 14 }}>${(f.montoPagado || 0).toLocaleString()}</td>
-                      <td style={{ padding: '20px 24px', textAlign: 'right', fontWeight: 700, color: tienePendiente ? '#ef4444' : '#10b981', fontSize: 14 }}>
+                    <tr key={f._id} className="hover:bg-white/5 transition-colors">
+                      <td className="px-8 py-4 font-mono text-xs text-white">#{f.numero || f.numero_factura}</td>
+                      <td className="px-4 py-4 text-xs text-slate-300">{new Date(f.fecha_factura || f.createdAt).toLocaleDateString('es-DO')}</td>
+                      <td className="px-4 py-4 text-xs font-medium text-slate-200">{f.datosCliente?.nombre || f.paciente?.nombre || 'Paciente'}</td>
+                      <td className="px-4 py-4 text-xs font-bold text-white text-right">${(f.total || 0).toLocaleString()}</td>
+                      <td className="px-4 py-4 text-xs text-emerald-400 font-semibold text-right">${(f.montoPagado || 0).toLocaleString()}</td>
+                      <td className={`px-4 py-4 text-xs ${tienePendiente ? 'text-red-400 font-bold' : 'text-slate-500'} text-right`}>
                         {tienePendiente ? `$${pendiente.toLocaleString()}` : '$0'}
                       </td>
-                      <td style={{ padding: '20px 24px' }}>
-                        <span style={{
-                          padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
-                          background: f.estado === 'pagada' ? '#ecfdf5' : f.estado === 'anulada' ? '#fef2f2' : '#fff3cd',
-                          color: f.estado === 'pagada' ? '#10b981' : f.estado === 'anulada' ? '#ef4444' : '#856404'
-                        }}>{f.estado === 'emitida' && tienePendiente ? 'pendiente' : f.estado}</span>
+                      <td className="px-4 py-4">
+                        <span className={`${
+                          f.estado === 'pagada' ? 'bg-emerald-500/20 text-emerald-400' :
+                          (f.estado === 'anulada' ? 'bg-red-500/20 text-red-400' : 'bg-yellow-500/20 text-yellow-500')
+                        } text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider`}>
+                          {f.estado === 'emitida' && tienePendiente ? 'Pendiente' : f.estado}
+                        </span>
                       </td>
-                      <td style={{ padding: '20px 24px' }}>
-                        <div style={{ display: 'flex', gap: 8 }}>
-                          <button onClick={() => verDetalle(f)} style={{ background: theme.surfaceMuted, border: 'none', color: theme.textStrong, width: 32, height: 32, borderRadius: 6, cursor: 'pointer' }}><FaEye size={12} /></button>
-                          <button onClick={() => imprimirFactura(f)} style={{ background: '#eff6ff', border: 'none', color: '#2563eb', width: 32, height: 32, borderRadius: 6, cursor: 'pointer' }}><FaPrint size={12} /></button>
-                          {tienePendiente && (
-                            <button onClick={() => { setShowModalPago(f); setMontoPago(pendiente.toString()); }} style={{ background: '#ecfdf5', border: 'none', color: '#10b981', width: 32, height: 32, borderRadius: 6, cursor: 'pointer' }} title="Registrar pago"><FaMoneyBillWave size={12} /></button>
-                          )}
-                        </div>
+                      <td className="px-8 py-4 flex justify-center gap-2">
+                        <button onClick={() => verDetalle(f)} className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 text-slate-400 transition-colors">
+                          <FaEye className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => imprimirFactura(f)} className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 text-[#00e1ff] transition-colors">
+                          <FaPrint className="w-4 h-4" />
+                        </button>
+                        {tienePendiente && (
+                          <button onClick={() => { setShowModalPago(f); setMontoPago(pendiente.toString()); }} className="p-2 bg-emerald-900/30 hover:bg-emerald-800/50 rounded-lg border border-emerald-800/50 text-emerald-400 transition-colors" title="Registrar pago">
+                            <FaMoneyBillWave className="w-4 h-4" />
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );
@@ -373,7 +388,7 @@ const Facturas = () => {
             </tbody>
           </table>
         </div>
-      </div>
+      </section>
 
       {/* ── Modales ── */}
       {facturaDetalle && (

@@ -37,13 +37,16 @@
     }
     
     .dark body {
-        /* Subtle starry texture mimicking The Cosmic Gallery deep space aesthetics */
-        background-color: #0B1120;
-        background-image: radial-gradient(circle at center, rgba(255,255,255,0.01) 0%, transparent 10%),
-                          radial-gradient(circle at 10% 20%, rgba(255,255,255,0.02) 1px, transparent 1px),
-                          radial-gradient(circle at 90% 80%, rgba(255,255,255,0.02) 1px, transparent 1px),
-                          radial-gradient(circle at 50% 50%, rgba(255,255,255,0.015) 1px, transparent 1px);
-        background-size: 100% 100%, 200px 200px, 300px 300px, 150px 150px;
+        /* The Celestial Lab - Starry Pattern Background */
+        background-color: #010413;
+        background-image: 
+            radial-gradient(1px 1px at 20px 30px, #ffffff22, rgba(0,0,0,0)),
+            radial-gradient(1.5px 1.5px at 40px 70px, #ffffff33, rgba(0,0,0,0)),
+            radial-gradient(1px 1px at 50px 160px, #ffffff22, rgba(0,0,0,0)),
+            radial-gradient(1.5px 1.5px at 90px 40px, #ffffff33, rgba(0,0,0,0)),
+            radial-gradient(1px 1px at 130px 80px, #ffffff22, rgba(0,0,0,0)),
+            radial-gradient(1px 1px at 160px 120px, #ffffff33, rgba(0,0,0,0));
+        background-size: 200px 200px;
         background-attachment: fixed;
     }
 
@@ -56,9 +59,7 @@
         backdrop-filter: blur(12px);
     }
     
-    .glass-card {
-        @apply bg-white shadow-xl rounded-2xl border border-gray-100 dark:bg-surface-dark/80 dark:border-white/5 dark:shadow-glass-glow dark:backdrop-blur-md;
-    }
+
 
     .dark input:not([type="checkbox"]):not([type="radio"]),
     .dark select,
@@ -95,6 +96,17 @@
         color: #cbd5e1;
     }
 
+    .glass-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 24px;
+}
+.dark .glass-card {
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
     .dark span {
         color: inherit;
     }

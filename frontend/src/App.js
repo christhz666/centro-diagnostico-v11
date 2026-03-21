@@ -248,7 +248,7 @@ function App() {
                   )}
 
                   {/* Sidebar */}
-                  <aside className={`fixed top-16 bottom-0 left-0 z-40 transition-all duration-300 ease-in-out bg-white dark:bg-background-dark border-r border-gray-200 dark:border-white/5 flex flex-col
+                  <aside className={`fixed top-16 bottom-0 left-0 z-40 transition-all duration-300 ease-in-out bg-white dark:bg-[#020617] border-r border-gray-200 dark:border-white/10 flex flex-col
                   ${isMobile
                       ? (sidebarOpen ? 'w-72 translate-x-0 shadow-2xl' : '-translate-x-full w-72')
                       : (sidebarOpen ? 'w-64 translate-x-0' : 'w-20 translate-x-0')}
@@ -271,10 +271,10 @@ function App() {
                           end={item.path === '/'}
                           onClick={() => isMobile && setSidebarOpen(false)}
                           className={({ isActive }) => `
-                          flex items-center gap-4 p-3 rounded-2xl transition-all group relative font-display tracking-wide
+                          flex items-center gap-4 p-3 rounded-r-2xl transition-all group relative font-display tracking-wide
                           ${isActive
-                              ? 'bg-primary text-slate-900 font-bold shadow-neon'
-                              : 'text-slate-400 dark:text-gray-500 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-primary'}
+                              ? 'bg-cyan-500/10 text-primary font-bold border-l-4 border-primary'
+                              : 'text-slate-400 dark:text-gray-500 hover:bg-white/5 hover:text-primary'}
                         `}>
                           <span className="material-icons-round transition-transform group-hover:scale-110">{item.icon}</span>
                           <span className={`font-medium whitespace-nowrap transition-opacity duration-300 ${!sidebarOpen && 'opacity-0 pointer-events-none w-0 overflow-hidden'}`}>

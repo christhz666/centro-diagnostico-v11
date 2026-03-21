@@ -213,11 +213,15 @@ const RegistroInteligente = () => {
     <div style={{ padding: '32px', maxWidth: 1400, margin: '0 auto' }}>
       <style>{`
         .clinical-step { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .clinical-input { border-radius: 8px; padding: 12px 16px; width: 100%; outline: none; transition: all 0.2s; font-size: 14px; }
-        .dark .clinical-input { background: #000000; border: 1px solid rgba(255,255,255,0.1); color: #fff; box-shadow: inset 0 0 20px rgba(0, 246, 255, 0.05); }
+        .clinical-input { border-radius: 12px; padding: 12px 16px; width: 100%; outline: none; transition: all 0.2s; font-size: 14px; }
+        .dark .clinical-input { background: rgba(30, 41, 59, 0.5); border: none; color: #f1f5f9; }
         :not(.dark) .clinical-input { background: #fff; border: 1.5px solid #e5e7eb; color: #1e293b; }
-        .clinical-input:focus { border-color: #00F6FF; box-shadow: 0 0 0 4px rgba(0, 246, 255, 0.1); }
-        .clinical-label { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; display: block; font-family: 'Space Grotesk', sans-serif; }
+        .clinical-input:focus { border-color: transparent; box-shadow: 0 0 0 2px #00e1ff; }
+        .clinical-label { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; display: block; }
+        .step-clip-path { clip-path: polygon(95% 0%, 100% 50%, 95% 100%, 0% 100%, 5% 50%, 0% 0%); }
+        .step-clip-path-first { clip-path: polygon(95% 0%, 100% 50%, 95% 100%, 0% 100%, 0% 0%); }
+        .step-clip-path-last { clip-path: polygon(100% 0%, 100% 100%, 0% 100%, 5% 50%, 0% 0%); }
+        .active-step-glow { box-shadow: 0 0 15px rgba(0, 229, 255, 0.4); }
         .clinical-form-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
         .clinical-form-span-2 { grid-column: span 2; }
         .clinical-form-span-4 { grid-column: 1 / -1; }
@@ -245,29 +249,31 @@ const RegistroInteligente = () => {
         <p style={{ margin: '8px 0 0', color: 'var(--text-muted)', fontSize: 16, fontWeight: 500 }}>Gestión integrada de admisiones y servicios médicos</p>
       </div>
 
-      {/* ── Stepper ── */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 44 }}>
+      {/* ── Stepper Estilo Chevron de Stitch ── */}
+      <div className="flex items-center mb-10 max-w-4xl mx-auto">
         {[
-          { step: 1, label: 'Identificación', icon: <FaIdCard /> },
-          { step: 2, label: 'Servicios Médicos', icon: <FaStethoscope /> },
-          { step: 3, label: 'Liquidación', icon: <FaWallet /> }
-        ].map((s, i) => (
-          <div key={i} className={`glass-card ${paso === s.step ? 'ring-2 ring-primary bg-primary/5' : ''}`} style={{
-            flex: 1, padding: '16px 20px',
-            display: 'flex', alignItems: 'center', gap: 14,
-          }}>
-            <div style={{
-              width: 32, height: 32, borderRadius: 6, background: paso >= s.step ? '#00F6FF' : 'var(--legacy-surface-muted)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', color: paso >= s.step ? '#000' : 'var(--legacy-text-muted)', fontSize: 13, fontWeight: 800
-            }}>
-              {paso > s.step ? <FaCheck /> : s.icon}
+          { step: 1, label: 'Identificación'},
+          { step: 2, label: 'Servicios Médicos'},
+          { step: 3, label: 'Liquidación'}
+        ].map((s, i) => {
+          const isActive = paso === s.step;
+          const isPast = paso >= s.step;
+          
+          let clipClass = 'step-clip-path';
+          if (i === 0) clipClass = 'step-clip-path-first';
+          if (i === 2) clipClass = 'step-clip-path-last';
+
+          return (
+            <div key={i} onClick={() => isPast && setPaso(s.step)} className={`flex-1 flex flex-col items-center justify-center cursor-pointer transition-colors z-${10 - i} 
+              ${clipClass} 
+              ${isActive ? 'bg-[#00e5ff] active-step-glow text-slate-900 h-14' : 'bg-slate-800/80 hover:bg-slate-700 text-slate-400 h-14'}
+              ${i !== 0 ? '-ml-4' : ''}
+            `}>
+              <span className={`text-[10px] font-bold ${isActive ? 'opacity-70' : 'opacity-60'}`}>PASO 0{s.step}</span>
+              <span className={`text-sm ${isActive ? 'font-bold' : 'font-medium'}`}>{s.label}</span>
             </div>
-            <div>
-              <div style={{ fontSize: 9, fontWeight: 800, color: 'var(--legacy-text-muted)', textTransform: 'uppercase' }}>PASO 0{s.step}</div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: paso >= s.step ? 'var(--legacy-text)' : 'var(--legacy-text-muted)' }}>{s.label}</div>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* ── PASO 1: PACIENTE ── */}
@@ -392,8 +398,9 @@ const RegistroInteligente = () => {
                   </div>
                 </div>
 
-                <button onClick={crearPaciente} style={{ width: '100%', marginTop: 22, padding: 15, background: '#00F6FF', border: 'none', borderRadius: 10, color: '#0f172a', fontWeight: 800, fontSize: 15, cursor: 'pointer', boxShadow: '0 0 20px rgba(0, 246, 255, 0.3)' }}>
-                  CONTINUAR <FaArrowRight style={{ marginLeft: 8 }} />
+                <button onClick={crearPaciente} className="w-full bg-[#00e5ff] hover:bg-[#00c9e0] text-slate-900 font-bold py-4 px-6 rounded-2xl flex items-center justify-center space-x-2 transition-all shadow-lg active:scale-[0.98] mt-6">
+                  <span className="uppercase tracking-widest text-sm">Continuar</span>
+                  <FaArrowRight />
                 </button>
               </>
             )}

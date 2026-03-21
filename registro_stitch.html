@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Registro de Nuevo Paciente - Centro Diagnóstico Mi Esperanza</title>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'space-dark': '#020617',
+            'form-bg': 'rgba(15, 23, 42, 0.6)',
+            'brand-cyan': '#00e5ff',
+            'sidebar-text': '#94a3b8',
+            'input-bg': 'rgba(30, 41, 59, 0.5)',
+          },
+          backgroundImage: {
+            'starry-space': "url('https://images.unsplash.com/photo-1475274047050-1d0c0975c63e?q=80&w=2070&auto=format&fit=crop')",
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="custom-layout">
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #020617;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 10px;
+    }
+
+    /* Step Arrow Shapes */
+    .step-clip-path {
+      clip-path: polygon(95% 0%, 100% 50%, 95% 100%, 0% 100%, 5% 50%, 0% 0%);
+    }
+    .step-clip-path-first {
+      clip-path: polygon(95% 0%, 100% 50%, 95% 100%, 0% 100%, 0% 0%);
+    }
+    .step-clip-path-last {
+      clip-path: polygon(100% 0%, 100% 100%, 0% 100%, 5% 50%, 0% 0%);
+    }
+
+    /* Overlay for starry background visibility */
+    .star-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at center, rgba(2, 6, 23, 0.4) 0%, rgba(2, 6, 23, 0.95) 100%);
+      z-index: -1;
+    }
+
+    /* Glow effect for active step */
+    .active-step-glow {
+      box-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
+    }
+  </style>
+</head>
+<body class="bg-space-dark text-slate-200 font-sans min-h-screen flex">
+<!-- BEGIN: Sidebar -->
+<aside class="w-64 bg-space-dark border-r border-slate-800 flex flex-col fixed inset-y-0 left-0 z-20">
+<div class="p-6">
+<!-- Placeholder for Logo as specified in prompt -->
+<div class="flex items-center space-x-2 text-brand-cyan mb-10" data-purpose="logo-container">
+<i class="fas fa-notes-medical text-3xl"></i>
+<span class="font-bold text-sm leading-tight">Centro Diagnóstico<br/>Mi Esperanza</span>
+</div>
+<nav class="space-y-1">
+<a class="flex items-center space-x-3 p-3 text-sidebar-text hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<i class="fas fa-th-large w-5"></i>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center space-x-3 p-3 bg-cyan-900/20 text-brand-cyan border-r-4 border-brand-cyan rounded-lg" href="#">
+<i class="fas fa-user-plus w-5"></i>
+<span class="font-medium">Registro</span>
+</a>
+<a class="flex items-center space-x-3 p-3 text-sidebar-text hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<i class="fas fa-search w-5"></i>
+<span>Consulta</span>
+</a>
+<a class="flex items-center space-x-3 p-3 text-sidebar-text hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<i class="fas fa-file-invoice-dollar w-5"></i>
+<span>Facturas</span>
+</a>
+<a class="flex items-center space-x-3 p-3 text-sidebar-text hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<i class="fas fa-user-md w-5"></i>
+<span>Médico</span>
+</a>
+<a class="flex items-center space-x-3 p-3 text-sidebar-text hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<i class="fas fa-flask w-5"></i>
+<span>Resultados</span>
+</a>
+<a class="flex items-center space-x-3 p-3 text-sidebar-text hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<i class="fas fa-images w-5"></i>
+<span>Imágenes</span>
+</a>
+<a class="flex items-center space-x-3 p-3 text-sidebar-text hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<i class="fas fa-user-circle w-5"></i>
+<span>Mi Perfil</span>
+</a>
+<div class="pt-4">
+<button class="w-full flex items-center justify-between p-3 text-sidebar-text hover:bg-slate-800 rounded-lg transition-colors">
+<div class="flex items-center space-x-3">
+<i class="fas fa-cog w-5"></i>
+<span>Administración</span>
+</div>
+<i class="fas fa-chevron-down text-xs"></i>
+</button>
+</div>
+</nav>
+</div>
+<div class="mt-auto p-6 border-t border-slate-800">
+<button class="flex items-center space-x-3 text-sidebar-text hover:text-red-400 transition-colors">
+<i class="fas fa-sign-out-alt rotate-180"></i>
+<span>Sair</span>
+</button>
+</div>
+</aside>
+<!-- END: Sidebar -->
+<!-- BEGIN: Main Content Area -->
+<main class="flex-1 ml-64 min-h-screen bg-starry-space bg-cover bg-center relative flex flex-col">
+<div class="star-overlay"></div>
+<!-- BEGIN: Top Header -->
+<header class="p-6 flex justify-between items-center bg-transparent relative z-10">
+<div class="text-slate-400 text-sm font-medium">Nuevo Registro</div>
+<div class="flex items-center space-x-4">
+<div class="text-right">
+<div class="text-[10px] uppercase text-slate-500 font-bold">Admin</div>
+<div class="text-xs font-semibold">cristian</div>
+</div>
+<div class="flex items-center space-x-3">
+<i class="fas fa-sun text-brand-cyan/80 text-lg cursor-pointer"></i>
+<div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center border border-slate-600 text-sm font-bold">C</div>
+</div>
+</div>
+</header>
+<!-- END: Top Header -->
+<!-- BEGIN: Content Scrollable -->
+<section class="p-8 pt-0 flex-1 overflow-y-auto relative z-10">
+<!-- BEGIN: Page Title -->
+<div class="mb-8">
+<h1 class="text-4xl font-bold text-white mb-2">Registro de Nuevo Paciente</h1>
+<p class="text-slate-400">Gestión integrada de admisiones y servicios médicos</p>
+</div>
+<!-- END: Page Title -->
+<!-- BEGIN: Stepper Navigation -->
+<div class="flex items-center mb-10 max-w-4xl mx-auto">
+<div class="flex-1 h-14 bg-brand-cyan active-step-glow step-clip-path-first flex flex-col items-center justify-center text-slate-900 z-10 cursor-pointer">
+<span class="text-[10px] font-bold opacity-70">PASO 01</span>
+<span class="font-bold">Identificación</span>
+</div>
+<div class="flex-1 h-14 bg-slate-800/80 step-clip-path flex flex-col items-center justify-center text-slate-400 -ml-4 z-0 hover:bg-slate-700 transition-colors cursor-pointer">
+<span class="text-[10px] font-bold opacity-60">PASO 02</span>
+<span class="font-medium">Servicios Médicos</span>
+</div>
+<div class="flex-1 h-14 bg-slate-800/80 step-clip-path-last flex flex-col items-center justify-center text-slate-400 -ml-4 z-0 hover:bg-slate-700 transition-colors cursor-pointer">
+<span class="text-[10px] font-bold opacity-60">PASO 03</span>
+<span class="font-medium">Liquidación</span>
+</div>
+</div>
+<!-- END: Stepper Navigation -->
+<!-- BEGIN: Registration Form Card -->
+<div class="max-w-4xl mx-auto bg-slate-900/60 backdrop-blur-md rounded-3xl p-10 shadow-2xl border border-white/5" data-purpose="form-container">
+<header class="mb-8">
+<h2 class="text-xl font-bold text-white mb-1">Identificación del Paciente</h2>
+<p class="text-sm text-slate-400">Complete el formulario para registrar un nuevo paciente y continuar con el ingreso.</p>
+</header>
+<form class="space-y-10">
+<!-- BEGIN: Section - Datos Personales -->
+<fieldset class="space-y-6">
+<legend class="text-lg font-semibold text-white mb-4">Datos Personales</legend>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+<!-- Nombre -->
+<div class="md:col-span-2 space-y-2">
+<label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Nombre *</label>
+<input class="w-full bg-slate-800/50 border-none rounded-xl py-3 px-4 text-slate-100 placeholder:text-slate-600 focus:ring-2 focus:ring-brand-cyan transition-all" placeholder="Nombre" type="text"/>
+</div>
+<!-- Apellido -->
+<div class="md:col-span-2 space-y-2">
+<label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Apellido *</label>
+<input class="w-full bg-slate-800/50 border-none rounded-xl py-3 px-4 text-slate-100 placeholder:text-slate-600 focus:ring-2 focus:ring-brand-cyan transition-all" placeholder="Apellido" type="text"/>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+<!-- Fecha Nacimiento -->
+<div class="md:col-span-2 space-y-2">
+<label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">F. Nacimiento *</label>
+<div class="relative">
+<input class="w-full bg-slate-800/50 border-none rounded-xl py-3 px-4 text-slate-100 placeholder:text-slate-600 focus:ring-2 focus:ring-brand-cyan transition-all" placeholder="mm/dd/aaaa" type="text"/>
+<i class="far fa-calendar absolute right-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+</div>
+</div>
+<!-- Sexo -->
+<div class="md:col-span-2 space-y-2">
+<label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Sexo *</label>
+<select class="w-full bg-slate-800/50 border-none rounded-xl py-3 px-4 text-slate-100 focus:ring-2 focus:ring-brand-cyan appearance-none cursor-pointer">
+<option>Masculino</option>
+<option>Femenino</option>
+<option>Otro</option>
+</select>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Cédula -->
+<div class="space-y-2">
+<label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Cedula / ID</label>
+<input class="w-full bg-slate-800/50 border-none rounded-xl py-3 px-4 text-slate-100 placeholder:text-slate-600 focus:ring-2 focus:ring-brand-cyan transition-all" placeholder="000-0000000-0" type="text"/>
+</div>
+<!-- Teléfono -->
+<div class="space-y-2">
+<label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Teléfono *</label>
+<input class="w-full bg-slate-800/50 border-none rounded-xl py-3 px-4 text-slate-100 placeholder:text-slate-600 focus:ring-2 focus:ring-brand-cyan transition-all" placeholder="809-000-0000" type="text"/>
+</div>
+<!-- Email (Placed in same row per screenshot flow) -->
+<div class="space-y-2">
+<label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Email</label>
+<input class="w-full bg-slate-800/50 border-none rounded-xl py-3 px-4 text-slate-100 placeholder:text-slate-600 focus:ring-2 focus:ring-brand-cyan transition-all" placeholder="correo@ejemplo.com" type="email"/>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Nacionalidad -->
+<div class="space-y-2">
+<label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Nacionalidad</label>
+<select class="w-full bg-slate-800/50 border-none rounded-xl py-3 px-4 text-slate-100 focus:ring-2 focus:ring-brand-cyan cursor-pointer">
+<option>Dominicano</option>
+<option>Extranjero</option>
+</select>
+</div>
+<!-- Tipo de Sangre -->
+<div class="space-y-2">
+<label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Tipo de Sangre</label>
+<select class="w-full bg-slate-800/50 border-none rounded-xl py-3 px-4 text-slate-100 focus:ring-2 focus:ring-brand-cyan cursor-pointer">
+<option>Desconocido</option>
+<option>A+</option>
+<option>A-</option>
+<option>B+</option>
+<option>B-</option>
+<option>O+</option>
+<option>O-</option>
+<option>AB+</option>
+<option>AB-</option>
+</select>
+</div>
+</div>
+</fieldset>
+<!-- END: Section - Datos Personales -->
+<!-- BEGIN: Section - Seguro Médico -->
+<fieldset class="space-y-6 pt-4">
+<legend class="text-lg font-semibold text-white mb-4">Seguro Médico</legend>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Nombre del Seguro -->
+<div class="space-y-2">
+<label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Nombre del Seguro</label>
+<select class="w-full bg-slate-800/50 border-none rounded-xl py-3 px-4 text-slate-100 focus:ring-2 focus:ring-brand-cyan cursor-pointer">
+<option>ARS, SENASA, etc.</option>
+<option>Mapfre</option>
+<option>Humano</option>
+</select>
+</div>
+<!-- No. Afiliado -->
+<div class="space-y-2">
+<label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">No. Afiliado</label>
+<input class="w-full bg-slate-800/50 border-none rounded-xl py-3 px-4 text-slate-100 placeholder:text-slate-600 focus:ring-2 focus:ring-brand-cyan transition-all" placeholder="Número de afiliado" type="text"/>
+</div>
+</div>
+</fieldset>
+<!-- END: Section - Seguro Médico -->
+<!-- BEGIN: Submit Button -->
+<div class="pt-8">
+<button class="w-full bg-brand-cyan hover:bg-[#00c9e0] text-slate-900 font-bold py-4 px-6 rounded-2xl flex items-center justify-center space-x-2 transition-all shadow-lg active:scale-[0.98]" type="submit">
+<span class="uppercase tracking-widest text-sm">Continuar</span>
+<i class="fas fa-arrow-right"></i>
+</button>
+</div>
+<!-- END: Submit Button -->
+</form>
+</div>
+<!-- END: Registration Form Card -->
+<!-- Footer Versioning Info -->
+<footer class="mt-12 text-center text-[10px] text-slate-600 uppercase font-medium">
+        v1.0.0 PACIENTE
+      </footer>
+</section>
+<!-- END: Content Scrollable -->
+</main>
+<!-- END: Main Content Area -->
+</body></html>
