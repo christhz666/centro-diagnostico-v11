@@ -730,15 +730,21 @@ exports.accesoPaciente = async (req, res, next) => {
 exports.getResultadosPorFactura = async (req, res, next) => {
     try {
         const param = req.params.facturaNumero;
-        const isObjectId = /^[0-9a-fA-F]{24}$/.test(param);
+        const cleanParam = param ? param.trim() : '';
+        const paramSinPrefix = cleanParam.replace(/^FAC-/i, '');
+        const isObjectId = /^[0-9a-fA-F]{24}$/.test(cleanParam);
+        
         const factura = await Factura.findOne({
             $or: [
-                { numero: param },
-                { codigoLIS: parseInt(param, 10) || -1 },
-                { codigoBarras: param },
-                { codigoBarras: String(parseInt(param, 10) || param).padStart(5, '0') },
-                { registroIdNumerico: param },
-                ...(isObjectId ? [{ _id: param }] : [])
+                { numero: new RegExp('^' + cleanParam + '$', 'i') },
+                { numero: new RegExp('^' + paramSinPrefix + '$', 'i') },
+                { codigoBarras: new RegExp('^' + cleanParam + '$', 'i') },
+                { codigoBarras: new RegExp('^' + paramSinPrefix + '$', 'i') },
+                { codigoQR: new RegExp('^' + cleanParam + '$', 'i') },
+                { codigoLIS: parseInt(cleanParam, 10) || parseInt(paramSinPrefix, 10) || -1 },
+                { registroIdNumerico: cleanParam },
+                { registroIdNumerico: paramSinPrefix },
+                ...(isObjectId ? [{ _id: cleanParam }] : [])
             ]
         }).populate('paciente', 'nombre apellido cedula');
 

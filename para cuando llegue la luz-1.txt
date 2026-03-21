@@ -1,0 +1,24 @@
+main.20ea0d6c.js:2  GET https://miesperanzalab.duckdns.org/api/resultados/factura/FAC-40438580D9 404 (Not Found)
+request @ main.20ea0d6c.js:2
+r @ 746.7f7a156c.chunk.js:1
+(anonymous) @ 746.7f7a156c.chunk.js:1
+await in (anonymous)
+(anonymous) @ 746.7f7a156c.chunk.js:1
+na @ main.20ea0d6c.js:2
+bl @ main.20ea0d6c.js:2
+(anonymous) @ main.20ea0d6c.js:2
+wl @ main.20ea0d6c.js:2
+sl @ main.20ea0d6c.js:2
+zo @ main.20ea0d6c.js:2
+ll @ main.20ea0d6c.js:2
+Qe @ main.20ea0d6c.js:2
+Vr @ main.20ea0d6c.js:2
+Gt @ main.20ea0d6c.js:2
+Kt @ main.20ea0d6c.js:2Understand this error
+746.7f7a156c.chunk.js:1 Error: Factura no encontrada
+    at Object.request (main.20ea0d6c.js:2:2675)
+    at async r (746.7f7a156c.chunk.js:1:1686)
+    at async 746.7f7a156c.chunk.js:1:2386
+
+
+no extraigas la url de ningun lado simplemente ve ala base de datos y toma el resultado con ese codigo de barras y muestralo es lo mas simple 
