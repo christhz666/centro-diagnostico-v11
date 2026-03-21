@@ -47,9 +47,7 @@ const ConsultaRapida = () => {
 
   /* ─── Cargar config empresa ──────────────────────────────── */
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    fetch('/api/configuracion/', { headers: { 'Authorization': `Bearer ${token}` } })
-      .then(r => r.json())
+    api.request('/configuracion/')
       .then(d => setEmpresaConfig(d.configuracion || d || {}))
       .catch(() => { });
   }, []);
@@ -95,23 +93,23 @@ const ConsultaRapida = () => {
     setResultados([]);
     setPagoBloqueo(null);
 
-    const headers = { Authorization: 'Bearer ' + localStorage.getItem('token') };
-
     /* Helper: buscar factura por cualquier identificador y devolver
        SOLO los resultados de esa factura */
     const buscarFactura = async (identificador) => {
-      const r = await fetch(`/api/resultados/factura/${encodeURIComponent(identificador)}`, { headers });
-      if (!r.ok) return false;
-      const d = await r.json();
-      if (d.success) {
-        setPaciente(d.paciente);
-        setFacturaSeleccionada(d.factura || null);
-        setResultados(d.data || []);
-        return true;
-      }
-      if (d.blocked) {
-        setPagoBloqueo({ montoPendiente: d.montoPendiente, mensaje: d.message });
-        return true;
+      try {
+        const d = await api.request(`/resultados/factura/${encodeURIComponent(identificador)}`);
+        if (d.success) {
+          setPaciente(d.paciente);
+          setFacturaSeleccionada(d.factura || null);
+          setResultados(d.data || []);
+          return true;
+        }
+        if (d.blocked) {
+          setPagoBloqueo({ montoPendiente: d.montoPendiente, mensaje: d.message });
+          return true;
+        }
+      } catch (err) {
+         console.error(err);
       }
       return false;
     };
@@ -120,9 +118,8 @@ const ConsultaRapida = () => {
       /* ── 1. QR de factura (hex 12-16 chars) ────────────────────── */
       if (/^[A-F0-9]{12,16}$/.test(codigoLimpio)) {
         // El QR apunta al codigoQR de la factura → buscar por él
-        const r = await fetch(`/api/resultados/qr/${codigoLimpio}`, { headers });
-        if (r.ok) {
-          const d = await r.json();
+        try {
+          const d = await api.request(`/resultados/qr/${codigoLimpio}`);
           if (d.success && !d.blocked) {
             setPaciente(d.paciente);
             setFacturaSeleccionada(d.factura || null);
@@ -130,6 +127,8 @@ const ConsultaRapida = () => {
             return;
           }
           if (d.blocked) { setPagoBloqueo({ montoPendiente: d.montoPendiente, mensaje: d.message }); return; }
+        } catch (err) {
+           console.error(err);
         }
         // Fallback: intentar como número de factura directamente (codigoBarras)
         if (await buscarFactura(codigoLimpio)) return;
@@ -241,10 +240,7 @@ const ConsultaRapida = () => {
   /* ─── Verificar pago e imprimir ───────────────────────── */
   const verificarPagoEImprimir = async (resultado) => {
     try {
-      const r = await fetch(`/api/resultados/${resultado._id}/verificar-pago`, {
-        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
-      });
-      const data = await r.json();
+      const data = await api.request(`/resultados/${resultado._id}/verificar-pago`);
       if (data.puede_imprimir === false && data.monto_pendiente > 0) {
         setPagoBloqueo({
           montoPendiente: data.monto_pendiente,
