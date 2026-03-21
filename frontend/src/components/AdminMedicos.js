@@ -15,12 +15,12 @@ function AdminMedicos() {
         fetchData();
     }, []);
 
-    const fetchData = async () => {
+                const fetchData = async () => {
         try {
             setLoading(true);
-            const docsRes = await api.get('/admin/medicos');
-            const statsRes = await api.get('/admin/estadisticas-medicos');
-            if (docsRes.success) setMedicos(docsRes.data || []);
+            const docsRes = await api.request('/admin/medicos');
+            const statsRes = await api.request('/admin/estadisticas-medicos', { noUnwrap: true });
+            if (docsRes) setMedicos(docsRes || []);
             if (statsRes && statsRes.success) setStats(statsRes.data || []);
         } catch (error) {
             console.error(error);
@@ -31,7 +31,10 @@ function AdminMedicos() {
 
     const handleSaveSchedule = async (medicoId, nuevosHorarios) => {
         try {
-            await api.put(`/admin/usuarios/${medicoId}`, { horarios: nuevosHorarios });
+            await api.request(`/admin/usuarios/${medicoId}`, { 
+                method: 'PUT', 
+                body: JSON.stringify({ horarios: nuevosHorarios }) 
+            });
             // Refresh
             fetchData();
             setSelectedMedico(null);
