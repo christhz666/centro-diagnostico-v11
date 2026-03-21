@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Diagnostic Center - Admin Portal</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-fixed-dim": "#00ded1",
+                        "surface-dim": "#10131a",
+                        "secondary-fixed": "#b3eee7",
+                        "on-surface": "#e1e2eb",
+                        "primary": "#4afdef",
+                        "surface-bright": "#363940",
+                        "on-primary-container": "#005e59",
+                        "on-secondary": "#003733",
+                        "surface-container-lowest": "#0b0e14",
+                        "surface-container-high": "#272a31",
+                        "tertiary-container": "#ffbd4a",
+                        "inverse-surface": "#e1e2eb",
+                        "tertiary-fixed": "#ffdeae",
+                        "on-tertiary-container": "#714d00",
+                        "surface-tint": "#00ded1",
+                        "tertiary": "#ffe0b5",
+                        "surface-variant": "#32353c",
+                        "surface-container": "#1d2026",
+                        "primary-fixed": "#47fbed",
+                        "on-error-container": "#ffdad6",
+                        "on-primary-fixed": "#00201e",
+                        "inverse-on-surface": "#2e3037",
+                        "on-surface-variant": "#bacac7",
+                        "on-background": "#e1e2eb",
+                        "error-container": "#93000a",
+                        "on-tertiary-fixed-variant": "#604100",
+                        "background": "#10131a",
+                        "outline": "#849491",
+                        "on-secondary-fixed": "#00201e",
+                        "on-secondary-fixed-variant": "#104f4a",
+                        "outline-variant": "#3b4a48",
+                        "primary-container": "#00e0d3",
+                        "on-primary": "#003733",
+                        "error": "#ffb4ab",
+                        "on-tertiary": "#432c00",
+                        "surface-container-low": "#191c22",
+                        "secondary": "#98d1ca",
+                        "on-secondary-container": "#87c0b9",
+                        "tertiary-fixed-dim": "#fcbb48",
+                        "surface": "#10131a",
+                        "inverse-primary": "#006a64",
+                        "secondary-fixed-dim": "#98d1ca",
+                        "on-tertiary-fixed": "#281900",
+                        "on-primary-fixed-variant": "#00504b",
+                        "surface-container-highest": "#32353c",
+                        "secondary-container": "#104f4a",
+                        "on-error": "#690005"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(29, 32, 38, 0.7);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+        }
+        .glow-text {
+            text-shadow: 0 0 15px rgba(74, 253, 239, 0.4);
+        }
+        .status-pulse {
+            box-shadow: 0 0 0 0 rgba(74, 253, 239, 0.7);
+            animation: pulse-ring 2s infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(74, 253, 239, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(74, 253, 239, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(74, 253, 239, 0); }
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-primary/30 min-h-screen">
+<!-- Shared SideNavBar -->
+<nav class="h-screen w-64 fixed left-0 top-0 border-r border-white/10 bg-[#191c22]/80 backdrop-blur-xl flex flex-col py-8 px-4 z-50">
+<div class="mb-10 px-4">
+<h1 class="text-[#00E0D3] font-extrabold tracking-tighter text-xl uppercase font-headline">Diagnostic Center</h1>
+<p class="text-[#bacac7] text-[10px] tracking-[0.2em] font-medium uppercase mt-1">Clinical Curator Portal</p>
+</div>
+<div class="space-y-1 flex-grow">
+<!-- Nav Item 1: Dashboard -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#bacac7] hover:bg-[#272a31] transition-all duration-300 scale-95 active:scale-90 font-manrope text-sm font-medium tracking-wide" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#bacac7] hover:bg-[#272a31] transition-all duration-300 scale-95 active:scale-90 font-manrope text-sm font-medium tracking-wide" href="#">
+<span class="material-symbols-outlined" data-icon="how_to_reg">how_to_reg</span>
+<span>Registro</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#bacac7] hover:bg-[#272a31] transition-all duration-300 scale-95 active:scale-90 font-manrope text-sm font-medium tracking-wide" href="#">
+<span class="material-symbols-outlined" data-icon="medical_services">medical_services</span>
+<span>Consulta</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#bacac7] hover:bg-[#272a31] transition-all duration-300 scale-95 active:scale-90 font-manrope text-sm font-medium tracking-wide" href="#">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+<span>Facturas</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#bacac7] hover:bg-[#272a31] transition-all duration-300 scale-95 active:scale-90 font-manrope text-sm font-medium tracking-wide" href="#">
+<span class="material-symbols-outlined" data-icon="medical_information">medical_information</span>
+<span>Médico</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#bacac7] hover:bg-[#272a31] transition-all duration-300 scale-95 active:scale-90 font-manrope text-sm font-medium tracking-wide" href="#">
+<span class="material-symbols-outlined" data-icon="biotech">biotech</span>
+<span>Resultados</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#bacac7] hover:bg-[#272a31] transition-all duration-300 scale-95 active:scale-90 font-manrope text-sm font-medium tracking-wide" href="#">
+<span class="material-symbols-outlined" data-icon="image">image</span>
+<span>Imágenes</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#bacac7] hover:bg-[#272a31] transition-all duration-300 scale-95 active:scale-90 font-manrope text-sm font-medium tracking-wide" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span>Mi Perfil</span>
+</a>
+<!-- Active State: Administración -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg bg-[#00E0D3]/10 text-[#00E0D3] border-r-4 border-[#00E0D3] shadow-[0_0_15px_rgba(0,224,211,0.2)] transition-all duration-300 scale-95 active:scale-90 font-manrope text-sm font-medium tracking-wide" href="#">
+<span class="material-symbols-outlined" data-icon="admin_panel_settings" style="font-variation-settings: 'FILL' 1;">admin_panel_settings</span>
+<span>Administración</span>
+</a>
+</div>
+<div class="mt-auto px-4 pt-6 border-t border-white/5">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center overflow-hidden border border-white/10">
+<img class="w-full h-full object-cover" data-alt="Clinic Administrator Profile Photo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDAl5vXPTA0BJt4hAZBuegniP5kGn82bguw8OI9tffaPEHh8oBbR9VZR0emrff7IoCeELihD6A92TYoLtCkGzZtixXzSGtlKqUCN-OJB5VlJEGBbP9X39tKRalfedhDuMLY0-BbDjDvqRSovClLzzAOqPkjsBzJ0lUi17uXOdINr7zS-17_ZtImFGiI7hobQKztFHwD9d3fKQFLlEIl63JgbRMu9t0y2Tujx2w8MtajsP4Efag8tOcm_eCZbs69N8hjR_gTOqugo0_R"/>
+</div>
+<div class="overflow-hidden">
+<p class="text-on-surface text-xs font-semibold truncate">Dr. Aris Thorne</p>
+<p class="text-on-surface-variant text-[10px] uppercase tracking-tighter">System Superuser</p>
+</div>
+</div>
+</div>
+</nav>
+<!-- Shared TopAppBar -->
+<header class="fixed top-0 right-0 w-[calc(100%-16rem)] h-16 bg-[#10131a]/50 backdrop-blur-md flex items-center justify-between px-8 z-40">
+<div class="flex items-center gap-4">
+<h2 class="font-manrope font-semibold text-lg uppercase tracking-widest text-[#00E0D3]">Admin Portal</h2>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative group">
+<input class="bg-surface-container-high border-none rounded-lg py-1.5 pl-10 pr-4 text-sm text-on-surface w-64 focus:ring-1 focus:ring-primary transition-all placeholder:text-on-surface-variant/50" placeholder="Global Search..." type="text"/>
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
+</div>
+<div class="flex items-center gap-4 text-[#bacac7]">
+<span class="material-symbols-outlined hover:text-[#00E0D3] cursor-pointer opacity-80 hover:opacity-100 transition-opacity" data-icon="notifications">notifications</span>
+<span class="material-symbols-outlined hover:text-[#00E0D3] cursor-pointer opacity-80 hover:opacity-100 transition-opacity" data-icon="settings">settings</span>
+<span class="material-symbols-outlined hover:text-[#00E0D3] cursor-pointer opacity-80 hover:opacity-100 transition-opacity" data-icon="help_outline">help_outline</span>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="ml-64 pt-24 px-8 pb-12">
+<!-- Header Section -->
+<div class="mb-10 flex items-end justify-between">
+<div>
+<span class="text-on-surface-variant font-label text-[10px] tracking-[0.3em] uppercase block mb-1">System Environment</span>
+<h1 class="font-headline font-bold text-4xl text-on-surface glow-text">System Administration</h1>
+</div>
+<div class="flex gap-3">
+<button class="px-5 py-2 rounded-lg bg-surface-container-high text-on-surface text-xs font-semibold hover:bg-surface-variant transition-colors border border-white/5">Export Logs</button>
+<button class="px-5 py-2 rounded-lg bg-gradient-to-r from-primary to-primary-container text-on-primary text-xs font-bold shadow-lg shadow-primary/10 hover:scale-105 transition-transform active:scale-95">Add Personnel</button>
+</div>
+</div>
+<!-- Metrics Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+<!-- Active Operations -->
+<div class="glass-panel rounded-xl p-5 border border-white/5 flex flex-col justify-between h-32 relative overflow-hidden group">
+<div class="flex justify-between items-start">
+<span class="text-on-surface-variant font-label text-[11px] uppercase tracking-wider">Active Operations</span>
+<div class="w-2 h-2 rounded-full bg-primary status-pulse"></div>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-headline text-3xl font-extrabold text-on-surface">248</span>
+<span class="text-[10px] text-primary/80 font-medium">LIVE</span>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+<span class="material-symbols-outlined text-7xl" data-icon="precision_manufacturing">precision_manufacturing</span>
+</div>
+</div>
+<!-- Medical Devices -->
+<div class="glass-panel rounded-xl p-5 border border-white/5 flex flex-col justify-between h-32 relative overflow-hidden group">
+<div class="flex justify-between items-start">
+<span class="text-on-surface-variant font-label text-[11px] uppercase tracking-wider">Medical Devices</span>
+<span class="material-symbols-outlined text-on-surface-variant text-sm" data-icon="sensors">sensors</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-headline text-3xl font-extrabold text-on-surface">1,204</span>
+<span class="text-[10px] text-on-surface-variant font-medium">CONNECTED</span>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+<span class="material-symbols-outlined text-7xl" data-icon="biotech">biotech</span>
+</div>
+</div>
+<!-- Security Alerts -->
+<div class="glass-panel rounded-xl p-5 border border-white/5 flex flex-col justify-between h-32 relative overflow-hidden group">
+<div class="flex justify-between items-start">
+<span class="text-on-surface-variant font-label text-[11px] uppercase tracking-wider">Security Alerts</span>
+<span class="material-symbols-outlined text-primary text-sm" data-icon="check_circle">check_circle</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-headline text-3xl font-extrabold text-on-surface">0</span>
+<span class="text-[10px] text-on-surface-variant font-medium">THREATS</span>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+<span class="material-symbols-outlined text-7xl" data-icon="security">security</span>
+</div>
+</div>
+<!-- System Latency -->
+<div class="glass-panel rounded-xl p-5 border border-white/5 flex flex-col justify-between h-32 relative overflow-hidden group">
+<div class="flex justify-between items-start">
+<span class="text-on-surface-variant font-label text-[11px] uppercase tracking-wider">System Latency</span>
+<span class="material-symbols-outlined text-on-surface-variant text-sm" data-icon="speed">speed</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-headline text-3xl font-extrabold text-on-surface">12ms</span>
+<span class="text-[10px] text-primary/80 font-medium">OPTIMAL</span>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+<span class="material-symbols-outlined text-7xl" data-icon="bolt">bolt</span>
+</div>
+</div>
+</div>
+<!-- Staff Directory Section -->
+<div class="glass-panel rounded-xl border border-white/5 overflow-hidden">
+<div class="px-8 py-6 border-b border-white/5 flex items-center justify-between bg-surface-container-low/50">
+<div>
+<h3 class="font-headline font-semibold text-lg text-on-surface">Staff Directory</h3>
+<p class="text-on-surface-variant text-xs">Manage clinical access and authentication levels</p>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-xs text-on-surface-variant mr-2">Sort by:</span>
+<div class="bg-surface-container-highest px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-2 cursor-pointer border border-white/5">
+                        Access Level
+                        <span class="material-symbols-outlined text-xs">keyboard_arrow_down</span>
+</div>
+</div>
+</div>
+<div class="min-w-full">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container-low">
+<tr>
+<th class="px-8 py-4 text-on-surface-variant font-label text-[10px] uppercase tracking-widest font-semibold">Name</th>
+<th class="px-8 py-4 text-on-surface-variant font-label text-[10px] uppercase tracking-widest font-semibold">Role</th>
+<th class="px-8 py-4 text-on-surface-variant font-label text-[10px] uppercase tracking-widest font-semibold">Access Level</th>
+<th class="px-8 py-4 text-on-surface-variant font-label text-[10px] uppercase tracking-widest font-semibold">Last Active</th>
+<th class="px-8 py-4 text-on-surface-variant font-label text-[10px] uppercase tracking-widest font-semibold text-right">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-white/[0.03]">
+<!-- Row 1 -->
+<tr class="hover:bg-[#272a31] transition-colors group">
+<td class="px-8 py-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-surface-container-highest flex items-center justify-center">
+<span class="text-xs font-bold text-on-surface-variant">SV</span>
+</div>
+<div>
+<div class="text-sm font-semibold text-on-surface">Dr. Sarah Vance</div>
+<div class="text-[10px] text-on-surface-variant">sarah.v@clinic.med</div>
+</div>
+</div>
+</td>
+<td class="px-8 py-5">
+<span class="text-sm text-on-surface">Chief Radiologist</span>
+</td>
+<td class="px-8 py-5">
+<span class="px-2 py-1 rounded bg-secondary-container/30 text-secondary text-[10px] font-bold uppercase tracking-wider">Radiologist</span>
+</td>
+<td class="px-8 py-5 text-sm text-on-surface-variant">14 mins ago</td>
+<td class="px-8 py-5 text-right">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="more_vert">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 2: Highlighted Row -->
+<tr class="bg-primary/5 border-l-4 border-primary transition-colors group">
+<td class="px-8 py-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-primary/20 flex items-center justify-center border border-primary/30">
+<span class="text-xs font-bold text-primary">EK</span>
+</div>
+<div>
+<div class="text-sm font-semibold text-on-surface">Elias Kaelen</div>
+<div class="text-[10px] text-primary/60">e.kaelen@sys.admin</div>
+</div>
+</div>
+</td>
+<td class="px-8 py-5">
+<span class="text-sm text-on-surface">System Architect</span>
+</td>
+<td class="px-8 py-5">
+<span class="px-2 py-1 rounded bg-primary-container/20 text-primary text-[10px] font-bold uppercase tracking-wider border border-primary/20">Admin</span>
+</td>
+<td class="px-8 py-5 text-sm text-primary">Just Now</td>
+<td class="px-8 py-5 text-right">
+<div class="flex justify-end gap-2">
+<button class="px-3 py-1 rounded bg-primary text-on-primary text-[10px] font-bold uppercase">Configure</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-[#272a31] transition-colors group">
+<td class="px-8 py-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-surface-container-highest flex items-center justify-center">
+<span class="text-xs font-bold text-on-surface-variant">JM</span>
+</div>
+<div>
+<div class="text-sm font-semibold text-on-surface">Juliana Moore</div>
+<div class="text-[10px] text-on-surface-variant">j.moore@desk.net</div>
+</div>
+</div>
+</td>
+<td class="px-8 py-5">
+<span class="text-sm text-on-surface">Patient Coordinator</span>
+</td>
+<td class="px-8 py-5">
+<span class="px-2 py-1 rounded bg-surface-variant text-on-surface-variant text-[10px] font-bold uppercase tracking-wider">Clerk</span>
+</td>
+<td class="px-8 py-5 text-sm text-on-surface-variant">2 hours ago</td>
+<td class="px-8 py-5 text-right">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="more_vert">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-[#272a31] transition-colors group">
+<td class="px-8 py-5">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-surface-container-highest flex items-center justify-center">
+<span class="text-xs font-bold text-on-surface-variant">DR</span>
+</div>
+<div>
+<div class="text-sm font-semibold text-on-surface">Daniel Ricci</div>
+<div class="text-[10px] text-on-surface-variant">d.ricci@clinic.med</div>
+</div>
+</div>
+</td>
+<td class="px-8 py-5">
+<span class="text-sm text-on-surface">MRI Specialist</span>
+</td>
+<td class="px-8 py-5">
+<span class="px-2 py-1 rounded bg-secondary-container/30 text-secondary text-[10px] font-bold uppercase tracking-wider">Radiologist</span>
+</td>
+<td class="px-8 py-5 text-sm text-on-surface-variant">Yesterday</td>
+<td class="px-8 py-5 text-right">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-lg" data-icon="more_vert">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="px-8 py-4 bg-surface-container-low/30 flex items-center justify-between border-t border-white/5">
+<span class="text-[10px] text-on-surface-variant uppercase tracking-widest font-medium">Showing 4 of 42 Personnel</span>
+<div class="flex gap-1">
+<button class="w-8 h-8 rounded flex items-center justify-center bg-surface-container-highest text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<button class="w-8 h-8 rounded flex items-center justify-center bg-primary text-on-primary font-bold text-xs">1</button>
+<button class="w-8 h-8 rounded flex items-center justify-center bg-surface-container-highest text-on-surface-variant hover:text-primary transition-colors text-xs">2</button>
+<button class="w-8 h-8 rounded flex items-center justify-center bg-surface-container-highest text-on-surface-variant hover:text-primary transition-colors text-xs">3</button>
+<button class="w-8 h-8 rounded flex items-center justify-center bg-surface-container-highest text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Footer Area -->
+<footer class="mt-12 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="relative flex items-center justify-center">
+<div class="w-2 h-2 rounded-full bg-primary status-pulse"></div>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-primary font-headline text-xs font-bold tracking-widest uppercase">Core Engine Online</span>
+<span class="text-on-surface-variant/40 text-[10px] font-medium">V4.8.2-STABLE</span>
+</div>
+</div>
+<div class="text-[10px] text-on-surface-variant/40 uppercase tracking-[0.2em] font-medium">
+                © 2024 Clinical Curator Systems • Secure Node 042
+            </div>
+</footer>
+</main>
+</body></html>

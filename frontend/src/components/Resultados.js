@@ -1,23 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { FaFlask, FaPlus, FaEdit, FaCheck, FaSpinner } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
-
-const theme = {
-  surface: 'var(--legacy-surface)',
-  surfaceMuted: 'var(--legacy-surface-muted)',
-  border: 'var(--legacy-border)',
-  text: 'var(--legacy-text)',
-  textStrong: 'var(--legacy-text-strong)',
-  textMuted: 'var(--legacy-text-muted)',
-  panel: 'var(--legacy-surface-panel)'
-};
 
 const Resultados = () => {
   const navigate = useNavigate();
   const [resultados, setResultados] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filtroEstado, setFiltroEstado] = useState('');
+  const [filtroPaciente, setFiltroPaciente] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [resultadoEditar, setResultadoEditar] = useState(null);
   const [citas, setCitas] = useState([]);
@@ -34,7 +24,7 @@ const Resultados = () => {
   const fetchResultados = useCallback(async (isSilent = false, estado = filtroEstado) => {
     try {
       if (!isSilent) setLoading(true);
-      const params = estado ? { estado, tipo: 'laboratorio' } : { tipo: 'laboratorio' };
+      const params = estado && estado !== 'Todos' ? { estado: estado.toLowerCase(), tipo: 'laboratorio' } : { tipo: 'laboratorio' };
       const response = await api.getResultados(params);
       setResultados(Array.isArray(response) ? response : (response.data || []));
     } catch (err) {
@@ -82,7 +72,7 @@ const Resultados = () => {
   const abrirModalNuevo = (cita) => {
     setCitaSeleccionada(cita);
     setNuevoResultado({
-      valores: [{ parametro: '', valor: '', unidad: '', valorReferencia: '', estado: 'normal' }],
+      valores: [{ parametro: '', valor: '', unidad: '', valorReferencia: '', estado: 'Normal' }],
       interpretacion: '',
       observaciones: '',
       conclusion: ''
@@ -93,7 +83,7 @@ const Resultados = () => {
   const abrirModalEditar = (resultado) => {
     setResultadoEditar(resultado);
     setNuevoResultado({
-      valores: resultado.valores || [{ parametro: '', valor: '', unidad: '', valorReferencia: '', estado: 'normal' }],
+      valores: resultado.valores?.length ? resultado.valores : [{ parametro: '', valor: '', unidad: '', valorReferencia: '', estado: 'Normal' }],
       interpretacion: resultado.interpretacion || '',
       observaciones: resultado.observaciones || '',
       conclusion: resultado.conclusion || ''
@@ -104,7 +94,7 @@ const Resultados = () => {
   const agregarValor = () => {
     setNuevoResultado({
       ...nuevoResultado,
-      valores: [...nuevoResultado.valores, { parametro: '', valor: '', unidad: '', valorReferencia: '', estado: 'normal' }]
+      valores: [...nuevoResultado.valores, { parametro: '', valor: '', unidad: '', valorReferencia: '', estado: 'Normal' }]
     });
   };
 
@@ -158,250 +148,331 @@ const Resultados = () => {
       setResultadoEditar(null);
       setCitaSeleccionada(null);
       fetchResultados();
+      fetchCitasPendientes();
     } catch (err) {
       alert('Error: ' + err.message);
     }
   };
 
-  if (loading) {
+  // Filtrado Front-End Adicional
+  const resultadosFiltrados = resultados.filter(r => {
+    const term = filtroPaciente.toLowerCase();
+    const isMatch = term === '' || 
+                    r.paciente?.nombre?.toLowerCase().includes(term) || 
+                    r.paciente?.apellido?.toLowerCase().includes(term) || 
+                    r.estudio?.nombre?.toLowerCase().includes(term);
+    return isMatch;
+  });
+
+  const citasPendientesList = citas.filter(c => !resultados.find(r => r.cita?._id === c._id || r.cita === c._id));
+  const countPendientes = citasPendientesList.length;
+  const countEnProceso = resultados.filter(r => r.estado === 'en_proceso' || r.estado === 'en proceso').length;
+  const countCompletado = resultados.filter(r => r.estado === 'completado').length;
+  const countCriticos = resultados.filter(r => r.valores?.some(v => v.estado?.toLowerCase().includes('critico') || v.estado?.toLowerCase().includes('crítico'))).length;
+
+  if (loading && !resultados.length) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', padding: 50 }}>
-        <FaSpinner className="spin" style={{ fontSize: 40 }} />
+      <div className="flex justify-center items-center h-64">
+        <span className="material-symbols-outlined animate-spin text-4xl text-[#4afdef]">autorenew</span>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: 20 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <h1 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 10, color: theme.textStrong }}>
-          <FaFlask style={{ color: '#9b59b6' }} /> Gestión de Resultados
-        </h1>
-      </div>
-
-      {/* Filtros */}
-      <div style={{ display: 'flex', gap: 15, marginBottom: 20 }}>
-        <select
-          value={filtroEstado}
-          onChange={e => setFiltroEstado(e.target.value)}
-          style={{ padding: 10, borderRadius: 8, border: `1px solid ${theme.border}`, background: theme.surface, color: theme.text, minWidth: 200 }}
-        >
-          <option value="">Todos los estados</option>
-          <option value="pendiente">Pendientes</option>
-          <option value="en_proceso">En Proceso</option>
-          <option value="completado">Completados</option>
-        </select>
-      </div>
-
-      {/* Citas sin resultado (para crear nuevos) */}
-      {citas.filter(c => !resultados.find(r => r.cita?._id === c._id || r.cita === c._id)).length > 0 && (
-        <div style={{ background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.28)', padding: 15, borderRadius: 10, marginBottom: 20 }}>
-          <h4 style={{ margin: '0 0 10px', color: '#856404' }}>?? Citas pendientes de resultado:</h4>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            {citas.filter(c => !resultados.find(r => r.cita?._id === c._id || r.cita === c._id)).slice(0, 5).map(cita => (
-              <button
-                key={cita._id}
-                onClick={() => abrirModalNuevo(cita)}
-                style={{
-                  padding: '8px 15px',
-                  background: '#28a745',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 6,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 5
-                }}
-              >
-                <FaPlus /> {cita.paciente?.nombre} - {cita.estudios?.[0]?.estudio?.nombre || 'Estudio'}
-              </button>
-            ))}
-          </div>
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+      
+      {/* Page Header */}
+      <header className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-4 relative z-10">
+        <div>
+          <h2 className="text-4xl font-headline font-bold tracking-tight text-[#e0e2ec]">Gestión de Resultados</h2>
+          <p className="text-[#bacac7] font-body mt-2">Monitoreo y carga de reportes de laboratorio en tiempo real.</p>
         </div>
+        <div className="flex gap-4">
+          <button onClick={() => fetchResultados()} className="px-6 py-2.5 bg-[#104f4a] text-[#87c0b9] rounded-lg font-headline text-sm font-bold flex items-center gap-2 hover:bg-[#104f4a]/80 transition-all">
+            <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24" }}>refresh</span>
+            Actualizar
+          </button>
+          <button className="px-6 py-2.5 bg-gradient-to-r from-[#00ded1] to-[#00716a] text-[#003733] font-headline text-sm font-bold rounded-lg shadow-[0_0_15px_rgba(71,251,237,0.2)] hover:shadow-[0_0_25px_rgba(71,251,237,0.3)] transition-all flex items-center gap-2">
+            <span className="material-symbols-outlined text-lg">add</span>
+            Nuevo Resultado
+          </button>
+        </div>
+      </header>
+
+      {/* Citas Pendientes Blocks (Substitutes Header Card) */}
+      {countPendientes > 0 && (
+        <section className="mb-10 relative z-10">
+          <div className="bg-[#191b23]/80 backdrop-blur-[24px] p-8 rounded-xl border border-amber-500/20 shadow-[0_0_30px_rgba(245,158,11,0.05)] relative overflow-hidden">
+             <div className="relative z-10">
+                <h3 className="font-headline text-xl font-bold mb-4 flex items-center gap-2 text-amber-500">
+                    <span className="material-symbols-outlined text-amber-500" style={{ fontVariationSettings: "'FILL' 1" }}>warning</span>
+                    Citas pendientes de resultado ({countPendientes})
+                </h3>
+                <div className="flex flex-wrap gap-4 mt-6">
+                  {citasPendientesList.slice(0, 10).map(cita => (
+                     <button
+                        key={cita._id}
+                        onClick={() => abrirModalNuevo(cita)}
+                        className="px-4 py-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-400 rounded-lg text-sm font-label uppercase tracking-widest flex items-center gap-2 transition-all active:scale-95"
+                     >
+                        <span className="material-symbols-outlined text-[18px]">add_box</span>
+                        {cita.paciente?.nombre} - {cita.estudios?.[0]?.estudio?.nombre || 'General'}
+                     </button>
+                  ))}
+                </div>
+             </div>
+             <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-amber-500/5 rounded-full blur-3xl"></div>
+          </div>
+        </section>
       )}
 
-      {/* Tabla de resultados */}
-      <div style={{ background: theme.surface, borderRadius: 10, overflow: 'hidden', border: `1px solid ${theme.border}`, boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr style={{ background: theme.surfaceMuted }}>
-              <th style={{ padding: 15, textAlign: 'left' }}>Fecha</th>
-              <th style={{ padding: 15, textAlign: 'left' }}>Paciente</th>
-              <th style={{ padding: 15, textAlign: 'left' }}>Estudio</th>
-              <th style={{ padding: 15, textAlign: 'center' }}>Estado</th>
-              <th style={{ padding: 15, textAlign: 'center' }}>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {resultados.length === 0 ? (
-              <tr>
-                <td colSpan="5" style={{ padding: 30, textAlign: 'center', color: theme.textMuted }}>
-                  No hay resultados registrados
-                </td>
-              </tr>
-            ) : (
-              resultados.map(r => (
-                <tr key={r._id} style={{ borderBottom: `1px solid ${theme.border}` }} className="hover-row">
-                  <td style={{ padding: 15, color: theme.text }}>
-                    {new Date(r.createdAt).toLocaleDateString('es-DO')}
-                  </td>
-                  <td style={{ padding: 15, color: theme.text }}>
-                    {r.paciente?.nombre} {r.paciente?.apellido}
-                  </td>
-                  <td style={{ padding: 15, color: theme.text }}>
-                    {r.estudio?.nombre || 'N/A'}
-                  </td>
-                  <td style={{ padding: 15, textAlign: 'center' }}>
-                    <span style={{
-                      padding: '5px 12px',
-                      borderRadius: 15,
-                      fontSize: 12,
-                      background: r.estado === 'completado' ? '#d4edda' : r.estado === 'pendiente' ? '#fff3cd' : '#cce5ff',
-                      color: r.estado === 'completado' ? '#155724' : r.estado === 'pendiente' ? '#856404' : '#004085'
-                    }}>
-                      {r.estado}
-                    </span>
-                  </td>
-                  <td style={{ padding: 15, textAlign: 'center' }}>
-                    <button
-                      onClick={() => abrirModalEditar(r)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, marginRight: 10 }}
-                      title="Editar"
-                    >
-                      <FaEdit style={{ color: '#3498db' }} />
-                    </button>
-                  </td>
+      {/* Summary Stats (If no pending to still show data) */}
+      {!countPendientes && (
+          <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 relative z-10">
+            <div className="col-span-2 bg-[rgba(29,32,39,0.7)] backdrop-blur-[24px] p-8 rounded-xl border border-white/5 relative overflow-hidden">
+                <div className="relative z-10">
+                    <h3 className="font-headline text-xl font-bold mb-4 flex items-center gap-2 text-[#e0e2ec]">
+                        <span className="material-symbols-outlined text-[#47fbed]" style={{ fontVariationSettings: "'FILL' 1" }}>biotech</span>
+                        Resumen de Laboratorio
+                    </h3>
+                    <div className="flex gap-12 mt-6">
+                        <div>
+                            <p className="text-4xl font-headline font-bold text-[#47fbed]">{countEnProceso}</p>
+                            <p className="text-xs font-label uppercase tracking-widest text-[#bacac7] mt-1">En Proceso</p>
+                        </div>
+                        <div className="h-12 w-[1px] bg-white/5"></div>
+                        <div>
+                            <p className="text-4xl font-headline font-bold text-[#98d1ca]">{countCompletado}</p>
+                            <p className="text-xs font-label uppercase tracking-widest text-[#bacac7] mt-1">Completados</p>
+                        </div>
+                        <div className="h-12 w-[1px] bg-white/5"></div>
+                        <div>
+                            <p className="text-4xl font-headline font-bold text-[#ffb4ab]">{countCriticos}</p>
+                            <p className="text-xs font-label uppercase tracking-widest text-[#bacac7] mt-1">Valores Críticos</p>
+                        </div>
+                    </div>
+                </div>
+                <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-[#47fbed]/5 rounded-full blur-3xl"></div>
+            </div>
+          </section>
+      )}
+
+      {/* Filter Bar */}
+      <section className="flex flex-wrap items-center gap-4 mb-6 relative z-10">
+        <div className="relative flex-1 min-w-[300px]">
+          <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#bacac7]/50">search</span>
+          <input 
+             className="w-full bg-[#1d2027] border border-white/5 rounded-lg pl-12 pr-4 py-3 text-sm font-label text-[#e0e2ec] focus:ring-1 focus:ring-[#47fbed]/30 transition-all outline-none placeholder:text-[#bacac7]/50" 
+             placeholder="Buscar por paciente, estudio..." 
+             type="text"
+             value={filtroPaciente}
+             onChange={e => setFiltroPaciente(e.target.value)}
+          />
+        </div>
+        <div className="flex items-center gap-3">
+          <select 
+             value={filtroEstado}
+             onChange={e => setFiltroEstado(e.target.value)}
+             className="bg-[#1d2027] border border-white/5 rounded-lg px-4 py-3 text-sm font-label text-[#bacac7] outline-none focus:ring-1 focus:ring-[#47fbed]/30 min-w-[160px]"
+          >
+            <option value="">Estado: Todos</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="en_proceso">En Proceso</option>
+            <option value="completado">Completado</option>
+          </select>
+        </div>
+      </section>
+
+      {/* Data Table Container */}
+      <section className="bg-[rgba(29,32,39,0.7)] backdrop-blur-[24px] rounded-xl border border-white/5 overflow-hidden shadow-2xl relative z-10">
+        <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+            <thead className="bg-[#10131a]/50 border-b border-white/5">
+                <tr>
+                <th className="px-8 py-5 text-xs font-label uppercase tracking-widest text-[#bacac7]">Fecha</th>
+                <th className="px-8 py-5 text-xs font-label uppercase tracking-widest text-[#bacac7]">Paciente</th>
+                <th className="px-8 py-5 text-xs font-label uppercase tracking-widest text-[#bacac7]">Estudio</th>
+                <th className="px-8 py-5 text-xs font-label uppercase tracking-widest text-[#bacac7] text-center">Estado</th>
+                <th className="px-8 py-5 text-xs font-label uppercase tracking-widest text-[#bacac7] text-right">Acciones</th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+                {resultadosFiltrados.length === 0 ? (
+                   <tr>
+                       <td colSpan="5" className="px-8 py-10 text-center text-[#bacac7] font-body text-sm">
+                           No se encontraron resultados registrados
+                       </td>
+                   </tr>
+                ) : (
+                   resultadosFiltrados.map((r, idx) => {
+                       const estado = (r.estado || 'pendiente').toLowerCase();
+                       let badgeClass = "bg-[#47fbed]/10 text-[#47fbed] border-[#47fbed]/20"; // En proceso
+                       let estadoText = "En Proceso";
+                       if (estado === 'completado') {
+                           badgeClass = "bg-green-500/10 text-green-500 border-green-500/20";
+                           estadoText = "Completado";
+                       } else if (estado === 'pendiente') {
+                           badgeClass = "bg-amber-500/10 text-amber-500 border-amber-500/20";
+                           estadoText = "Pendiente";
+                       }
 
-      {/* Modal para crear/editar resultado */}
+                       return (
+                        <tr key={r._id || idx} className="hover:bg-white/5 transition-colors group">
+                            <td className="px-8 py-5 font-label text-sm text-[#bacac7]">
+                                {new Date(r.createdAt || r.fecha).toLocaleDateString('es-DO', { day: '2-digit', month: 'short', year: 'numeric' })}
+                            </td>
+                            <td className="px-8 py-5">
+                                <div className="flex flex-col">
+                                    <span className="font-headline font-bold text-[#e0e2ec]">{r.paciente?.nombre} {r.paciente?.apellido}</span>
+                                    <span className="text-[10px] text-[#bacac7]/60 font-label uppercase">ID: {r.paciente?.cedula || r.paciente?._id?.substring(0,8) || '--'}</span>
+                                </div>
+                            </td>
+                            <td className="px-8 py-5 font-body text-sm text-[#e0e2ec]">
+                                {r.estudio?.nombre || 'Estudio General'}
+                            </td>
+                            <td className="px-8 py-5 text-center">
+                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${badgeClass}`}>
+                                    {estadoText}
+                                </span>
+                            </td>
+                            <td className="px-8 py-5 text-right flex justify-end gap-3">
+                                <button onClick={() => abrirModalEditar(r)} className="material-symbols-outlined text-[#bacac7] hover:text-[#47fbed] transition-all p-2 bg-[#32353c]/0 hover:bg-[#32353c] rounded" style={{ fontVariationSettings: "'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24" }}>
+                                    {estado === 'completado' ? 'visibility' : 'edit_note'}
+                                </button>
+                            </td>
+                        </tr>
+                       )
+                   })
+                )}
+            </tbody>
+            </table>
+        </div>
+      </section>
+
+      {/* Data Entry Modal Overlay */}
       {showModal && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'flex-start',
-          padding: '50px 20px', overflow: 'auto', zIndex: 1000
-        }}>
-          <div style={{ background: theme.surface, padding: 30, borderRadius: 15, width: '100%', maxWidth: 800, border: `1px solid ${theme.border}` }}>
-            <h2 style={{ marginTop: 0, color: theme.textStrong }}>
-              {resultadoEditar ? 'Editar Resultado' : 'Nuevo Resultado'}
-            </h2>
-
-            {citaSeleccionada && (
-              <div style={{ background: theme.surfaceMuted, color: theme.text, padding: 15, borderRadius: 8, marginBottom: 20 }}>
-                <strong>Paciente:</strong> {citaSeleccionada.paciente?.nombre} {citaSeleccionada.paciente?.apellido}<br />
-                <strong>Estudio:</strong> {citaSeleccionada.estudios?.[0]?.estudio?.nombre}
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-[#32353c] w-full max-w-4xl rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.6)] border border-white/10 overflow-hidden my-8">
+            <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between bg-white/5 sticky top-0 z-20 backdrop-blur-md">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-[#47fbed]/10 flex items-center justify-center text-[#47fbed]">
+                  <span className="material-symbols-outlined">science</span>
+                </div>
+                <div>
+                  <h3 className="font-headline font-bold text-lg text-[#e0e2ec]">
+                      {resultadoEditar ? 'Editar / Consultar Resultado' : 'Carga de Resultados'}
+                  </h3>
+                  {citaSeleccionada && (
+                      <p className="text-xs text-[#bacac7] font-label">
+                          Paciente: {citaSeleccionada.paciente?.nombre} • {citaSeleccionada.estudios?.[0]?.estudio?.nombre}
+                      </p>
+                  )}
+                  {resultadoEditar && (
+                      <p className="text-xs text-[#bacac7] font-label">
+                          Paciente: {resultadoEditar.paciente?.nombre} • {resultadoEditar.estudio?.nombre}
+                      </p>
+                  )}
+                </div>
               </div>
-            )}
-
-            {/* Valores */}
-            <h4 style={{ color: theme.textStrong }}>Valores del Resultado:</h4>
-            {nuevoResultado.valores.map((v, index) => (
-              <div key={index} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 2fr 1fr auto', gap: 10, marginBottom: 10 }}>
-                <input
-                  placeholder="Parámetro"
-                  value={v.parametro}
-                  onChange={e => actualizarValor(index, 'parametro', e.target.value)}
-                  style={{ padding: 10, borderRadius: 6, border: `1px solid ${theme.border}`, background: theme.surface, color: theme.text }}
-                />
-                <input
-                  placeholder="Valor"
-                  value={v.valor}
-                  onChange={e => actualizarValor(index, 'valor', e.target.value)}
-                  style={{ padding: 10, borderRadius: 6, border: `1px solid ${theme.border}`, background: theme.surface, color: theme.text }}
-                />
-                <input
-                  placeholder="Unidad"
-                  value={v.unidad}
-                  onChange={e => actualizarValor(index, 'unidad', e.target.value)}
-                  style={{ padding: 10, borderRadius: 6, border: `1px solid ${theme.border}`, background: theme.surface, color: theme.text }}
-                />
-                <input
-                  placeholder="Valor Referencia"
-                  value={v.valorReferencia}
-                  onChange={e => actualizarValor(index, 'valorReferencia', e.target.value)}
-                  style={{ padding: 10, borderRadius: 6, border: `1px solid ${theme.border}`, background: theme.surface, color: theme.text }}
-                />
-                <select
-                  value={v.estado}
-                  onChange={e => actualizarValor(index, 'estado', e.target.value)}
-                  style={{ padding: 10, borderRadius: 6, border: `1px solid ${theme.border}`, background: theme.surface, color: theme.text }}
-                >
-                  <option value="normal">Normal</option>
-                  <option value="alto">Alto</option>
-                  <option value="bajo">Bajo</option>
-                  <option value="critico">Crítico</option>
-                </select>
-                <button
-                  onClick={() => eliminarValor(index)}
-                  style={{ padding: 10, background: '#e74c3c', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer' }}
-                >
-                  ?
-                </button>
-              </div>
-            ))}
-            <button
-              onClick={agregarValor}
-              style={{ padding: '8px 15px', background: '#28a745', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', marginBottom: 20 }}
-            >
-              <FaPlus /> Agregar Valor
-            </button>
-
-            {/* Interpretación */}
-            <div style={{ marginBottom: 15 }}>
-              <label style={{ fontWeight: 'bold', display: 'block', marginBottom: 5, color: theme.text }}>Interpretación:</label>
-              <textarea
-                value={nuevoResultado.interpretacion}
-                onChange={e => setNuevoResultado({ ...nuevoResultado, interpretacion: e.target.value })}
-                style={{ width: '100%', padding: 12, borderRadius: 8, border: `1px solid ${theme.border}`, background: theme.surface, color: theme.text, minHeight: 80, resize: 'vertical' }}
-                placeholder="Escriba la interpretación de los resultados..."
-              />
-            </div>
-
-            {/* Observaciones */}
-            <div style={{ marginBottom: 15 }}>
-              <label style={{ fontWeight: 'bold', display: 'block', marginBottom: 5, color: theme.text }}>Observaciones:</label>
-              <textarea
-                value={nuevoResultado.observaciones}
-                onChange={e => setNuevoResultado({ ...nuevoResultado, observaciones: e.target.value })}
-                style={{ width: '100%', padding: 12, borderRadius: 8, border: `1px solid ${theme.border}`, background: theme.surface, color: theme.text, minHeight: 60, resize: 'vertical' }}
-                placeholder="Observaciones adicionales..."
-              />
-            </div>
-
-            {/* Conclusión */}
-            <div style={{ marginBottom: 20 }}>
-              <label style={{ fontWeight: 'bold', display: 'block', marginBottom: 5, color: theme.text }}>Conclusión:</label>
-              <textarea
-                value={nuevoResultado.conclusion}
-                onChange={e => setNuevoResultado({ ...nuevoResultado, conclusion: e.target.value })}
-                style={{ width: '100%', padding: 12, borderRadius: 8, border: `1px solid ${theme.border}`, background: theme.surface, color: theme.text, minHeight: 60, resize: 'vertical' }}
-                placeholder="Conclusión final..."
-              />
-            </div>
-
-            {/* Botones */}
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button
-                onClick={guardarResultado}
-                style={{ flex: 1, padding: 12, background: '#27ae60', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
-              >
-                <FaCheck /> Guardar Resultado
+              <button onClick={() => { setShowModal(false); setResultadoEditar(null); setCitaSeleccionada(null); }} className="text-[#bacac7] hover:text-[#ffb4ab] transition-colors p-1 rounded hover:bg-white/5">
+                <span className="material-symbols-outlined">close</span>
               </button>
-              <button
-                onClick={() => { setShowModal(false); setResultadoEditar(null); setCitaSeleccionada(null); }}
-                style={{ flex: 1, padding: 12, background: '#6c757d', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer' }}
-              >
-                Cancelar
+            </div>
+            
+            <div className="p-6 md:p-8 space-y-8">
+              {/* Parameter Table Inputs */}
+              <div>
+                  <h4 className="font-label text-xs uppercase tracking-widest text-[#bacac7] mb-4">Parámetros del Estudio</h4>
+                  <div className="space-y-3">
+                      {nuevoResultado.valores.map((v, index) => (
+                           <div key={index} className="flex flex-wrap md:flex-nowrap gap-3 items-start bg-[#191b23] p-3 rounded-lg border border-white/5">
+                               <div className="flex-1 min-w-[150px]">
+                                   <label className="text-[10px] font-label uppercase tracking-widest text-[#bacac7] mb-1 block">Parámetro</label>
+                                   <input className="w-full bg-[#0b0e15] border border-[#3b4a48] rounded-lg p-2.5 text-xs text-[#e0e2ec] font-label focus:ring-1 focus:ring-[#47fbed] outline-none transition-all" type="text" value={v.parametro} onChange={e => actualizarValor(index, 'parametro', e.target.value)} placeholder="Ej. Glucosa" />
+                               </div>
+                               <div className="w-full md:w-32">
+                                   <label className="text-[10px] font-label uppercase tracking-widest text-[#bacac7] mb-1 block">Valor</label>
+                                   <input className="w-full bg-[#0b0e15] border border-[#3b4a48] rounded-lg p-2.5 text-xs text-[#e0e2ec] font-label focus:ring-1 focus:ring-[#47fbed] outline-none transition-all" type="text" value={v.valor} onChange={e => actualizarValor(index, 'valor', e.target.value)} placeholder="0.0" />
+                               </div>
+                               <div className="w-full md:w-24">
+                                   <label className="text-[10px] font-label uppercase tracking-widest text-[#bacac7] mb-1 block">Unidad</label>
+                                   <input className="w-full bg-[#0b0e15] border border-[#3b4a48] rounded-lg p-2.5 text-xs text-[#e0e2ec] font-label focus:ring-1 focus:ring-[#47fbed] outline-none transition-all" type="text" value={v.unidad} onChange={e => actualizarValor(index, 'unidad', e.target.value)} placeholder="mg/dL" />
+                               </div>
+                               <div className="flex-1 min-w-[120px]">
+                                   <label className="text-[10px] font-label uppercase tracking-widest text-[#bacac7] mb-1 block">Referencia</label>
+                                   <input className="w-full bg-[#0b0e15] border border-[#3b4a48] rounded-lg p-2.5 text-xs text-[#e0e2ec] font-label focus:ring-1 focus:ring-[#47fbed] outline-none transition-all" type="text" value={v.valorReferencia} onChange={e => actualizarValor(index, 'valorReferencia', e.target.value)} placeholder="70 - 100" />
+                               </div>
+                               <div className="w-full md:w-36">
+                                   <label className="text-[10px] font-label uppercase tracking-widest text-[#bacac7] mb-1 block">Estado</label>
+                                   <select className="w-full bg-[#0b0e15] border border-[#3b4a48] rounded-lg p-2.5 text-xs text-[#e0e2ec] font-label focus:ring-1 focus:ring-[#47fbed] outline-none transition-all appearance-none" value={v.estado} onChange={e => actualizarValor(index, 'estado', e.target.value)}>
+                                       <option value="Normal">Normal</option>
+                                       <option value="Alto">Alto</option>
+                                       <option value="Bajo">Bajo</option>
+                                       <option value="Crítico Alto">Crítico Alto</option>
+                                       <option value="Crítico Bajo">Crítico Bajo</option>
+                                   </select>
+                               </div>
+                               <div className="mt-5">
+                                   <button onClick={() => eliminarValor(index)} className="p-2.5 bg-[#ffb4ab]/10 text-[#ffb4ab] rounded-lg hover:bg-[#ffb4ab]/20 transition-all border border-[#ffb4ab]/20" title="Eliminar Parámetro">
+                                       <span className="material-symbols-outlined text-[18px]">delete</span>
+                                   </button>
+                               </div>
+                           </div>
+                      ))}
+                      <button onClick={agregarValor} className="w-full py-3 bg-[#191b23] border border-dashed border-[#3b4a48] rounded-lg text-[#bacac7] hover:text-[#47fbed] hover:border-[#47fbed]/50 transition-all flex justify-center items-center gap-2 font-label text-xs uppercase tracking-widest mt-2">
+                          <span className="material-symbols-outlined text-[18px]">add</span>
+                          Añadir Otro Parámetro
+                      </button>
+                  </div>
+              </div>
+
+              {/* Text Areas */}
+              <div className="space-y-6">
+                 <div>
+                    <label className="text-[10px] font-label uppercase tracking-widest text-[#bacac7] mb-2 block">Interpretación (Opcional)</label>
+                    <textarea 
+                       className="w-full bg-[#191b23] border border-[#3b4a48] rounded-lg p-4 text-sm text-[#e0e2ec] font-body focus:ring-1 focus:ring-[#47fbed] outline-none transition-all resize-none min-h-[100px]" 
+                       placeholder="Escriba la interpretación de los resultados..."
+                       value={nuevoResultado.interpretacion}
+                       onChange={e => setNuevoResultado({ ...nuevoResultado, interpretacion: e.target.value })}
+                    />
+                 </div>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                     <div>
+                        <label className="text-[10px] font-label uppercase tracking-widest text-[#bacac7] mb-2 block">Observaciones (Opcional)</label>
+                        <textarea 
+                           className="w-full bg-[#191b23] border border-[#3b4a48] rounded-lg p-4 text-sm text-[#e0e2ec] font-body focus:ring-1 focus:ring-[#47fbed] outline-none transition-all resize-none min-h-[80px]" 
+                           placeholder="Detalles adicionales..."
+                           value={nuevoResultado.observaciones}
+                           onChange={e => setNuevoResultado({ ...nuevoResultado, observaciones: e.target.value })}
+                        />
+                     </div>
+                     <div>
+                        <label className="text-[10px] font-label uppercase tracking-widest text-[#bacac7] mb-2 block">Conclusión (Opcional)</label>
+                        <textarea 
+                           className="w-full bg-[#191b23] border border-[#3b4a48] rounded-lg p-4 text-sm text-[#e0e2ec] font-body focus:ring-1 focus:ring-[#47fbed] outline-none transition-all resize-none min-h-[80px]" 
+                           placeholder="Conclusión final..."
+                           value={nuevoResultado.conclusion}
+                           onChange={e => setNuevoResultado({ ...nuevoResultado, conclusion: e.target.value })}
+                        />
+                     </div>
+                 </div>
+              </div>
+            </div>
+
+            <div className="p-6 bg-[#10131a]/80 border-t border-white/5 flex gap-4 justify-end sticky bottom-0 z-20 backdrop-blur-md">
+              <button onClick={() => { setShowModal(false); setResultadoEditar(null); setCitaSeleccionada(null); }} className="px-6 py-2.5 rounded-lg font-headline text-sm font-bold text-[#bacac7] hover:bg-white/10 transition-all">
+                  Cancelar
+              </button>
+              <button onClick={guardarResultado} className="px-8 py-2.5 rounded-lg bg-gradient-to-r from-[#00ded1] to-[#00716a] text-[#003733] font-headline text-sm font-bold shadow-[0_0_20px_rgba(71,251,237,0.3)] hover:shadow-[0_0_30px_rgba(71,251,237,0.5)] transition-all flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[20px]">check_circle</span>
+                  Guardar Resultado
               </button>
             </div>
           </div>
         </div>
       )}
+
     </div>
   );
 };

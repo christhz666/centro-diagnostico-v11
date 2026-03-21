@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MedTech OS Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary-container": "#47fbed",
+              "outline-variant": "#3b4a48",
+              "surface-container-high": "#272a31",
+              "on-background": "#e0e2ec",
+              "surface-container": "#1d2027",
+              "on-tertiary-container": "#62646c",
+              "inverse-primary": "#006a63",
+              "tertiary": "#ffffff",
+              "on-tertiary": "#2e3037",
+              "primary": "#ffffff",
+              "outline": "#849491",
+              "inverse-surface": "#e0e2ec",
+              "surface-dim": "#10131a",
+              "secondary-fixed-dim": "#00ded1",
+              "surface-container-highest": "#32353c",
+              "on-secondary-container": "#005d57",
+              "secondary": "#47fbed",
+              "on-secondary": "#003733",
+              "on-surface": "#e0e2ec",
+              "surface-container-lowest": "#0b0e15",
+              "background": "#10131a",
+              "tertiary-fixed": "#e1e2eb",
+              "surface-tint": "#00ded1",
+              "on-error-container": "#ffdad6",
+              "primary-fixed-dim": "#00ded1",
+              "primary-fixed": "#47fbed",
+              "on-tertiary-fixed": "#191c22",
+              "inverse-on-surface": "#2d3038",
+              "tertiary-fixed-dim": "#c5c6cf",
+              "on-primary": "#003733",
+              "on-surface-variant": "#bacac7",
+              "surface": "#10131a",
+              "secondary-fixed": "#47fbed",
+              "surface-bright": "#363941",
+              "tertiary-container": "#e1e2eb",
+              "on-primary-fixed": "#00201d",
+              "on-primary-container": "#00716a",
+              "surface-container-low": "#191b23",
+              "error": "#ffb4ab",
+              "secondary-container": "#00ded1",
+              "surface-variant": "#32353c",
+              "on-tertiary-fixed-variant": "#44474e",
+              "on-primary-fixed-variant": "#00504b",
+              "on-secondary-fixed-variant": "#00504b",
+              "error-container": "#93000a",
+              "on-secondary-fixed": "#00201e",
+              "on-error": "#690005"
+            },
+            fontFamily: {
+              "headline": ["Space Grotesk"],
+              "body": ["Manrope"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(29, 32, 39, 0.7);
+            backdrop-filter: blur(24px);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .glow-cyan {
+            box-shadow: 0 0 40px -15px rgba(74, 253, 239, 0.15);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container">
+<!-- Top Navigation Anchor -->
+<header class="fixed top-0 w-full z-50 bg-[#10131a]/70 backdrop-blur-2xl shadow-[0_0_40px_-15px_rgba(74,253,239,0.08)] flex justify-between items-center px-8 h-16">
+<div class="flex items-center gap-8">
+<span class="text-xl font-bold tracking-tighter text-[#4afdef] uppercase font-headline">MedTech OS</span>
+<nav class="hidden md:flex gap-6">
+<a class="text-[#4afdef] font-label text-xs uppercase tracking-widest" href="#">Dashboard</a>
+<a class="text-[#bacac7] hover:text-white transition-colors font-label text-xs uppercase tracking-widest" href="#">Pacientes</a>
+<a class="text-[#bacac7] hover:text-white transition-colors font-label text-xs uppercase tracking-widest" href="#">Laboratorio</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-[#bacac7] hover:bg-[#272a31] p-2 rounded-lg transition-colors active:scale-95 duration-200">
+<span class="material-symbols-outlined">dark_mode</span>
+</button>
+<button class="text-[#bacac7] hover:bg-[#272a31] p-2 rounded-lg transition-colors active:scale-95 duration-200">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-[#bacac7] hover:bg-[#272a31] p-2 rounded-lg transition-colors active:scale-95 duration-200">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+</header>
+<!-- Side Navigation Anchor -->
+<aside class="fixed left-0 top-0 h-full w-64 z-40 bg-[#10131a] pt-24 hidden lg:flex flex-col py-8 gap-y-2 tonal-shift pr-4">
+<div class="px-6 mb-8">
+<h2 class="font-headline text-tertiary-fixed text-lg font-bold">Dr. Obsidian</h2>
+<p class="font-label text-on-surface-variant text-[10px] uppercase tracking-widest">Senior Clinician</p>
+</div>
+<nav class="flex flex-col gap-1">
+<a class="flex items-center gap-4 px-6 py-3 text-[#4afdef] border-l-2 border-[#4afdef] bg-gradient-to-r from-[#4afdef]/10 to-transparent font-label text-sm uppercase tracking-[0.1em]" href="#">
+<span class="material-symbols-outlined">dashboard</span> Dashboard
+            </a>
+<a class="flex items-center gap-4 px-6 py-3 text-[#bacac7] hover:text-white hover:bg-[#1d2027] transition-all font-label text-sm uppercase tracking-[0.1em]" href="#">
+<span class="material-symbols-outlined">how_to_reg</span> Registro
+            </a>
+<a class="flex items-center gap-4 px-6 py-3 text-[#bacac7] hover:text-white hover:bg-[#1d2027] transition-all font-label text-sm uppercase tracking-[0.1em]" href="#">
+<span class="material-symbols-outlined">medical_services</span> Consulta
+            </a>
+<a class="flex items-center gap-4 px-6 py-3 text-[#bacac7] hover:text-white hover:bg-[#1d2027] transition-all font-label text-sm uppercase tracking-[0.1em]" href="#">
+<span class="material-symbols-outlined">receipt_long</span> Facturas
+            </a>
+<a class="flex items-center gap-4 px-6 py-3 text-[#bacac7] hover:text-white hover:bg-[#1d2027] transition-all font-label text-sm uppercase tracking-[0.1em]" href="#">
+<span class="material-symbols-outlined">medical_information</span> Médico
+            </a>
+<a class="flex items-center gap-4 px-6 py-3 text-[#bacac7] hover:text-white hover:bg-[#1d2027] transition-all font-label text-sm uppercase tracking-[0.1em]" href="#">
+<span class="material-symbols-outlined">biotech</span> Resultados
+            </a>
+<a class="flex items-center gap-4 px-6 py-3 text-[#bacac7] hover:text-white hover:bg-[#1d2027] transition-all font-label text-sm uppercase tracking-[0.1em]" href="#">
+<span class="material-symbols-outlined">wb_iridescent</span> Imágenes
+            </a>
+<a class="flex items-center gap-4 px-6 py-3 text-[#bacac7] hover:text-white hover:bg-[#1d2027] transition-all font-label text-sm uppercase tracking-[0.1em]" href="#">
+<span class="material-symbols-outlined">person</span> Mi Perfil
+            </a>
+<a class="flex items-center gap-4 px-6 py-3 text-[#bacac7] hover:text-white hover:bg-[#1d2027] transition-all font-label text-sm uppercase tracking-[0.1em]" href="#">
+<span class="material-symbols-outlined">admin_panel_settings</span> Administración
+            </a>
+</nav>
+</aside>
+<!-- Main Content Canvas -->
+<main class="lg:ml-64 pt-24 px-8 pb-12">
+<!-- Section 1: Welcome Header -->
+<header class="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
+<div>
+<h1 class="font-headline text-4xl font-bold text-white tracking-tight">
+                    Buenos días, <span class="bg-gradient-to-r from-secondary-fixed to-primary-fixed-dim bg-clip-text text-transparent">Doctor</span>
+</h1>
+<div class="flex items-center gap-3 mt-2 text-on-surface-variant">
+<p class="font-label text-sm uppercase tracking-wider">Panel de diagnóstico inteligente</p>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<p class="font-label text-sm uppercase tracking-wider">Viernes, 24 Mayo 2024</p>
+</div>
+</div>
+<button class="flex items-center gap-2 px-5 py-2.5 rounded-lg border border-outline-variant/20 hover:bg-surface-container-high transition-colors text-on-surface active:scale-95">
+<span class="material-symbols-outlined text-sm">refresh</span>
+<span class="font-label text-xs uppercase tracking-widest">Actualizar</span>
+</button>
+</header>
+<!-- Section 2: Metrics Cards -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+<!-- Citas Hoy -->
+<div class="glass-panel p-6 rounded-xl glow-cyan group hover:bg-surface-container transition-all">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 rounded-lg bg-blue-500/10 text-blue-400">
+<span class="material-symbols-outlined">calendar_today</span>
+</div>
+<span class="text-xs font-label text-blue-400 uppercase tracking-widest">+12%</span>
+</div>
+<p class="font-label text-[10px] text-on-surface-variant uppercase tracking-[0.15em] mb-1">Citas Hoy</p>
+<h3 class="font-headline text-3xl font-bold text-white">24</h3>
+</div>
+<!-- Resultados Mes -->
+<div class="glass-panel p-6 rounded-xl glow-cyan group hover:bg-surface-container transition-all">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 rounded-lg bg-secondary/10 text-secondary">
+<span class="material-symbols-outlined">science</span>
+</div>
+<span class="text-xs font-label text-secondary uppercase tracking-widest">Normal</span>
+</div>
+<p class="font-label text-[10px] text-on-surface-variant uppercase tracking-[0.15em] mb-1">Resultados Mes</p>
+<h3 class="font-headline text-3xl font-bold text-white">1,284</h3>
+</div>
+<!-- Ingresos Hoy -->
+<div class="glass-panel p-6 rounded-xl glow-cyan group hover:bg-surface-container transition-all">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 rounded-lg bg-green-500/10 text-green-400">
+<span class="material-symbols-outlined">payments</span>
+</div>
+<span class="text-xs font-label text-green-400 uppercase tracking-widest">Record</span>
+</div>
+<p class="font-label text-[10px] text-on-surface-variant uppercase tracking-[0.15em] mb-1">Ingresos Hoy</p>
+<h3 class="font-headline text-3xl font-bold text-white">$4.2k</h3>
+</div>
+<!-- Pacientes Nuevos -->
+<div class="glass-panel p-6 rounded-xl glow-cyan group hover:bg-surface-container transition-all">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 rounded-lg bg-purple-500/10 text-purple-400">
+<span class="material-symbols-outlined">people</span>
+</div>
+<span class="text-xs font-label text-purple-400 uppercase tracking-widest">+4</span>
+</div>
+<p class="font-label text-[10px] text-on-surface-variant uppercase tracking-[0.15em] mb-1">Pacientes Nuevos</p>
+<h3 class="font-headline text-3xl font-bold text-white">18</h3>
+</div>
+</section>
+<!-- Section 3: Bento Grid Charts -->
+<section class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+<!-- Area Chart: Pacientes por Día -->
+<div class="lg:col-span-2 glass-panel p-8 rounded-xl">
+<div class="flex justify-between items-center mb-10">
+<div>
+<h4 class="font-headline text-lg font-bold text-white uppercase tracking-tight">Pacientes por Día</h4>
+<p class="font-label text-[10px] text-on-surface-variant uppercase tracking-widest">Historial de consultas semanal</p>
+</div>
+<div class="flex gap-4">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="text-[10px] font-label text-on-surface-variant uppercase tracking-widest">Consultas</span>
+</div>
+</div>
+</div>
+<!-- Pure CSS Area Chart Mockup -->
+<div class="relative h-64 flex items-end gap-1">
+<div class="absolute inset-0 flex flex-col justify-between pointer-events-none">
+<div class="border-t border-outline-variant/10 w-full"></div>
+<div class="border-t border-outline-variant/10 w-full"></div>
+<div class="border-t border-outline-variant/10 w-full"></div>
+<div class="border-t border-outline-variant/10 w-full"></div>
+</div>
+<div class="relative flex-1 group h-full flex flex-col justify-end">
+<div class="w-full bg-gradient-to-t from-secondary/5 to-secondary/30 rounded-t-sm transition-all group-hover:bg-secondary/40" style="height: 40%;"></div>
+<div class="absolute bottom-[-24px] left-0 right-0 text-center font-label text-[10px] text-on-surface-variant">LUN</div>
+</div>
+<div class="relative flex-1 group h-full flex flex-col justify-end">
+<div class="w-full bg-gradient-to-t from-secondary/5 to-secondary/30 rounded-t-sm transition-all group-hover:bg-secondary/40" style="height: 65%;"></div>
+<div class="absolute bottom-[-24px] left-0 right-0 text-center font-label text-[10px] text-on-surface-variant">MAR</div>
+</div>
+<div class="relative flex-1 group h-full flex flex-col justify-end">
+<div class="w-full bg-gradient-to-t from-secondary/5 to-secondary/30 rounded-t-sm transition-all group-hover:bg-secondary/40" style="height: 55%;"></div>
+<div class="absolute bottom-[-24px] left-0 right-0 text-center font-label text-[10px] text-on-surface-variant">MIE</div>
+</div>
+<div class="relative flex-1 group h-full flex flex-col justify-end">
+<div class="w-full bg-gradient-to-t from-secondary/5 to-secondary/30 rounded-t-sm transition-all group-hover:bg-secondary/40" style="height: 85%;"></div>
+<div class="absolute bottom-[-24px] left-0 right-0 text-center font-label text-[10px] text-on-surface-variant">JUE</div>
+</div>
+<div class="relative flex-1 group h-full flex flex-col justify-end">
+<div class="w-full bg-gradient-to-t from-secondary/5 to-secondary/30 rounded-t-sm transition-all group-hover:bg-secondary/40" style="height: 70%;"></div>
+<div class="absolute bottom-[-24px] left-0 right-0 text-center font-label text-[10px] text-on-surface-variant">VIE</div>
+</div>
+<div class="relative flex-1 group h-full flex flex-col justify-end">
+<div class="w-full bg-gradient-to-t from-secondary/5 to-secondary/30 rounded-t-sm transition-all group-hover:bg-secondary/40" style="height: 30%;"></div>
+<div class="absolute bottom-[-24px] left-0 right-0 text-center font-label text-[10px] text-on-surface-variant">SAB</div>
+</div>
+<div class="relative flex-1 group h-full flex flex-col justify-end">
+<div class="w-full bg-gradient-to-t from-secondary/5 to-secondary/30 rounded-t-sm transition-all group-hover:bg-secondary/40" style="height: 20%;"></div>
+<div class="absolute bottom-[-24px] left-0 right-0 text-center font-label text-[10px] text-on-surface-variant">DOM</div>
+</div>
+</div>
+</div>
+<!-- Donut Chart: Estudios Populares -->
+<div class="glass-panel p-8 rounded-xl flex flex-col items-center">
+<div class="w-full text-left mb-8">
+<h4 class="font-headline text-lg font-bold text-white uppercase tracking-tight">Estudios</h4>
+<p class="font-label text-[10px] text-on-surface-variant uppercase tracking-widest">Distribución por especialidad</p>
+</div>
+<!-- Pure CSS Donut Mockup -->
+<div class="relative w-48 h-48 flex items-center justify-center">
+<div class="absolute inset-0 rounded-full border-[14px] border-surface-container-high"></div>
+<div class="absolute inset-0 rounded-full border-[14px] border-secondary border-l-transparent border-b-transparent rotate-45"></div>
+<div class="absolute inset-0 rounded-full border-[14px] border-primary-container/30 border-t-transparent border-r-transparent -rotate-12"></div>
+<div class="text-center">
+<span class="block font-headline text-3xl font-bold text-white">84%</span>
+<span class="block font-label text-[8px] text-on-surface-variant uppercase tracking-[0.2em]">Efectividad</span>
+</div>
+</div>
+<div class="w-full mt-8 space-y-3">
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-3">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-label text-xs text-on-surface uppercase tracking-wider">Radiografía</span>
+</div>
+<span class="font-headline text-xs text-white">42%</span>
+</div>
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-3">
+<span class="w-2 h-2 rounded-full bg-primary-container/50"></span>
+<span class="font-label text-xs text-on-surface uppercase tracking-wider">Resonancia</span>
+</div>
+<span class="font-headline text-xs text-white">31%</span>
+</div>
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-3">
+<span class="w-2 h-2 rounded-full bg-surface-container-high"></span>
+<span class="font-label text-xs text-on-surface uppercase tracking-wider">Otros</span>
+</div>
+<span class="font-headline text-xs text-white">27%</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 4: Recent Activity Table -->
+<section class="glass-panel rounded-xl overflow-hidden">
+<div class="px-8 py-6 flex justify-between items-center bg-surface-container/30">
+<h4 class="font-headline text-lg font-bold text-white uppercase tracking-tight">Pacientes de Hoy</h4>
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
+<input class="bg-surface-container-lowest border-none rounded-lg pl-9 pr-4 py-1.5 text-xs font-label text-on-surface focus:ring-1 focus:ring-secondary uppercase tracking-widest placeholder:text-on-surface-variant/50 w-48" placeholder="BUSCAR..." type="text"/>
+</div>
+<button class="text-on-surface-variant hover:text-white">
+<span class="material-symbols-outlined">filter_list</span>
+</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container-lowest/50 border-none">
+<tr>
+<th class="px-8 py-4 font-label text-[10px] text-on-surface-variant uppercase tracking-[0.2em] font-medium">Paciente</th>
+<th class="px-8 py-4 font-label text-[10px] text-on-surface-variant uppercase tracking-[0.2em] font-medium">Estudio</th>
+<th class="px-8 py-4 font-label text-[10px] text-on-surface-variant uppercase tracking-[0.2em] font-medium">Estado</th>
+<th class="px-8 py-4 font-label text-[10px] text-on-surface-variant uppercase tracking-[0.2em] font-medium">Hora</th>
+<th class="px-8 py-4 font-label text-[10px] text-on-surface-variant uppercase tracking-[0.2em] font-medium text-right">Acción</th>
+</tr>
+</thead>
+<tbody class="divide-y-0">
+<tr class="group hover:bg-white/5 transition-colors">
+<td class="px-8 py-5">
+<div class="flex items-center gap-4">
+<div class="w-9 h-9 rounded-full bg-[#272c37] flex items-center justify-center font-headline text-sm font-bold text-secondary">AM</div>
+<div>
+<p class="font-headline text-sm text-white font-medium">Alejandro Morales</p>
+<p class="font-label text-[10px] text-on-surface-variant uppercase tracking-widest">ID: #82910</p>
+</div>
+</div>
+</td>
+<td class="px-8 py-5">
+<span class="bg-[#32353c] text-on-surface px-3 py-1 rounded text-[10px] font-label uppercase tracking-widest">Resonancia Magnética</span>
+</td>
+<td class="px-8 py-5">
+<div class="flex items-center gap-2">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span>
+</span>
+<span class="font-label text-[10px] text-secondary uppercase tracking-widest">En Proceso</span>
+</div>
+</td>
+<td class="px-8 py-5 font-headline text-sm text-on-surface-variant">09:30 AM</td>
+<td class="px-8 py-5 text-right">
+<button class="p-2 hover:bg-surface-container-high rounded transition-colors text-on-surface-variant hover:text-white">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="group hover:bg-white/5 transition-colors">
+<td class="px-8 py-5">
+<div class="flex items-center gap-4">
+<div class="w-9 h-9 rounded-full bg-[#272c37] flex items-center justify-center font-headline text-sm font-bold text-secondary">EB</div>
+<div>
+<p class="font-headline text-sm text-white font-medium">Elena Beltrán</p>
+<p class="font-label text-[10px] text-on-surface-variant uppercase tracking-widest">ID: #82915</p>
+</div>
+</div>
+</td>
+<td class="px-8 py-5">
+<span class="bg-[#32353c] text-on-surface px-3 py-1 rounded text-[10px] font-label uppercase tracking-widest">Tomografía Axial</span>
+</td>
+<td class="px-8 py-5">
+<div class="flex items-center gap-2">
+<span class="h-2 w-2 rounded-full bg-green-500"></span>
+<span class="font-label text-[10px] text-green-500 uppercase tracking-widest">Completado</span>
+</div>
+</td>
+<td class="px-8 py-5 font-headline text-sm text-on-surface-variant">10:45 AM</td>
+<td class="px-8 py-5 text-right">
+<button class="p-2 hover:bg-surface-container-high rounded transition-colors text-on-surface-variant hover:text-white">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="group hover:bg-white/5 transition-colors">
+<td class="px-8 py-5">
+<div class="flex items-center gap-4">
+<div class="w-9 h-9 rounded-full bg-[#272c37] flex items-center justify-center font-headline text-sm font-bold text-secondary">RV</div>
+<div>
+<p class="font-headline text-sm text-white font-medium">Ricardo Vargas</p>
+<p class="font-label text-[10px] text-on-surface-variant uppercase tracking-widest">ID: #82922</p>
+</div>
+</div>
+</td>
+<td class="px-8 py-5">
+<span class="bg-[#32353c] text-on-surface px-3 py-1 rounded text-[10px] font-label uppercase tracking-widest">RX Tórax</span>
+</td>
+<td class="px-8 py-5">
+<div class="flex items-center gap-2">
+<span class="h-2 w-2 rounded-full bg-outline-variant"></span>
+<span class="font-label text-[10px] text-on-surface-variant uppercase tracking-widest">Programado</span>
+</div>
+</td>
+<td class="px-8 py-5 font-headline text-sm text-on-surface-variant">12:15 PM</td>
+<td class="px-8 py-5 text-right">
+<button class="p-2 hover:bg-surface-container-high rounded transition-colors text-on-surface-variant hover:text-white">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="px-8 py-4 bg-surface-container/30 flex justify-center">
+<button class="font-label text-[10px] text-secondary uppercase tracking-[0.2em] hover:underline">Ver todo el registro</button>
+</div>
+</section>
+</main>
+<!-- Floating Action Anchor (Suppressed contextually if needed, but active here for main action) -->
+<button class="fixed bottom-8 right-8 w-14 h-14 rounded-full bg-gradient-to-tr from-secondary-fixed to-secondary-fixed-dim text-on-secondary shadow-[0_0_30px_-5px_rgba(0,222,209,0.5)] flex items-center justify-center active:scale-95 transition-transform z-50">
+<span class="material-symbols-outlined">add</span>
+</button>
+</body></html>

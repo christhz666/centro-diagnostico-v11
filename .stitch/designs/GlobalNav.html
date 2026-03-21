@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lumina OS - Clinical Intelligence</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-surface": "#f2f3fd",
+                        "on-tertiary": "#003650",
+                        "on-primary-fixed-variant": "#00635d",
+                        "primary": "#3df5e7",
+                        "on-secondary-fixed-variant": "#505e5c",
+                        "tertiary-fixed": "#38bbff",
+                        "on-tertiary-container": "#002b40",
+                        "primary-fixed-dim": "#1fe6d9",
+                        "tertiary-container": "#18b0f5",
+                        "secondary-fixed": "#d6e6e3",
+                        "secondary-fixed-dim": "#c8d8d5",
+                        "on-background": "#f2f3fd",
+                        "tertiary": "#46beff",
+                        "on-surface-variant": "#a9abb4",
+                        "error-dim": "#d7383b",
+                        "surface": "#0b0e15",
+                        "surface-dim": "#0b0e15",
+                        "primary-dim": "#1fe6d9",
+                        "secondary-dim": "#c8d8d5",
+                        "surface-bright": "#272c37",
+                        "surface-container-high": "#1c2029",
+                        "on-error-container": "#ffa8a3",
+                        "primary-container": "#05e1d3",
+                        "background": "#0b0e15",
+                        "outline-variant": "#454850",
+                        "on-secondary-fixed": "#344240",
+                        "secondary-container": "#3b4a48",
+                        "on-primary": "#005853",
+                        "surface-container-low": "#10131b",
+                        "tertiary-dim": "#00a8eb",
+                        "on-error": "#490006",
+                        "outline": "#73757e",
+                        "on-primary-container": "#004b46",
+                        "inverse-on-surface": "#52555d",
+                        "inverse-surface": "#f9f9ff",
+                        "tertiary-fixed-dim": "#0daef2",
+                        "on-tertiary-fixed": "#001a29",
+                        "on-tertiary-fixed-variant": "#003e59",
+                        "on-primary-fixed": "#00443f",
+                        "surface-container-lowest": "#000000",
+                        "primary-fixed": "#3df5e7",
+                        "secondary": "#d6e6e3",
+                        "inverse-primary": "#006b64",
+                        "error-container": "#9f0519",
+                        "on-secondary": "#465552",
+                        "surface-tint": "#3df5e7",
+                        "surface-container-highest": "#212630",
+                        "error": "#ff716c",
+                        "surface-variant": "#212630",
+                        "surface-container": "#161a22",
+                        "on-secondary-container": "#c4d4d1"
+                    },
+                    fontFamily: {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Manrope"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #0b0e15;
+            color: #f2f3fd;
+            overflow-x: hidden;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glow-top-left {
+            background: radial-gradient(circle at 0% 0%, rgba(61, 245, 231, 0.05) 0%, transparent 50%);
+        }
+        .glow-bottom-right {
+            background: radial-gradient(circle at 100% 100%, rgba(16, 79, 74, 0.2) 0%, transparent 50%);
+        }
+        .glass-sidebar {
+            background: rgba(22, 26, 34, 0.8);
+            backdrop-filter: blur(24px);
+        }
+        .glass-header {
+            background: rgba(16, 19, 27, 0.7);
+            backdrop-filter: blur(16px);
+        }
+    </style>
+</head>
+<body class="font-body selection:bg-primary/30 selection:text-primary">
+<!-- Ambient Glow Backgrounds -->
+<div class="fixed inset-0 pointer-events-none z-0">
+<div class="absolute inset-0 glow-top-left"></div>
+<div class="absolute inset-0 glow-bottom-right"></div>
+</div>
+<!-- SideNavBar (Authority: JSON & Design System) -->
+<aside class="fixed left-0 top-0 h-screen w-64 glass-sidebar z-50 flex flex-col py-8 px-4 gap-y-6 font-['Space_Grotesk'] tracking-tight">
+<!-- Brand Identity Section -->
+<div class="flex items-center gap-x-3 px-2">
+<div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20 shadow-[0_0_15px_rgba(61,245,231,0.1)]">
+<span class="material-symbols-outlined text-primary" data-icon="clinical_notes">clinical_notes</span>
+</div>
+<div class="flex flex-col">
+<span class="text-primary font-bold text-xl tracking-widest leading-none">LUMINA CLINIC</span>
+<span class="text-[#bacac7] text-[10px] uppercase tracking-[0.2em] mt-1 opacity-70">Clinical Intelligence</span>
+</div>
+</div>
+<!-- Navigation Links -->
+<nav class="flex flex-col gap-y-1 mt-4">
+<!-- Dashboard (Active State) -->
+<a class="bg-[#3df5e7]/10 text-[#3df5e7] font-semibold rounded-md flex items-center gap-x-3 px-4 py-3 transition-all duration-300 active:scale-95" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="dashboard" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="text-sm">Dashboard</span>
+</a>
+<!-- Patients (Inactive State) -->
+<a class="text-[#d6e6e3]/60 hover:text-[#d6e6e3] hover:bg-[#272c37]/50 transition-all duration-300 flex items-center gap-x-3 px-4 py-3 rounded-md active:scale-95" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="group">group</span>
+<span class="text-sm">Patients</span>
+</a>
+<!-- Billing (Inactive State) -->
+<a class="text-[#d6e6e3]/60 hover:text-[#d6e6e3] hover:bg-[#272c37]/50 transition-all duration-300 flex items-center gap-x-3 px-4 py-3 rounded-md active:scale-95" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="payments">payments</span>
+<span class="text-sm">Billing</span>
+</a>
+<!-- Admin (Inactive State) -->
+<a class="text-[#d6e6e3]/60 hover:text-[#d6e6e3] hover:bg-[#272c37]/50 transition-all duration-300 flex items-center gap-x-3 px-4 py-3 rounded-md active:scale-95" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="admin_panel_settings">admin_panel_settings</span>
+<span class="text-sm">Admin</span>
+</a>
+</nav>
+<!-- Bottom Action CTA -->
+<div class="mt-auto px-2">
+<button class="w-full bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold py-3.5 rounded-md flex items-center justify-center gap-x-2 shadow-lg shadow-primary/10 hover:shadow-primary/20 transition-all duration-300 active:scale-95 group">
+<span class="material-symbols-outlined text-[20px]" data-icon="person_add">person_add</span>
+<span class="text-sm">Register New Patient</span>
+</button>
+</div>
+</aside>
+<!-- TopAppBar (Authority: JSON & Design System) -->
+<header class="fixed top-0 right-0 left-64 h-16 glass-header z-40 flex items-center justify-end px-8 gap-x-6 border-none font-['Manrope'] text-sm">
+<!-- Search Interface (Hidden as per JSON, but styled for layout placeholder) -->
+<div class="hidden flex-1 max-w-md mx-8">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]" data-icon="search">search</span>
+<input class="w-full bg-surface-container-highest/50 border-none rounded-lg pl-10 pr-4 py-1.5 text-xs text-on-surface focus:ring-1 focus:ring-primary/40 placeholder:text-on-surface-variant/50" placeholder="Global search..." type="text"/>
+</div>
+</div>
+<!-- Utility Actions -->
+<div class="flex items-center gap-x-4">
+<button class="text-[#bacac7] hover:text-[#3df5e7] transition-colors focus:ring-1 focus:ring-[#3df5e7]/40 p-1.5 rounded-full" title="Notifications">
+<span class="material-symbols-outlined text-[22px]" data-icon="notifications">notifications</span>
+</button>
+<button class="text-[#bacac7] hover:text-[#3df5e7] transition-colors focus:ring-1 focus:ring-[#3df5e7]/40 p-1.5 rounded-full" title="Help">
+<span class="material-symbols-outlined text-[22px]" data-icon="help">help</span>
+</button>
+<button class="text-[#bacac7] hover:text-[#3df5e7] transition-colors focus:ring-1 focus:ring-[#3df5e7]/40 p-1.5 rounded-full" title="Settings">
+<span class="material-symbols-outlined text-[22px]" data-icon="settings">settings</span>
+</button>
+</div>
+<!-- Divider tonal shift -->
+<div class="w-px h-6 bg-outline-variant/20 mx-2"></div>
+<!-- Profile Section -->
+<div class="flex items-center gap-x-3 group cursor-pointer">
+<div class="flex flex-col items-end">
+<span class="text-on-surface font-semibold text-[13px] group-hover:text-primary transition-colors">Dr. Elias Smith</span>
+<span class="text-[#bacac7] text-[10px] uppercase tracking-wider opacity-60">Chief Medical Officer</span>
+</div>
+<div class="relative">
+<img alt="Dr. Elias Smith" class="w-9 h-9 rounded-lg object-cover border border-outline-variant/30 group-hover:border-primary/40 transition-all" data-alt="Professional portrait of a male doctor in clinical attire" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD8ypFUgskNRQTDNKzXnUir79XQbBrn1nRiVOsjjjZuUvVCrrJaLtUdyYxIxQCXx8Zapr--uIWYoNMOD-twTPHZ871PoEptdMebhxLKTCNbLSa9j1zc_3E3umv2dDWjwi3XV9G1uzssmYFbBmkkJw1Bl-GEfNR9IbtEGuTFwvK5wc8s-rB6YfJsMDm4nHK0gO7u3x36PPypmUVYUEWy4aFBJ9l10oXxUVvjOOgYmWatInHIbOiJdQqo8a9cGtRzXjTcjArD-3AY4idm"/>
+<div class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-primary rounded-full border-2 border-[#10131b]"></div>
+</div>
+</div>
+</header>
+<!-- Main Routing Area (The Canvas) -->
+<main class="ml-64 mt-16 p-8 relative z-10 min-h-[calc(100vh-64px)]">
+<!-- Editorial Headline -->
+<div class="flex justify-between items-end mb-12">
+<div>
+<h1 class="font-headline text-4xl font-bold text-on-surface tracking-tight leading-none">Clinical Overview</h1>
+<p class="font-body text-[#bacac7] mt-3 max-w-xl text-sm leading-relaxed">
+                    Welcome back, <span class="text-primary/90">Dr. Smith</span>. You have 4 patient reviews pending and 2 urgent laboratory results awaiting verification.
+                </p>
+</div>
+<div class="text-right">
+<span class="font-label text-[10px] text-on-surface-variant uppercase tracking-[0.2em] block">Current Shift</span>
+<span class="font-headline text-xl font-medium text-on-surface">08:42 <span class="text-primary/50 text-sm">AM</span></span>
+</div>
+</div>
+<!-- Placeholder for routing content: Bento Grid Suggestion -->
+<div class="grid grid-cols-12 gap-6">
+<!-- Large Focus Card -->
+<div class="col-span-8 h-80 bg-surface-container-low rounded-xl p-8 flex flex-col justify-between border-none">
+<div class="flex justify-between items-start">
+<span class="font-label text-[11px] text-[#bacac7] uppercase tracking-widest">Real-time Patient Activity</span>
+<div class="flex gap-x-2">
+<div class="flex items-center gap-x-1.5 px-3 py-1 rounded-full bg-primary/5 border border-primary/10">
+<span class="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></span>
+<span class="text-[10px] text-primary font-semibold">LIVE</span>
+</div>
+</div>
+</div>
+<!-- Vital Sparkline Placeholder (Signature Component) -->
+<div class="flex items-center justify-center border border-outline-variant/10 rounded-lg bg-surface-container-lowest/30 h-40">
+<div class="flex flex-col items-center gap-y-3 opacity-40">
+<span class="material-symbols-outlined text-4xl" data-icon="monitoring">monitoring</span>
+<span class="font-label text-xs uppercase tracking-widest">Telemetry Stream Offline</span>
+</div>
+</div>
+<div class="flex gap-x-12">
+<div>
+<span class="block text-[10px] text-[#bacac7] uppercase tracking-widest mb-1">Total Admissions</span>
+<span class="text-2xl font-headline font-bold text-on-surface">142</span>
+</div>
+<div>
+<span class="block text-[10px] text-[#bacac7] uppercase tracking-widest mb-1">Recovery Rate</span>
+<span class="text-2xl font-headline font-bold text-primary">94.2%</span>
+</div>
+</div>
+</div>
+<!-- Side Card -->
+<div class="col-span-4 h-80 bg-surface-container-high/40 rounded-xl p-6 border-none backdrop-blur-sm">
+<div class="flex items-center justify-between mb-6">
+<span class="font-label text-[11px] text-[#bacac7] uppercase tracking-widest">Urgent Alerts</span>
+<span class="material-symbols-outlined text-error text-[20px]" data-icon="emergency_home">emergency_home</span>
+</div>
+<div class="space-y-4">
+<!-- Alert Item -->
+<div class="p-3 bg-error/5 rounded-lg border border-error/10">
+<div class="flex justify-between mb-1">
+<span class="text-xs font-bold text-error">Critical Lab</span>
+<span class="text-[10px] text-error/60">2m ago</span>
+</div>
+<p class="text-[11px] text-[#f2f3fd]/80">Patient #8821: Potassium levels outside normal range.</p>
+</div>
+<!-- Alert Item -->
+<div class="p-3 bg-surface-bright/50 rounded-lg">
+<div class="flex justify-between mb-1">
+<span class="text-xs font-bold text-on-surface">Nurse Call</span>
+<span class="text-[10px] text-[#bacac7]">15m ago</span>
+</div>
+<p class="text-[11px] text-[#f2f3fd]/80">Room 402 requesting attending physician for consultation.</p>
+</div>
+</div>
+<button class="w-full mt-6 py-2 rounded-md bg-surface-bright text-[11px] font-bold text-primary-fixed uppercase tracking-widest hover:bg-surface-container-highest transition-colors">
+                    View All Activity
+                </button>
+</div>
+</div>
+</main>
+</body></html>

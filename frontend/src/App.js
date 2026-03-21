@@ -187,8 +187,14 @@ function App() {
   return (
     <OfflineScreen>
       <Router>
-        <div className={`min-h-screen flex flex-col transition-colors duration-300 bg-background-light dark:bg-background-dark`}>
-          {/* Portal Paciente — ruta PÚBLICA (no requiere login de empleado) */}
+        <div className={`min-h-screen flex flex-col transition-colors duration-300 bg-[#0b0e15] text-[#f2f3fd] selection:bg-[#3df5e7]/30 selection:text-[#3df5e7] overflow-x-hidden relative font-body`}>
+          
+          {/* Ambient Glow Backgrounds */}
+          <div className="fixed inset-0 pointer-events-none z-0">
+            <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at 0% 0%, rgba(61, 245, 231, 0.05) 0%, transparent 50%)' }}></div>
+            <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at 100% 100%, rgba(16, 79, 74, 0.2) 0%, transparent 50%)' }}></div>
+          </div>
+
           <PortalPacienteRoute>
             {!user ? (
               <Login onLogin={handleLogin} empresaConfig={empresaConfig} authNotice={authNotice} />
@@ -202,137 +208,154 @@ function App() {
                   showProgress
                   callback={handleTourCallback}
                   locale={{ back: 'Atrás', close: 'Cerrar', last: 'Finalizar', next: 'Siguiente', skip: 'Saltar tour' }}
-                  styles={{ options: { primaryColor: '#2563eb', zIndex: 10000 } }}
+                  styles={{ options: { primaryColor: '#3df5e7', zIndex: 10000, backgroundColor: '#1c2029', textColor: '#f2f3fd' } }}
                 />
-                {/* Header */}
-                <header className="sticky top-0 z-50 h-16 glass-header flex items-center justify-between px-4 lg:px-8 border-b border-gray-100 dark:border-white/5">
-                  <div className="flex items-center gap-4">
-                    <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 rounded-xl h-10 w-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors">
-                      <span className="material-icons-round">{sidebarOpen ? 'menu_open' : 'menu'}</span>
-                    </button>
-                    <h1 className="text-lg font-display font-semibold text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
-                      <PageTitle />
-                    </h1>
-                  </div>
-
-                  <div className="flex items-center gap-4">
-                    <div className="hidden md:flex flex-col items-end">
-                      <span className="text-[10px] text-primary font-bold uppercase tracking-widest">{rol}</span>
-                      <span className="text-sm font-semibold text-gray-900 dark:text-white">{user.nombre || user.username || 'Usuario'}</span>
-                    </div>
-
-                    {/* Theme Toggle */}
-                    <button onClick={() => setDarkMode(!darkMode)} className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-primary transition-all duration-500 group">
-                      <span className="material-icons-round text-xl group-hover:rotate-12 transition-transform duration-500">{darkMode ? 'light_mode' : 'dark_mode'}</span>
-                    </button>
-
-                    <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-primary to-blue-600 p-[1px] shadow-neon">
-                      <div className="h-full w-full rounded-xl bg-white dark:bg-slate-800 flex items-center justify-center text-xs font-bold dark:text-white text-slate-800">
-                        {(user.nombre || 'U')[0].toUpperCase()}
-                      </div>
-                    </div>
-                  </div>
-                </header>
 
                 <div className="flex flex-1 overflow-hidden">
-                  {/* Mobile overlay — tap to close sidebar */}
+                  {/* Mobile overlay */}
                   {isMobile && sidebarOpen && (
                     <div
                       onClick={() => setSidebarOpen(false)}
-                      style={{
-                        position: 'fixed', inset: '4rem 0 0 0', zIndex: 39,
-                        background: 'rgba(0,0,0,0.5)',
-                        backdropFilter: 'blur(2px)'
-                      }}
+                      className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
                     />
                   )}
 
-                  {/* Sidebar */}
-                  <aside className={`fixed top-16 bottom-0 left-0 z-40 transition-all duration-300 ease-in-out bg-white dark:bg-[#020617] border-r border-gray-200 dark:border-white/10 flex flex-col
-                  ${isMobile
-                      ? (sidebarOpen ? 'w-72 translate-x-0 shadow-2xl' : '-translate-x-full w-72')
-                      : (sidebarOpen ? 'w-64 translate-x-0' : 'w-20 translate-x-0')}
-                `}>
-                    <div className="p-6 flex items-center justify-center">
-                      {empresaConfig.logo_sidebar ? (
-                        <img src={empresaConfig.logo_sidebar} alt="Logo" className={`max-h-12 max-w-[160px] object-contain transition-all ${!sidebarOpen && 'scale-90 max-w-[40px]'}`} />
-                      ) : (
-                        <div className={`h-12 w-12 bg-primary rounded-2xl flex items-center justify-center shadow-neon transition-all ${!sidebarOpen && 'scale-90'}`}>
-                          <span className="material-icons-round text-slate-900">medical_services</span>
-                        </div>
-                      )}
-                    </div>
+                  {/* Sidebar Navigation */}
+                  <aside className={`fixed top-0 bottom-0 left-0 z-50 flex flex-col py-8 px-4 gap-y-6 transition-all duration-300 ease-in-out font-display tracking-tight
+                      bg-[rgba(22,26,34,0.8)] backdrop-blur-[24px] border-r border-white/5 shadow-[20px_0px_40px_rgba(0,0,0,0.2)]
+                      ${isMobile
+                          ? (sidebarOpen ? 'w-72 translate-x-0' : '-translate-x-full w-72')
+                          : (sidebarOpen ? 'w-64 translate-x-0' : 'w-20 translate-x-0')}
+                  `}>
+                     {/* Brand Identity Section */}
+                     <div className="flex items-center gap-x-3 px-2">
+                       <div className={`w-10 h-10 rounded-lg bg-[#3df5e7]/10 flex items-center justify-center border border-[#3df5e7]/20 shadow-[0_0_15px_rgba(61,245,231,0.1)] transition-all flex-shrink-0 ${!sidebarOpen && !isMobile ? 'mx-auto' : ''}`}>
+                          <span className="material-symbols-outlined text-[#3df5e7]" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24" }}>clinical_notes</span>
+                       </div>
+                       {(sidebarOpen || isMobile) && (
+                         <div className="flex flex-col overflow-hidden">
+                           <span className="text-[#3df5e7] font-bold text-xl tracking-widest leading-none truncate">{empresaConfig.nombre || 'LUMINA'}</span>
+                           <span className="text-[#bacac7] text-[10px] uppercase tracking-[0.2em] mt-1 opacity-70 truncate">Clinical Intelligence</span>
+                         </div>
+                       )}
+                     </div>
 
-                    <nav className="flex-1 px-4 space-y-1 py-4 overflow-y-auto custom-scrollbar">
-                      {filteredMenu.map((item, idx) => (
-                        <NavLink
-                          key={idx}
-                          to={item.path}
-                          end={item.path === '/'}
-                          onClick={() => isMobile && setSidebarOpen(false)}
-                          className={({ isActive }) => `
-                          flex items-center gap-4 p-3 rounded-r-2xl transition-all group relative font-display tracking-wide
-                          ${isActive
-                              ? 'bg-cyan-500/10 text-primary font-bold border-l-4 border-primary'
-                              : 'text-slate-400 dark:text-gray-500 hover:bg-white/5 hover:text-primary'}
-                        `}>
-                          <span className="material-icons-round transition-transform group-hover:scale-110">{item.icon}</span>
-                          <span className={`font-medium whitespace-nowrap transition-opacity duration-300 ${!sidebarOpen && 'opacity-0 pointer-events-none w-0 overflow-hidden'}`}>
-                            {item.label}
-                          </span>
-                          {!sidebarOpen && !isMobile && (
-                            <div className="absolute left-full ml-4 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none z-50 transition-opacity whitespace-nowrap">
-                              {item.label}
-                            </div>
-                          )}
-                        </NavLink>
-                      ))}
-
-                      {/* Admin Submenu Section */}
-                      {isAdmin && (
-                        <div className="pt-2">
-                          <button
-                            onClick={() => setAdminOpen(!adminOpen)}
-                            className={`w-full flex items-center justify-between p-3 rounded-2xl transition-all group relative
-                            ${adminOpen ? 'text-primary' : 'text-slate-400 dark:text-gray-500 hover:text-primary hover:bg-slate-50 dark:hover:bg-white/5'}
-                          `}
+                     {/* Navigation Links */}
+                     <nav className="flex-1 px-1 space-y-1 py-4 overflow-y-auto custom-scrollbar flex flex-col gap-y-1 mt-4">
+                        {filteredMenu.map((item, idx) => (
+                          <NavLink
+                              key={idx}
+                              to={item.path}
+                              end={item.path === '/'}
+                              onClick={() => isMobile && setSidebarOpen(false)}
+                              className={({ isActive }) => `
+                              flex items-center gap-x-3 px-4 py-3 rounded-md transition-all duration-300 group relative
+                              ${isActive
+                                  ? 'bg-[#3df5e7]/10 text-[#3df5e7] font-semibold active:scale-95'
+                                  : 'text-[#d6e6e3]/60 hover:text-[#d6e6e3] hover:bg-[#272c37]/50 active:scale-95'}
+                              `}
                           >
-                            <div className="flex items-center gap-4">
-                              <span className="material-icons-round">settings</span>
-                              <span className={`font-medium whitespace-nowrap transition-opacity duration-300 ${!sidebarOpen && 'lg:opacity-0'}`}>Administración</span>
-                            </div>
-                            {sidebarOpen && (
-                              <span className={`material-icons-round text-sm transition-transform ${adminOpen ? 'rotate-180' : ''}`}>expand_more</span>
+                            <span className="material-symbols-outlined text-[20px] transition-transform group-hover:scale-110 flex-shrink-0" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24" }}>{item.icon}</span>
+                            <span className={`text-sm whitespace-nowrap transition-opacity duration-300 ${!sidebarOpen && !isMobile ? 'opacity-0 pointer-events-none w-0 overflow-hidden hidden' : 'block'}`}>
+                              {item.label}
+                            </span>
+                            
+                            {!sidebarOpen && !isMobile && (
+                              <div className="absolute left-full ml-4 px-2 py-1 bg-[#272c37] border border-[#454850] text-[#f2f3fd] text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none z-50 transition-opacity whitespace-nowrap shadow-xl">
+                                {item.label}
+                              </div>
                             )}
-                          </button>
+                          </NavLink>
+                        ))}
 
-                          <div className={`overflow-hidden transition-all duration-300 ${adminOpen && sidebarOpen ? 'max-h-96 mt-1 opacity-100' : 'max-h-0 opacity-0'}`}>
-                            <div className="ml-9 space-y-1 border-l-2 border-primary/20 pl-3">
-                              <NavLink to="/admin/usuarios" className={({ isActive }) => `block p-2 text-sm rounded-xl transition-all ${isActive ? 'text-primary font-bold bg-primary/5' : 'text-slate-400 dark:text-gray-500 hover:text-primary'}`}>Usuarios</NavLink>
-                              <NavLink to="/admin/equipos" className={({ isActive }) => `block p-2 text-sm rounded-xl transition-all ${isActive ? 'text-primary font-bold bg-primary/5' : 'text-slate-400 dark:text-gray-500 hover:text-primary'}`}>Equipos</NavLink>
-                              <NavLink to="/admin/estudios" className={({ isActive }) => `block p-2 text-sm rounded-xl transition-all ${isActive ? 'text-primary font-bold bg-primary/5' : 'text-slate-400 dark:text-gray-500 hover:text-primary'}`}>Catálogo</NavLink>
-                              <NavLink to="/admin" className={({ isActive }) => `block p-2 text-sm rounded-xl transition-all ${isActive ? 'text-primary font-bold bg-primary/5' : 'text-slate-400 dark:text-gray-500 hover:text-primary'}`}>Configuración</NavLink>
-                              <NavLink to="/contabilidad" className={({ isActive }) => `block p-2 text-sm rounded-xl transition-all ${isActive ? 'text-primary font-bold bg-primary/5' : 'text-slate-400 dark:text-gray-500 hover:text-primary'}`}>Contabilidad</NavLink>
-                              <NavLink to="/campana-whatsapp" className={({ isActive }) => `block p-2 text-sm rounded-xl transition-all ${isActive ? 'text-primary font-bold bg-primary/5' : 'text-slate-400 dark:text-gray-500 hover:text-primary'}`}>WhatsApp</NavLink>
-                              <NavLink to="/descargar-app" className={({ isActive }) => `block p-2 text-sm rounded-xl transition-all ${isActive ? 'text-primary font-bold bg-primary/5' : 'text-slate-400 dark:text-gray-500 hover:text-primary'}`}>Descargas</NavLink>
+                        {/* Admin Submenu Section */}
+                        {isAdmin && (
+                          <div className="pt-2">
+                            <button
+                              onClick={() => setAdminOpen(!adminOpen)}
+                              className={`w-full flex items-center justify-between px-4 py-3 rounded-md transition-all duration-300 group relative
+                              ${adminOpen ? 'text-[#3df5e7]' : 'text-[#d6e6e3]/60 hover:text-[#d6e6e3] hover:bg-[#272c37]/50'}
+                            `}
+                            >
+                              <div className="flex items-center gap-x-3">
+                                <span className="material-symbols-outlined text-[20px] flex-shrink-0" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24" }}>admin_panel_settings</span>
+                                <span className={`text-sm whitespace-nowrap transition-opacity duration-300 ${!sidebarOpen && !isMobile ? 'hidden' : 'block'}`}>Administración</span>
+                              </div>
+                              {(sidebarOpen || isMobile) && (
+                                <span className={`material-icons-round text-sm transition-transform ${adminOpen ? 'rotate-180' : ''}`}>expand_more</span>
+                              )}
+                            </button>
+
+                            <div className={`overflow-hidden transition-all duration-300 ${adminOpen && (sidebarOpen || isMobile) ? 'max-h-96 mt-1 opacity-100' : 'max-h-0 opacity-0'}`}>
+                              <div className="ml-9 space-y-1 border-l border-[#3df5e7]/20 pl-3">
+                                <NavLink to="/admin/usuarios" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#3df5e7] font-bold bg-[#3df5e7]/5' : 'text-[#d6e6e3]/60 hover:text-[#3df5e7]'}`}>Usuarios</NavLink>
+                                <NavLink to="/admin/equipos" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#3df5e7] font-bold bg-[#3df5e7]/5' : 'text-[#d6e6e3]/60 hover:text-[#3df5e7]'}`}>Equipos</NavLink>
+                                <NavLink to="/admin/estudios" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#3df5e7] font-bold bg-[#3df5e7]/5' : 'text-[#d6e6e3]/60 hover:text-[#3df5e7]'}`}>Catálogo</NavLink>
+                                <NavLink to="/admin" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#3df5e7] font-bold bg-[#3df5e7]/5' : 'text-[#d6e6e3]/60 hover:text-[#3df5e7]'}`}>Configuración</NavLink>
+                                <NavLink to="/contabilidad" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#3df5e7] font-bold bg-[#3df5e7]/5' : 'text-[#d6e6e3]/60 hover:text-[#3df5e7]'}`}>Contabilidad</NavLink>
+                                <NavLink to="/campana-whatsapp" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#3df5e7] font-bold bg-[#3df5e7]/5' : 'text-[#d6e6e3]/60 hover:text-[#3df5e7]'}`}>WhatsApp</NavLink>
+                                <NavLink to="/descargar-app" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#3df5e7] font-bold bg-[#3df5e7]/5' : 'text-[#d6e6e3]/60 hover:text-[#3df5e7]'}`}>Descargas</NavLink>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      )}
-                    </nav>
+                        )}
+                     </nav>
 
-                    <div className="p-4 border-t border-gray-100 dark:border-white/5">
-                      <button onClick={handleLogout} className="w-full flex items-center gap-4 p-3 rounded-2xl text-red-400 hover:bg-red-500/10 transition-all group">
-                        <span className="material-icons-round">logout</span>
-                        <span className={`font-medium transition-opacity ${!sidebarOpen && 'lg:opacity-0'}`}>Sair</span>
-                      </button>
-                    </div>
+                     {/* Bottom Navigation CTA */}
+                     <div className="mt-auto px-2 border-t border-white/5 pt-4">
+                       <button onClick={handleLogout} className="w-full bg-[#32353c]/30 hover:bg-[#d7383b]/20 text-[#d7383b] font-bold py-3.5 rounded-md flex items-center justify-center gap-x-2 transition-all duration-300 active:scale-95 group">
+                         <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24" }}>logout</span>
+                         {(sidebarOpen || isMobile) && <span className="text-sm">Log Out</span>}
+                       </button>
+                     </div>
                   </aside>
 
-                  <main className={`flex-1 overflow-y-auto p-4 lg:p-8 relative transition-all duration-300
-                  ${!isMobile && sidebarOpen ? 'ml-64' : (!isMobile ? 'ml-20' : 'ml-0')}
-                `}>
-                    <div className="fixed top-20 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl pointer-events-none -z-10"></div>
+                  {/* TopAppBar */}
+                  <header className={`fixed top-0 right-0 h-16 bg-[rgba(16,19,27,0.7)] backdrop-blur-[16px] z-40 flex items-center justify-between px-4 lg:px-8 gap-x-6 border-b border-white/5 font-body text-sm transition-all duration-300
+                    ${!isMobile ? (sidebarOpen ? 'left-64' : 'left-20') : 'left-0'}
+                  `}>
+                    <div className="flex items-center gap-4">
+                      {isMobile ? (
+                        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-[#bacac7] hover:text-[#3df5e7] p-2 transition-colors">
+                          <span className="material-icons-round">{sidebarOpen ? 'menu_open' : 'menu'}</span>
+                        </button>
+                      ) : (
+                        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-[#bacac7] hover:text-[#3df5e7] p-2 transition-colors">
+                          <span className="material-icons-round">{sidebarOpen ? 'chevron_left' : 'chevron_right'}</span>
+                        </button>
+                      )}
+                      <h1 className="text-lg font-headline font-semibold text-[#e1e2eb] tracking-tight flex items-center gap-2">
+                        <PageTitle />
+                      </h1>
+                    </div>
+
+                    <div className="flex items-center gap-x-4">
+                      {/* Utilities */}
+                      <button className="text-[#bacac7] hover:text-[#3df5e7] transition-colors focus:ring-1 focus:ring-[#3df5e7]/40 p-1.5 rounded-full hidden sm:block">
+                        <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24" }}>notifications</span>
+                      </button>
+                      <div className="w-px h-6 bg-[#454850]/40 mx-2 hidden sm:block"></div>
+
+                      {/* Profile Section */}
+                      <div className="flex items-center gap-x-3 group cursor-pointer" onClick={() => {/* profile nav logic if needed */}}>
+                        <div className="hidden sm:flex flex-col items-end">
+                          <span className="text-on-surface font-semibold text-[13px] group-hover:text-primary transition-colors">{user.nombre || user.username || 'Dr. Lumina'}</span>
+                          <span className="text-[#bacac7] text-[10px] uppercase tracking-wider opacity-60">{rol}</span>
+                        </div>
+                        <div className="relative">
+                          <div className="w-9 h-9 rounded-lg bg-[#272c37] border border-[#454850]/50 group-hover:border-[#3df5e7]/50 transition-all flex items-center justify-center font-bold text-sm text-[#00e0d3]">
+                            {(user.nombre || 'U')[0].toUpperCase()}
+                          </div>
+                          <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-[#3df5e7] rounded-full border-2 border-[#10131b]"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </header>
+
+                  {/* Main Routing Area */}
+                  <main className={`flex-1 relative z-10 min-h-[calc(100vh-64px)] mt-16 p-6 lg:p-8 transition-all duration-300
+                      ${!isMobile && sidebarOpen ? 'ml-64' : (!isMobile ? 'ml-20' : 'ml-0')}
+                  `}>
                     <Suspense fallback={<RouteLoader />}>
                       <Routes>
                         <Route path="/" element={<Dashboard />} />
@@ -360,8 +383,8 @@ function App() {
                 </div>
               </>
             )}
-            <div className="fixed bottom-2 right-4 text-[10px] font-mono text-slate-400 pointer-events-none opacity-50 z-[60]">
-              v1.2.0-PREMIUM
+            <div className="fixed bottom-2 right-4 text-[10px] font-mono text-slate-500 pointer-events-none opacity-50 z-[60]">
+              OS v1.2.0 • Obsidian Pulse
             </div>
           </PortalPacienteRoute>
         </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { FaUserPlus, FaSearch, FaTrash, FaSpinner, FaCheck, FaPrint, FaArrowRight, FaArrowLeft, FaIdCard, FaStethoscope, FaWallet, FaShieldAlt } from 'react-icons/fa';
+import { FaSpinner } from 'react-icons/fa';
 import api from '../services/api';
 import FacturaTermica from './FacturaTermica';
 import useDebounce from '../hooks/useDebounce';
@@ -38,16 +38,10 @@ const RegistroInteligente = () => {
 
   const buscarPaciente = useCallback(async (queryInput = '') => {
     const query = String(queryInput || '').trim();
-    if (!query) {
+    if (!query || query.length < 2) {
       setPacientes([]);
       return;
     }
-
-    if (query.length < 2) {
-      setPacientes([]);
-      return;
-    }
-
     try {
       setLoading(true);
       const response = await api.getPacientes({ search: query });
@@ -116,28 +110,25 @@ const RegistroInteligente = () => {
   const calcularSubtotal = () => estudiosSeleccionados.reduce((sum, e) => sum + ((e.precio || 0) * (e.cantidad || 1)), 0);
   const calcularCobertura = () => estudiosSeleccionados.reduce((sum, e) => sum + (e.cobertura || 0), 0);
   const calcularTotal = () => Math.max(0, calcularSubtotal() - calcularCobertura() - descuento);
+  
   const finalizarRegistro = async () => {
     if (estudiosSeleccionados.length === 0) { alert('Agregue al menos un estudio'); return; }
     try {
       setLoading(true);
       const ahora = new Date();
-
-      // ── Detectar si hay estudios de Rayos X ──────────────────────
       const CATEGORIAS_RAYOS_X = ['radiologia', 'radiography', 'rayos_x', 'rayos x', 'rx', 'radio', 'imagen', 'imagenologia', 'radiology'];
       const tieneRayosX = estudiosSeleccionados.some(e => {
         const cat = (e.categoria || e.category || '').toLowerCase();
         const nom = (e.nombre || e.name || '').toLowerCase();
         return CATEGORIAS_RAYOS_X.some(k => cat.includes(k) || nom.includes('rx') || nom.includes('radio') || nom.includes('rayos'));
       });
-
-      // Obtener sucursal de Rayos X configurada
       let sucursalRayosXId = null;
       if (tieneRayosX) {
         try {
           const cfgResp = await fetch('/api/configuracion/empresa');
           const cfgData = await cfgResp.json();
           sucursalRayosXId = cfgData?.sucursal_rayos_x_id || null;
-        } catch (_) { /* ignorar si falla */ }
+        } catch (_) {}
       }
 
       const citaData = {
@@ -151,7 +142,6 @@ const RegistroInteligente = () => {
         metodoPago: metodoPago,
         pagado: montoPagado >= calcularTotal(),
         estado: 'completada',
-        // Si hay estudios de Rayos X y hay sucursal configurada, asignar esa sucursal
         ...(sucursalRayosXId ? { sucursalRayosX: sucursalRayosXId } : {})
       };
       const citaRes = await api.createCita(citaData);
@@ -166,7 +156,6 @@ const RegistroInteligente = () => {
         montoPagado: montoPagado, metodoPago,
         estado: montoPagado >= calcularTotal() ? 'pagada' : 'emitida',
         datosCliente: { nombre: `${pacienteSeleccionado.nombre} ${pacienteSeleccionado.apellido}`, cedula: pacienteSeleccionado.cedula || '', telefono: pacienteSeleccionado.telefono || '' },
-        // Propagar sucursal de Rayos X a la factura también
         ...(sucursalRayosXId ? { sucursal: sucursalRayosXId } : {})
       };
       const factRes = await api.createFactura(facturaData);
@@ -184,313 +173,316 @@ const RegistroInteligente = () => {
     setNuevoPaciente({ nombre: '', apellido: '', cedula: '', esMenor: false, telefono: '', email: '', fechaNacimiento: '', sexo: 'M', nacionalidad: 'Dominicano', tipoSangre: '', seguroNombre: '', seguroNumeroAfiliado: '' });
   };
 
-  const cambiarModoPaciente = (modo) => {
-    setModoPaciente(modo);
-    if (modo === 'nuevo') {
-      setBusqueda('');
-      setPacientes([]);
-    }
-  };
+  const Steps = [
+    { num: 1, label: 'Identidad' },
+    { num: 2, label: 'Servicios' },
+    { num: 3, label: 'Liquidación' }
+  ];
 
-  const getModoButtonStyle = (activo) => ({
-    padding: '12px 18px',
-    borderRadius: 10,
-    border: `1px solid ${activo ? '#2563eb' : 'var(--legacy-border)'}`,
-    background: activo ? 'rgba(37, 99, 235, 0.08)' : 'var(--legacy-surface)',
-    color: activo ? '#2563eb' : 'var(--legacy-text)',
-    fontWeight: 700,
-    fontSize: 13,
-    cursor: 'pointer',
-    transition: 'all 0.2s ease',
-    boxShadow: activo ? '0 10px 24px -18px rgba(37, 99, 235, 0.45)' : 'none'
-  });
-
-  if (mostrarFactura && facturaGenerada) return (
-    <FacturaTermica factura={facturaGenerada} paciente={pacienteSeleccionado} estudios={estudiosSeleccionados} onClose={reiniciar} />
-  );
+  if (mostrarFactura && facturaGenerada) return <FacturaTermica factura={facturaGenerada} paciente={pacienteSeleccionado} estudios={estudiosSeleccionados} onClose={reiniciar} />;
 
   return (
-    <div style={{ padding: '32px', maxWidth: 1400, margin: '0 auto' }}>
-      <style>{`
-        .clinical-step { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .clinical-input { border-radius: 12px; padding: 12px 16px; width: 100%; outline: none; transition: all 0.2s; font-size: 14px; }
-        .dark .clinical-input { background: rgba(30, 41, 59, 0.5); border: none; color: #f1f5f9; }
-        :not(.dark) .clinical-input { background: #fff; border: 1.5px solid #e5e7eb; color: #1e293b; }
-        .clinical-input:focus { border-color: transparent; box-shadow: 0 0 0 2px #00e1ff; }
-        .clinical-label { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; display: block; }
-        .step-clip-path { clip-path: polygon(95% 0%, 100% 50%, 95% 100%, 0% 100%, 5% 50%, 0% 0%); }
-        .step-clip-path-first { clip-path: polygon(95% 0%, 100% 50%, 95% 100%, 0% 100%, 0% 0%); }
-        .step-clip-path-last { clip-path: polygon(100% 0%, 100% 100%, 0% 100%, 5% 50%, 0% 0%); }
-        .active-step-glow { box-shadow: 0 0 15px rgba(0, 229, 255, 0.4); }
-        .clinical-form-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
-        .clinical-form-span-2 { grid-column: span 2; }
-        .clinical-form-span-4 { grid-column: 1 / -1; }
-        .clinical-insurance-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-        @media (max-width: 1100px) {
-          .clinical-form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-          .clinical-form-span-2 { grid-column: span 1; }
-        }
-        @media (max-width: 720px) {
-          .clinical-form-grid,
-          .clinical-insurance-grid { grid-template-columns: 1fr; }
-          .clinical-form-span-2,
-          .clinical-form-span-4 { grid-column: 1 / -1; }
-        }
-      `}</style>
+    <div className="min-h-full pb-16 animate-in fade-in zoom-in-95 duration-500 font-body">
+      
+      {/* 1. Header & Progress Stepper */}
+      <section className="flex flex-col md:flex-row justify-between items-center gap-6 bg-[#191b23] p-6 rounded-2xl mb-8 border border-white/5 shadow-2xl">
+        <div className="flex flex-col">
+          <h2 className="font-headline text-2xl font-bold tracking-tight text-[#e0e2ec]">Admisión de Paciente</h2>
+          <p className="text-[#bacac7] text-sm font-body">Complete el flujo para generar el ticket clínico.</p>
+        </div>
+        
+        <div className="flex items-center gap-4">
+          {Steps.map((s, i) => {
+            const isActive = paso === s.num;
+            const isCompleted = paso > s.num;
+            return (
+              <React.Fragment key={s.num}>
+                <div 
+                    onClick={() => { if (isCompleted) setPaso(s.num); }}
+                    className={`flex items-center gap-3 transition-all duration-300 ${isCompleted ? 'cursor-pointer hover:opacity-80' : ''} ${isActive ? 'text-[#00e0d3] px-4 py-2 bg-[#32353c] rounded-full shadow-[0_0_15px_rgba(0,224,211,0.2)]' : isCompleted ? 'text-[#00e0d3] opacity-70' : 'text-[#e0e2ec] opacity-40'}`}
+                >
+                  <span className={`w-8 h-8 rounded-full flex items-center justify-center font-label text-xs font-bold ${isActive ? 'bg-[#4afdef] text-[#00201d]' : isCompleted ? 'border border-[#00e0d3]' : 'border border-[#bacac7]'}`}>
+                    {isCompleted ? '✓' : `0${s.num}`}
+                  </span>
+                  <span className={`font-headline text-sm ${isActive ? 'font-bold' : 'font-medium'} hidden sm:block`}>{s.label}</span>
+                </div>
+                {i < Steps.length - 1 && <div className={`w-8 sm:w-12 h-px transition-colors ${paso > s.num ? 'bg-[#00e0d3]/50' : 'bg-white/10'}`}></div>}
+              </React.Fragment>
+            );
+          })}
+        </div>
+      </section>
 
-      {/* ── Encabezado ── */}
-      <div style={{ marginBottom: 44 }}>
-        <h1 style={{ margin: 0, fontSize: 30, fontWeight: 800, color: 'var(--color-dark)', fontFamily: 'var(--font-title)', display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(37, 99, 235, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563eb' }}>
-            <FaUserPlus size={20} />
-          </div>
-          Registro de Paciente
-        </h1>
-        <p style={{ margin: '8px 0 0', color: 'var(--text-muted)', fontSize: 16, fontWeight: 500 }}>Gestión integrada de admisiones y servicios médicos</p>
-      </div>
-
-      {/* ── Stepper Estilo Chevron de Stitch ── */}
-      <div className="flex items-center mb-10 max-w-4xl mx-auto">
-        {[
-          { step: 1, label: 'Identificación'},
-          { step: 2, label: 'Servicios Médicos'},
-          { step: 3, label: 'Liquidación'}
-        ].map((s, i) => {
-          const isActive = paso === s.step;
-          const isPast = paso >= s.step;
-          
-          let clipClass = 'step-clip-path';
-          if (i === 0) clipClass = 'step-clip-path-first';
-          if (i === 2) clipClass = 'step-clip-path-last';
-
-          return (
-            <div key={i} onClick={() => isPast && setPaso(s.step)} className={`flex-1 flex flex-col items-center justify-center cursor-pointer transition-colors z-${10 - i} 
-              ${clipClass} 
-              ${isActive ? 'bg-[#00e5ff] active-step-glow text-slate-900 h-14' : 'bg-slate-800/80 hover:bg-slate-700 text-slate-400 h-14'}
-              ${i !== 0 ? '-ml-4' : ''}
-            `}>
-              <span className={`text-[10px] font-bold ${isActive ? 'opacity-70' : 'opacity-60'}`}>PASO 0{s.step}</span>
-              <span className={`text-sm ${isActive ? 'font-bold' : 'font-medium'}`}>{s.label}</span>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* ── PASO 1: PACIENTE ── */}
-      {paso === 1 && (
-        <div className="clinical-step" style={{ maxWidth: modoPaciente === 'nuevo' ? 1160 : 840, margin: '0 auto' }}>
-          <div className="glass-card" style={{ padding: modoPaciente === 'nuevo' ? 24 : 32 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 28, flexWrap: 'wrap' }}>
-              <div>
-                <h3 style={{ margin: '0 0 8px', color: 'var(--color-dark)', fontSize: 18, fontWeight: 800 }}>Identificación del Paciente</h3>
-                <p style={{ margin: 0, color: 'var(--legacy-text-muted)', fontSize: 14 }}>
-                  {modoPaciente === 'existente'
-                    ? 'Busque un paciente ya registrado para continuar con el ingreso.'
-                    : 'Complete el formulario para registrar un nuevo paciente y continuar con el ingreso.'}
-                </p>
+      <div className="mt-8 transition-all duration-500 relative">
+        
+        {/* BLOCK 1 (IDENTIDAD) */}
+        {paso === 1 && (
+          <section className="bg-[#1d2027]/70 backdrop-blur-xl p-8 rounded-2xl shadow-2xl border border-white/5 animate-in slide-in-from-right-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-8">
+              <div className="flex items-center gap-2 bg-[#0b0e15] p-1.5 rounded-xl border border-white/5">
+                <button onClick={() => { setModoPaciente('nuevo'); setBusqueda(''); setPacientes([]); }} className={`px-6 py-2.5 rounded-lg font-bold text-sm transition-all focus:outline-none ${modoPaciente === 'nuevo' ? 'bg-[#4afdef] text-[#00201d] shadow-[0_0_15px_rgba(74,253,239,0.3)]' : 'text-[#bacac7] hover:text-white bg-transparent'}`}>Nuevo Paciente</button>
+                <button onClick={() => setModoPaciente('existente')} className={`px-6 py-2.5 rounded-lg font-bold text-sm transition-all focus:outline-none ${modoPaciente === 'existente' ? 'bg-[#4afdef] text-[#00201d] shadow-[0_0_15px_rgba(74,253,239,0.3)]' : 'text-[#bacac7] hover:text-white bg-transparent'}`}>Paciente Existente</button>
               </div>
-
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                <button type="button" onClick={() => cambiarModoPaciente('nuevo')} style={getModoButtonStyle(modoPaciente === 'nuevo')}>
-                  Registrar Nuevo Paciente
-                </button>
-                <button type="button" onClick={() => cambiarModoPaciente('existente')} style={getModoButtonStyle(modoPaciente === 'existente')}>
-                  Paciente Existente
-                </button>
+              <div className="flex items-center gap-2 text-[#4afdef] bg-primary/10 px-4 py-2 rounded-lg">
+                <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>supervised_user_circle</span>
+                <span className="text-xs font-label uppercase tracking-widest font-bold">Identidad</span>
               </div>
             </div>
 
             {modoPaciente === 'existente' ? (
-              <>
-                <div style={{ display: 'flex', gap: 10, marginBottom: 24 }}>
-                  <input
-                    className="clinical-input"
-                    placeholder="Nombre completo o cédula"
-                    value={busqueda}
-                    onChange={e => setBusqueda(e.target.value)}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => buscarPaciente(busqueda)}
-                    style={{ width: 52, background: '#2563eb', border: 'none', borderRadius: 8, color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                  >
-                    {loading ? <FaSpinner className="spin" /> : <FaSearch />}
-                  </button>
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 380, overflowY: 'auto' }}>
-                  {pacientes.map(p => (
-                    <div
-                      key={p._id || p.id}
-                      onClick={() => seleccionarPacienteExistente(p)}
-                      style={{
-                        padding: 16,
-                        borderRadius: 8,
-                        border: '1px solid var(--legacy-border-soft)',
-                        background: 'var(--legacy-surface)',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s'
-                      }}
-                      onMouseEnter={e => { e.currentTarget.style.background = 'var(--legacy-surface-muted)'; e.currentTarget.style.borderColor = 'var(--legacy-border)'; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = 'var(--legacy-surface)'; e.currentTarget.style.borderColor = 'var(--legacy-border-soft)'; }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <strong style={{ color: 'var(--legacy-text)', fontSize: 14 }}>{p.nombre} {p.apellido}</strong>
-                        <FaArrowRight style={{ color: '#2563eb', fontSize: 12 }} />
-                      </div>
-                      <div style={{ fontSize: 12, color: 'var(--legacy-text-muted)', marginTop: 4 }}>{p.cedula} · {p.telefono}</div>
+                <div className="space-y-6">
+                    <div className="relative max-w-2xl">
+                        <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#bacac7]">search</span>
+                        <input className="w-full bg-[#32353c] border-0 border-b-2 border-transparent focus:border-[#4afdef] focus:ring-0 transition-all text-white py-4 pl-12 pr-4 rounded-t-xl font-body text-lg shadow-inner" placeholder="Escriba nombre o cédula para buscar..." value={busqueda} onChange={e => setBusqueda(e.target.value)} />
                     </div>
-                  ))}
 
-                  {pacientes.length === 0 && !loading && busqueda && (
-                    <p style={{ textAlign: 'center', color: 'var(--legacy-text-muted)', fontSize: 13, marginTop: 20 }}>No se encontraron pacientes</p>
-                  )}
-
-                  {pacientes.length === 0 && !loading && !busqueda && (
-                    <p style={{ textAlign: 'center', color: 'var(--legacy-text-muted)', fontSize: 13, marginTop: 20 }}>Escriba un nombre o cédula para buscar.</p>
-                  )}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
+                        {pacientes.map(p => (
+                            <div key={p._id || p.id} onClick={() => seleccionarPacienteExistente(p)} className="bg-[#272a31] border border-white/5 hover:border-[#4afdef]/50 hover:bg-[#32353c] p-5 rounded-xl cursor-pointer transition-all group hover:shadow-[0_0_15px_rgba(74,253,239,0.1)]">
+                                <div className="flex justify-between items-start mb-2">
+                                    <strong className="text-white font-headline text-lg group-hover:text-[#4afdef] transition-colors line-clamp-1">{p.nombre} {p.apellido}</strong>
+                                    <span className="material-symbols-outlined text-[#4afdef] opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2 group-hover:translate-x-0">chevron_right</span>
+                                </div>
+                                <div className="text-[11px] font-label text-[#849491] uppercase tracking-widest flex items-center gap-4">
+                                    <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">badge</span> {p.cedula || 'N/A'}</span>
+                                </div>
+                                {p.telefono && <div className="text-[11px] font-label text-[#849491] uppercase tracking-widest flex items-center gap-4 mt-1">
+                                    <span className="flex items-center gap-1"><span className="material-symbols-outlined text-[14px]">call</span> {p.telefono}</span>
+                                </div>}
+                            </div>
+                        ))}
+                    </div>
+                    {pacientes.length === 0 && !loading && busqueda && <p className="text-[#849491] font-label text-sm">No se encontraron pacientes que coincidan con la búsqueda.</p>}
+                    {loading && <div className="flex items-center gap-3 text-[#00e0d3] p-4"><FaSpinner className="animate-spin" /> Buscando pacientes...</div>}
                 </div>
-              </>
             ) : (
-              <>
-                <div className="clinical-form-grid">
-                  <div className="clinical-form-span-2"><label className="clinical-label">Nombre *</label><input className="clinical-input" value={nuevoPaciente.nombre} onChange={e => setNuevoPaciente({ ...nuevoPaciente, nombre: e.target.value })} /></div>
-                  <div className="clinical-form-span-2"><label className="clinical-label">Apellido *</label><input className="clinical-input" value={nuevoPaciente.apellido} onChange={e => setNuevoPaciente({ ...nuevoPaciente, apellido: e.target.value })} /></div>
-                  <div><label className="clinical-label">F. Nacimiento *</label><input type="date" className="clinical-input" value={nuevoPaciente.fechaNacimiento} onChange={e => {
-                    const val = e.target.value;
-                    const updates = { ...nuevoPaciente, fechaNacimiento: val };
-                    if (val) {
-                      const hoy = new Date(); const nac = new Date(val);
-                      let edad = hoy.getFullYear() - nac.getFullYear();
-                      const m = hoy.getMonth() - nac.getMonth();
-                      if (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) edad--;
-                      if (edad < 18) { updates.esMenor = true; updates.cedula = 'MENOR DE EDAD'; }
-                      else { updates.esMenor = false; if (updates.cedula === 'MENOR DE EDAD') updates.cedula = ''; }
-                    }
-                    setNuevoPaciente(updates);
-                  }} /></div>
-                  <div><label className="clinical-label">Sexo *</label>
-                    <select className="clinical-input" value={nuevoPaciente.sexo} onChange={e => setNuevoPaciente({ ...nuevoPaciente, sexo: e.target.value })}>
-                      <option value="M">Masculino</option><option value="F">Femenino</option>
-                    </select>
-                  </div>
-                  <div><label className="clinical-label">Cédula / ID</label><input className="clinical-input" placeholder={nuevoPaciente.esMenor ? 'Menor de edad' : '000-0000000-0'} value={nuevoPaciente.cedula} disabled={nuevoPaciente.esMenor} onChange={e => setNuevoPaciente({ ...nuevoPaciente, cedula: e.target.value })} />
-                    {nuevoPaciente.esMenor && <span style={{ fontSize: 11, color: '#f59e0b', fontWeight: 600, marginTop: 4, display: 'block' }}>⚠ Menor de edad</span>}
-                  </div>
-                  <div><label className="clinical-label">Teléfono *</label><input className="clinical-input" placeholder="809-000-0000" value={nuevoPaciente.telefono} onChange={e => setNuevoPaciente({ ...nuevoPaciente, telefono: e.target.value })} /></div>
-                  <div className="clinical-form-span-2"><label className="clinical-label">Email</label><input type="email" className="clinical-input" placeholder="correo@ejemplo.com" value={nuevoPaciente.email} onChange={e => setNuevoPaciente({ ...nuevoPaciente, email: e.target.value })} /></div>
-                  <div><label className="clinical-label">Nacionalidad</label>
-                    <select className="clinical-input" value={nuevoPaciente.nacionalidad} onChange={e => setNuevoPaciente({ ...nuevoPaciente, nacionalidad: e.target.value })}>
-                      <option value="Dominicano">Dominicano</option><option value="Haitiano">Haitiano</option><option value="Otro">Otro</option>
-                    </select>
-                  </div>
-                  <div><label className="clinical-label">Tipo de Sangre</label>
-                    <select className="clinical-input" value={nuevoPaciente.tipoSangre} onChange={e => setNuevoPaciente({ ...nuevoPaciente, tipoSangre: e.target.value })}>
-                      <option value="">Desconocido</option><option value="A+">A+</option><option value="A-">A-</option><option value="B+">B+</option><option value="B-">B-</option><option value="AB+">AB+</option><option value="AB-">AB-</option><option value="O+">O+</option><option value="O-">O-</option>
-                    </select>
-                  </div>
-                  <div className="clinical-form-span-4" style={{ borderTop: '1px solid #e2e8f0', paddingTop: 14, marginTop: 2 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}><FaShieldAlt style={{ color: '#2563eb' }} /><span style={{ fontWeight: 700, fontSize: 13, color: '#1e293b' }}>Seguro Médico</span></div>
-                    <div className="clinical-insurance-grid">
-                      <div><label className="clinical-label">Nombre del Seguro</label><input className="clinical-input" placeholder="ARS, SENASA, etc." value={nuevoPaciente.seguroNombre} onChange={e => setNuevoPaciente({ ...nuevoPaciente, seguroNombre: e.target.value })} /></div>
-                      <div><label className="clinical-label">No. Afiliado</label><input className="clinical-input" placeholder="Número de afiliado" value={nuevoPaciente.seguroNumeroAfiliado} onChange={e => setNuevoPaciente({ ...nuevoPaciente, seguroNumeroAfiliado: e.target.value })} /></div>
+                <div className="space-y-8 animate-in slide-in-from-bottom-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
+                        <div className="relative group">
+                            <label className="block text-[10px] uppercase tracking-widest text-[#849491] mb-1 ml-1 font-bold">Nombre *</label>
+                            <input value={nuevoPaciente.nombre} onChange={e => setNuevoPaciente({ ...nuevoPaciente, nombre: e.target.value })} className="w-full bg-[#32353c] border-0 border-b-2 border-transparent focus:border-[#4afdef] focus:ring-0 transition-all text-white py-3 px-4 rounded-t-lg font-body" placeholder="Ej. Juan Alberto" />
+                        </div>
+                        <div className="relative group">
+                            <label className="block text-[10px] uppercase tracking-widest text-[#849491] mb-1 ml-1 font-bold">Apellido *</label>
+                            <input value={nuevoPaciente.apellido} onChange={e => setNuevoPaciente({ ...nuevoPaciente, apellido: e.target.value })} className="w-full bg-[#32353c] border-0 border-b-2 border-transparent focus:border-[#4afdef] focus:ring-0 transition-all text-white py-3 px-4 rounded-t-lg font-body" placeholder="Ej. Pérez Rosario" />
+                        </div>
+                        <div className="relative group">
+                            <label className="block text-[10px] uppercase tracking-widest text-[#849491] mb-1 ml-1 font-bold">Cédula / ID</label>
+                            <input value={nuevoPaciente.cedula} onChange={e => setNuevoPaciente({ ...nuevoPaciente, cedula: e.target.value })} disabled={nuevoPaciente.esMenor} className="w-full bg-[#32353c] border-0 border-b-2 border-transparent focus:border-[#4afdef] focus:ring-0 transition-all text-white py-3 px-4 rounded-t-lg font-label disabled:opacity-50" placeholder={nuevoPaciente.esMenor ? 'Menor de edad' : '000-0000000-0'} />
+                        </div>
+                        <div className="relative group">
+                            <label className="block text-[10px] uppercase tracking-widest text-[#849491] mb-1 ml-1 font-bold">F. Nacimiento *</label>
+                            <input type="date" value={nuevoPaciente.fechaNacimiento} onChange={e => {
+                                const val = e.target.value;
+                                const updates = { ...nuevoPaciente, fechaNacimiento: val };
+                                if (val) {
+                                  const hoy = new Date(); const nac = new Date(val);
+                                  let edad = hoy.getFullYear() - nac.getFullYear();
+                                  const m = hoy.getMonth() - nac.getMonth();
+                                  if (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) edad--;
+                                  if (edad < 18) { updates.esMenor = true; updates.cedula = 'MENOR DE EDAD'; }
+                                  else { updates.esMenor = false; if (updates.cedula === 'MENOR DE EDAD') updates.cedula = ''; }
+                                }
+                                setNuevoPaciente(updates);
+                              }} className="w-full bg-[#32353c] border-0 border-b-2 border-transparent focus:border-[#4afdef] focus:ring-0 transition-all text-white py-3 px-4 rounded-t-lg font-label uppercase" />
+                        </div>
+                        <div className="relative group">
+                            <label className="block text-[10px] uppercase tracking-widest text-[#849491] mb-1 ml-1 font-bold">Sexo *</label>
+                            <select value={nuevoPaciente.sexo} onChange={e => setNuevoPaciente({ ...nuevoPaciente, sexo: e.target.value })} className="w-full bg-[#32353c] border-0 border-b-2 border-transparent focus:border-[#4afdef] focus:ring-0 transition-all text-white py-3 px-4 rounded-t-lg font-body appearance-none">
+                                <option value="M">Masculino</option>
+                                <option value="F">Femenino</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+                        <div className="relative group">
+                            <label className="block text-[10px] uppercase tracking-widest text-[#849491] mb-1 ml-1 font-bold">Teléfono *</label>
+                            <input value={nuevoPaciente.telefono} onChange={e => setNuevoPaciente({ ...nuevoPaciente, telefono: e.target.value })} className="w-full bg-[#32353c] border-0 border-b-2 border-transparent focus:border-[#4afdef] focus:ring-0 transition-all text-white py-3 px-4 rounded-t-lg font-label" placeholder="809-000-0000" />
+                        </div>
+                        <div className="relative group lg:col-span-3">
+                            <label className="block text-[10px] uppercase tracking-widest text-[#849491] mb-1 ml-1 font-bold">Email</label>
+                            <input value={nuevoPaciente.email} onChange={e => setNuevoPaciente({ ...nuevoPaciente, email: e.target.value })} type="email" className="w-full bg-[#32353c] border-0 border-b-2 border-transparent focus:border-[#4afdef] focus:ring-0 transition-all text-white py-3 px-4 rounded-t-lg font-body" placeholder="correo@ejemplo.com" />
+                        </div>
                     </div>
-                  </div>
-                </div>
 
-                <button onClick={crearPaciente} className="w-full bg-[#00e5ff] hover:bg-[#00c9e0] text-slate-900 font-bold py-4 px-6 rounded-2xl flex items-center justify-center space-x-2 transition-all shadow-lg active:scale-[0.98] mt-6">
-                  <span className="uppercase tracking-widest text-sm">Continuar</span>
-                  <FaArrowRight />
-                </button>
-              </>
+                    <div className="pt-6 border-t border-white/5">
+                        <div className="bg-[#4afdef]/5 p-6 rounded-2xl flex flex-col md:flex-row items-center gap-8 border border-[#4afdef]/10">
+                            <div className="flex items-center gap-4 min-w-[200px]">
+                                <div className="w-12 h-12 rounded-full bg-[#4afdef]/20 flex items-center justify-center text-[#4afdef] shadow-[0_0_15px_rgba(74,253,239,0.2)]">
+                                    <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>shield_locked</span>
+                                </div>
+                                <div>
+                                    <h4 className="font-headline text-sm font-bold text-[#4afdef]">Cobertura Aseguradora</h4>
+                                    <p className="text-[10px] text-[#4afdef]/70 uppercase font-bold tracking-tighter">Plan de Salud</p>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
+                                <div className="relative">
+                                    <label className="block text-[10px] text-[#4afdef]/80 uppercase tracking-widest mb-1 ml-1 font-bold">ARS / Aseguradora</label>
+                                    <input value={nuevoPaciente.seguroNombre} onChange={e => setNuevoPaciente({ ...nuevoPaciente, seguroNombre: e.target.value })} className="w-full bg-[#10131a]/50 border-0 border-b-2 border-transparent focus:border-[#4afdef] focus:ring-0 transition-all text-white py-2.5 px-3 rounded-t-lg text-sm font-body" placeholder="Ej. ARS Universal, Senasa..." />
+                                </div>
+                                <div className="relative">
+                                    <label className="block text-[10px] text-[#4afdef]/80 uppercase tracking-widest mb-1 ml-1 font-bold">No. Afiliado</label>
+                                    <input value={nuevoPaciente.seguroNumeroAfiliado} onChange={e => setNuevoPaciente({ ...nuevoPaciente, seguroNumeroAfiliado: e.target.value })} className="w-full bg-[#10131a]/50 border-0 border-b-2 border-transparent focus:border-[#4afdef] focus:ring-0 transition-all text-white py-2.5 px-3 rounded-t-lg text-sm font-label" placeholder="882734412-01" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div className="flex justify-end pt-4">
+                        <button onClick={crearPaciente} disabled={loading} className="px-10 py-4 bg-[#4afdef] text-[#00201d] font-headline font-bold text-[15px] rounded-xl shadow-[0_0_20px_rgba(74,253,239,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-3">
+                            {loading ? <FaSpinner className="animate-spin" /> : 'Registrar y Continuar' }
+                            {!loading && <span className="material-symbols-outlined">arrow_forward</span>}
+                        </button>
+                    </div>
+                </div>
             )}
-          </div>
-        </div>
-      )}
+          </section>
+        )}
 
-      {/* ── PASO 2: ESTUDIOS ── */}
-      {paso === 2 && (
-        <div className="clinical-step" style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 24 }}>
-          <div className="glass-card" style={{ padding: 32 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-              <h3 style={{ margin: 0, color: 'var(--color-dark)', fontSize: 18, fontWeight: 800 }}>Catálogo de Servicios</h3>
-              <input className="clinical-input" placeholder="Buscar estudio..." value={filtroCategoria} onChange={e => setFiltroCategoria(e.target.value)} style={{ width: 240 }} />
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 12, maxHeight: 550, overflowY: 'auto', padding: '2px' }}>
-              {estudios.filter(e => (e.nombre || '').toLowerCase().includes(filtroCategoria.toLowerCase())).map(e => (
-                <div key={e._id || e.id} onClick={() => agregarEstudio(e)} style={{
-                  padding: 16, borderRadius: 10, background: 'var(--legacy-surface-muted)', border: '1.5px solid var(--legacy-border-soft)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'all 0.2s'
-                }} onMouseEnter={ev => { ev.currentTarget.style.borderColor = '#2563eb'; ev.currentTarget.style.background = 'var(--legacy-surface-hover)'; }}
-                  onMouseLeave={ev => { ev.currentTarget.style.borderColor = 'var(--legacy-border-soft)'; ev.currentTarget.style.background = 'var(--legacy-surface-muted)'; }}>
-                  <div>
-                    <div style={{ color: 'var(--legacy-text)', fontWeight: 700, fontSize: 13 }}>{e.nombre}</div>
-                    <div style={{ color: 'var(--legacy-text-muted)', fontSize: 11, marginTop: 4 }}>ID: {e.codigo || 'N/A'}</div>
-                  </div>
-                  <div style={{ color: '#2563eb', fontWeight: 800, fontSize: 14 }}>${(e.precio || 0).toLocaleString()}</div>
+        {/* BLOCK 2 (SERVICIOS Y ORDEN) */}
+        {paso === 2 && (
+            <section className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start animate-in slide-in-from-right-8">
+                {/* Left: Catalog */}
+                <div className="lg:col-span-2 space-y-6">
+                    <div className="flex flex-col sm:flex-row items-end sm:items-center justify-between gap-4">
+                        <h3 className="font-headline text-xl font-bold text-white flex items-center gap-2">
+                            <span className="material-symbols-outlined text-[#4afdef]">medical_services</span> Catálogo de Servicios
+                        </h3>
+                        <div className="relative w-full sm:w-72">
+                            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#849491]">search</span>
+                            <input value={filtroCategoria} onChange={e => setFiltroCategoria(e.target.value)} className="w-full bg-[#272a31] border border-white/5 focus:border-[#4afdef]/50 rounded-full pl-10 pr-4 py-2 text-sm text-white focus:ring-0 transition-all font-body shadow-inner" placeholder="Buscar estudio o código..." />
+                        </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[600px] overflow-y-auto custom-scrollbar pr-2 pb-4">
+                        {estudios.filter(e => (e.nombre || '').toLowerCase().includes(filtroCategoria.toLowerCase()) || (e.codigo || '').toLowerCase().includes(filtroCategoria.toLowerCase())).map(e => (
+                            <div key={e._id || e.id} onClick={() => agregarEstudio(e)} className="bg-[#272a31] p-5 rounded-xl border border-white/5 hover:bg-[#32353c] hover:border-[#4afdef]/30 transition-all group cursor-pointer hover:shadow-[0_0_15px_rgba(74,253,239,0.1)] flex flex-col justify-between min-h-[140px]">
+                                <div>
+                                    <div className="flex justify-between items-start mb-3">
+                                        <span className="text-[10px] font-label font-bold text-[#4afdef] bg-[#4afdef]/10 px-2 py-0.5 rounded tracking-widest">{e.codigo || 'S/C'}</span>
+                                        <span className="material-symbols-outlined text-[#4afdef] opacity-0 group-hover:opacity-100 transition-opacity translate-x-1 group-hover:translate-x-0" style={{ fontVariationSettings: "'FILL' 1" }}>add_box</span>
+                                    </div>
+                                    <h4 className="font-headline font-bold text-white mb-1 leading-tight text-[15px]">{e.nombre}</h4>
+                                    <p className="text-[11px] text-[#849491] mb-4 font-body line-clamp-2">Tarifa general del laboratorio.</p>
+                                </div>
+                                <div className="flex justify-between items-end border-t border-white/5 pt-3 mt-auto">
+                                    <span className="font-label text-[#4afdef] font-bold text-lg">${(e.precio || 0).toLocaleString()}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
-              ))}
-            </div>
-          </div>
 
-          <div className="glass-card" style={{ padding: 24, height: 'fit-content', position: 'sticky', top: 20 }}>
-            <h4 style={{ color: 'var(--legacy-text)', margin: '0 0 20px', fontSize: 15, fontWeight: 700, borderBottom: '1px solid var(--legacy-border-soft)', paddingBottom: 12 }}>Resumen de Orden</h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24, maxHeight: 300, overflowY: 'auto' }}>
-              {estudiosSeleccionados.map(e => (
-                <div key={e._id || e.id} style={{ background: 'var(--legacy-surface-muted)', padding: 14, borderRadius: 8, border: '1px solid var(--legacy-border-soft)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                    <span style={{ color: 'var(--legacy-text)', fontWeight: 700, fontSize: 12 }}>{e.nombre}</span>
-                    <button onClick={() => quitarEstudio(e._id || e.id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><FaTrash size={11} /></button>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ color: 'var(--legacy-text-muted)', fontSize: 11 }}>RD$ {e.precio}</span>
-                    <input className="clinical-input" type="number" placeholder="Cobertura" value={e.cobertura} onChange={ev => actualizarCobertura(e._id || e.id, ev.target.value)} style={{ width: 80, padding: '4px 8px', fontSize: 11 }} />
-                  </div>
+                {/* Right: Resumen (Cart) */}
+                <aside className="sticky top-24 bg-[#1d2027]/80 backdrop-blur-2xl rounded-2xl border border-white/5 overflow-hidden shadow-2xl flex flex-col max-h-[calc(100vh-120px)]">
+                    <div className="p-5 border-b border-[#4afdef]/20 bg-[#191b23]/50 flex items-center justify-between shrink-0">
+                        <h3 className="font-headline font-bold text-white text-lg flex items-center gap-2"><span className="material-symbols-outlined text-[#4afdef]">shopping_cart_checkout</span> Resumen de Orden</h3>
+                        <span className="bg-[#4afdef]/20 text-[#4afdef] text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-widest">{estudiosSeleccionados.length} ITEMS</span>
+                    </div>
+                    
+                    <div className="p-5 overflow-y-auto custom-scrollbar flex-1 space-y-3">
+                        {estudiosSeleccionados.length === 0 ? (
+                            <div className="text-center py-10 opacity-50">
+                                <span className="material-symbols-outlined text-4xl text-[#849491]">inventory_2</span>
+                                <p className="text-xs text-[#849491] mt-2 font-body">No hay estudios en la orden.</p>
+                            </div>
+                        ) : estudiosSeleccionados.map(e => (
+                             <div key={e._id || e.id} className="bg-[#272a31] p-4 rounded-xl border border-white/5 relative group">
+                                <h5 className="text-[13px] font-bold text-white pr-8 leading-tight mb-2">{e.nombre}</h5>
+                                <button onClick={() => quitarEstudio(e._id || e.id)} className="absolute top-3 right-3 text-[#ffb4ab] hover:text-white hover:bg-[#ffb4ab]/20 w-7 h-7 flex items-center justify-center rounded transition-colors"><span className="material-symbols-outlined text-[16px]">close</span></button>
+                                
+                                <div className="flex items-center justify-between border-t border-white/5 pt-3 mt-1">
+                                    <span className="text-xs text-[#00e0d3] font-label font-bold tracking-wider">${(e.precio || 0).toLocaleString()}</span>
+                                    <div className="flex items-center gap-2 bg-[#10131a] p-1 rounded-lg border border-white/5">
+                                        <span className="text-[9px] text-[#849491] uppercase tracking-widest font-bold ml-1">ARS</span>
+                                        <input type="number" placeholder="0" value={e.cobertura || ''} onClick={ev => ev.target.select()} onChange={ev => actualizarCobertura(e._id || e.id, ev.target.value)} className="w-[70px] bg-transparent border-0 text-right text-xs text-white font-label focus:ring-0 p-1 appearance-none" />
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="p-5 bg-gradient-to-t from-[#10131a] to-[#1d2027]/90 space-y-4 shrink-0 border-t border-white/5">
+                        <div className="flex justify-between items-center text-sm">
+                            <span className="text-[#849491] font-bold uppercase tracking-widest text-[10px]">Neto Calculado</span>
+                            <span className="text-white font-headline text-2xl font-bold">${calcularTotal().toLocaleString()}</span>
+                        </div>
+                        <div className="flex gap-2">
+                            <button onClick={() => setPaso(1)} className="p-3 bg-[#32353c] hover:bg-white/10 rounded-xl text-white transition-colors flex items-center justify-center"><span className="material-symbols-outlined">arrow_back</span></button>
+                            <button onClick={() => setPaso(3)} disabled={estudiosSeleccionados.length === 0} className="flex-1 py-3 bg-[#4afdef] hover:bg-[#00e0d3] text-[#00201d] font-headline font-bold text-sm rounded-xl transition-all shadow-[0_0_15px_rgba(74,253,239,0.2)] hover:shadow-[0_0_20px_rgba(74,253,239,0.4)] disabled:opacity-50 disabled:shadow-none flex justify-center items-center gap-2">
+                                CONTINUAR <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                            </button>
+                        </div>
+                    </div>
+                </aside>
+            </section>
+        )}
+
+        {/* BLOCK 3 (LIQUIDACIÓN) */}
+        {paso === 3 && (
+            <section className="bg-[#191b23] max-w-4xl mx-auto p-8 md:p-12 rounded-3xl border-t-[6px] border-[#4afdef] shadow-[0_0_50px_rgba(0,0,0,0.5)] animate-in slide-in-from-bottom-8">
+                <div className="text-center mb-10">
+                    <span className="material-symbols-outlined text-5xl text-[#4afdef] mb-4" style={{ fontVariationSettings: "'FILL' 1" }}>fact_check</span>
+                    <h2 className="font-headline text-3xl font-bold text-white tracking-tight">Liquidación de Servicios</h2>
+                    <p className="text-[#849491] font-body text-sm mt-2">Verifique los montos y emita el comprobante definitivo.</p>
                 </div>
-              ))}
-              {estudiosSeleccionados.length === 0 && <p style={{ textAlign: 'center', color: 'var(--legacy-text-muted)', fontSize: 12 }}>Seleccione estudios a realizar</p>}
-            </div>
-            <div style={{ borderTop: '2px solid var(--legacy-border-soft)', paddingTop: 20 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20, alignItems: 'baseline' }}>
-                <span style={{ color: 'var(--legacy-text-muted)', fontWeight: 600, fontSize: 13 }}>Total Neto</span>
-                <span style={{ color: 'var(--legacy-text)', fontSize: 26, fontWeight: 800 }}>${calcularTotal().toLocaleString()}</span>
-              </div>
-              <div style={{ display: 'flex', gap: 10 }}>
-                <button onClick={() => setPaso(1)} style={{ padding: '12px 16px', borderRadius: 8, background: 'var(--legacy-surface-muted)', border: '1px solid var(--legacy-border-soft)', color: 'var(--legacy-text-muted)', cursor: 'pointer' }}><FaArrowLeft /></button>
-                <button onClick={() => setPaso(3)} disabled={estudiosSeleccionados.length === 0} style={{ flex: 1, padding: '12px', borderRadius: 8, background: '#00F6FF', border: 'none', color: '#0f172a', fontWeight: 800, cursor: 'pointer', boxShadow: '0 0 15px rgba(0, 246, 255, 0.3)' }}>CONTINUAR <FaArrowRight style={{ marginLeft: 6 }} /></button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* ── PASO 3: PAGO ── */}
-      {paso === 3 && (
-        <div className="clinical-step" style={{ maxWidth: 700, margin: '0 auto' }}>
-          <div className="glass-card" style={{ padding: 48 }}>
-            <h3 style={{ margin: '0 0 32px', color: 'var(--legacy-text-strong)', textAlign: 'center', fontSize: 22, fontWeight: 800 }}>Liquidación de Servicios</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 32 }}>
-              <div style={{ background: 'var(--legacy-surface-muted)', padding: 32, borderRadius: 12 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}><span style={{ color: 'var(--legacy-text-muted)' }}>Subtotal</span><span style={{ color: 'var(--legacy-text)', fontWeight: 600 }}>${calcularSubtotal().toLocaleString()}</span></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}><span style={{ color: '#ef4444' }}>Cobertura Seguro</span><span style={{ color: '#ef4444', fontWeight: 600 }}>-${(calcularCobertura() + descuento).toLocaleString()}</span></div>
-                <div style={{ borderTop: '1px solid var(--legacy-border)', paddingTop: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontWeight: 800, color: 'var(--legacy-text-strong)', fontSize: 18 }}>TOTAL A PAGAR</span>
-                  <span style={{ fontSize: 32, fontWeight: 900, color: '#2563eb' }}>${calcularTotal().toLocaleString()}</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                    <div className="space-y-5 bg-[#10131a]/50 p-6 md:p-8 rounded-2xl border border-white/5 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-[#4afdef]/5 blur-3xl rounded-full pointer-events-none"></div>
+
+                        <div className="flex justify-between items-center pb-4 border-b border-white/5">
+                            <span className="text-[#bacac7] font-body text-sm">Subtotal</span>
+                            <span className="font-label text-white font-bold tracking-wider">${calcularSubtotal().toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between items-center pb-4 border-b border-white/5">
+                            <span className="text-[#ffb4ab] font-body text-sm">Cobertura Seguro</span>
+                            <span className="font-label text-[#ffb4ab] font-bold tracking-wider">-${(calcularCobertura() + descuento).toLocaleString()}</span>
+                        </div>
+                        
+                        <div className="flex flex-col pt-4">
+                            <span className="text-[#849491] text-[10px] font-bold uppercase tracking-widest mb-1">Total a Pagar</span>
+                            <span className="font-headline text-5xl font-black text-[#4afdef] tracking-tighter drop-shadow-[0_0_15px_rgba(74,253,239,0.2)]">${calcularTotal().toLocaleString()}</span>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col gap-6">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="relative">
+                                <label className="block text-[10px] uppercase tracking-widest text-[#849491] mb-2 font-bold ml-1">Método de Pago</label>
+                                <select value={metodoPago} onChange={e => setMetodoPago(e.target.value)} className="w-full bg-[#32353c] border border-transparent rounded-xl text-white font-body py-3.5 px-4 focus:ring-1 focus:ring-[#4afdef] transition-all appearance-none outline-none">
+                                    <option value="efectivo">Efectivo</option>
+                                    <option value="tarjeta">Tarjeta (POS)</option>
+                                    <option value="transferencia">Transferencia</option>
+                                </select>
+                            </div>
+                            <div className="relative">
+                                <label className="block text-[10px] uppercase tracking-widest text-[#849491] mb-2 font-bold ml-1">Monto Recibido</label>
+                                <input type="number" onClick={ev => ev.target.select()} value={montoPagado} onChange={e => setMontoPagado(parseFloat(e.target.value) || 0)} className="w-full bg-[#10131a] border border-[#32353c] rounded-xl text-[#00e0d3] font-label font-bold text-lg py-2.5 px-4 focus:border-[#4afdef] focus:ring-1 focus:ring-[#4afdef] transition-all outline-none" />
+                            </div>
+                        </div>
+
+                        {calcularTotal() > 0 && montoPagado >= calcularTotal() && (
+                            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 flex justify-between items-center text-emerald-400 font-label text-sm animate-in fade-in">
+                                <span className="font-bold">Cambio a devolver:</span>
+                                <span className="font-bold tracking-wider text-base">${(montoPagado - calcularTotal()).toLocaleString()}</span>
+                            </div>
+                        )}
+
+                        <button onClick={finalizarRegistro} disabled={loading} className="w-full py-5 bg-gradient-to-r from-[#4afdef] to-[#00e0d3] text-[#00201d] font-headline font-extrabold text-base tracking-widest uppercase rounded-xl shadow-[0_0_20px_rgba(74,253,239,0.3)] hover:shadow-[0_0_30px_rgba(74,253,239,0.5)] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 mt-4">
+                            {loading ? <FaSpinner className="animate-spin text-xl" /> : <span className="material-symbols-outlined text-[20px]">receipt_long</span>}
+                            {loading ? 'Procesando...' : 'Procesar y Emitir Ticket'}
+                        </button>
+                        
+                        <button onClick={() => setPaso(2)} className="w-full py-3 bg-transparent border border-white/5 text-[#849491] hover:text-white hover:bg-white/5 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all">
+                            VOLVER A SERVICIOS
+                        </button>
+                    </div>
                 </div>
-              </div>
+            </section>
+        )}
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-                <div><label className="clinical-label">F. Pago</label><select className="clinical-input" value={metodoPago} onChange={e => setMetodoPago(e.target.value)}><option value="efectivo">Efectivo</option><option value="tarjeta">Tarjeta</option></select></div>
-                <div><label className="clinical-label">Recibido</label><input type="number" className="clinical-input" value={montoPagado} onChange={e => setMontoPagado(parseFloat(e.target.value) || 0)} style={{ fontWeight: 800 }} /></div>
-              </div>
-
-              <button onClick={finalizarRegistro} disabled={loading} style={{ width: '100%', padding: 18, background: '#00F6FF', border: 'none', borderRadius: 12, color: '#0f172a', fontWeight: 800, fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, boxShadow: '0 0 20px rgba(0, 246, 255, 0.4)' }}>
-                {loading ? <FaSpinner className="spin" /> : <><FaPrint /> PROCESAR Y EMITIR TICKET</>}
-              </button>
-              <button onClick={() => setPaso(2)} style={{ background: 'none', border: 'none', color: 'var(--legacy-text-muted)', fontSize: 13, cursor: 'pointer', fontWeight: 600 }}>VOLVER AL DETALLE</button>
-            </div>
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 };

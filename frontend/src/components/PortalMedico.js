@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { FaUserMd, FaSearch, FaUser, FaFlask, FaEye, FaSpinner, FaFileMedical, FaEdit, FaCheck, FaPrint, FaSave, FaPlus, FaSignature } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import useDebounce from '../hooks/useDebounce';
@@ -20,25 +19,8 @@ const PortalMedico = () => {
   const [medicoSesion, setMedicoSesion] = useState(null);
   const debouncedBusqueda = useDebounce(busqueda, 350);
 
-  // Constantes para formato de códigos
-  // Formato antiguo para retrocompatibilidad
   const CODIGO_MUESTRA_PREFIX = 'MUE-';
-  const CODIGO_MUESTRA_MIN_LENGTH = 13; // MUE-YYYYMMDD-NNNNN tiene 18, pero buscamos con 13+ para ser flexibles
-
-  const colores = {
-    azulCielo: '#87CEEB',
-    azulOscuro: '#1a3a5c'
-  };
-  const theme = {
-    surface: 'var(--legacy-surface)',
-    surfaceMuted: 'var(--legacy-surface-muted)',
-    panel: 'var(--legacy-surface-panel)',
-    border: 'var(--legacy-border)',
-    borderSoft: 'var(--legacy-border-soft)',
-    text: 'var(--legacy-text)',
-    textStrong: 'var(--legacy-text-strong)',
-    textMuted: 'var(--legacy-text-muted)'
-  };
+  const CODIGO_MUESTRA_MIN_LENGTH = 13;
 
   const cargarFirmaSesion = useCallback(async () => {
     try {
@@ -59,11 +41,8 @@ const PortalMedico = () => {
     try {
       setLoadingHistorial(true);
       const pacienteId = paciente._id || paciente.id;
-
-      // Usar el endpoint dedicado para cargar resultados por paciente
       const response = await api.getResultadosPorPaciente(pacienteId);
       const datos = response.data || response || [];
-
       setHistorial(Array.isArray(datos) ? datos : []);
     } catch (err) {
       console.error('Error cargando historial:', err);
@@ -77,14 +56,12 @@ const PortalMedico = () => {
     const query = String(queryInput || '').trim();
 
     if (!query) {
-      // Si no hay busqueda, cargar todos los pacientes
       try {
         setLoading(true);
         const response = await api.getPacientes({});
         const datos = response.data || response || [];
         setPacientes(Array.isArray(datos) ? datos : []);
       } catch (err) {
-        console.error('Error:', err);
         setPacientes([]);
       } finally {
         setLoading(false);
@@ -97,23 +74,19 @@ const PortalMedico = () => {
       return;
     }
 
-    // Si la búsqueda parece un código de muestra simple (L1328 o 1329) o formato antiguo (MUE-YYYYMMDD-NNNNN)
     if (esFormatoSimple || (query.startsWith(CODIGO_MUESTRA_PREFIX) && query.length >= CODIGO_MUESTRA_MIN_LENGTH)) {
       try {
         setLoading(true);
         const response = await api.getResultadoPorCodigoMuestra(query);
         const resultado = response.data || response;
         if (resultado && resultado.paciente) {
-          // Buscar el paciente completo
           const pacienteId = resultado.paciente._id || resultado.paciente.id || resultado.paciente;
           const pacResponse = await api.getPaciente(pacienteId);
           const pac = pacResponse.data || pacResponse;
           setPacientes([pac]);
-          // Auto-cargar el historial
           await cargarHistorial(pac);
         }
       } catch (err) {
-        console.error('Error buscando por código:', err);
         setPacientes([]);
       } finally {
         setLoading(false);
@@ -125,13 +98,8 @@ const PortalMedico = () => {
       setLoading(true);
       const response = await api.getPacientes({ search: query });
       let datos = response.data || response || [];
+      if (!Array.isArray(datos)) datos = [];
 
-      // Asegurar que es un array
-      if (!Array.isArray(datos)) {
-        datos = [];
-      }
-
-      // Si no hay resultados con search, filtrar manualmente
       if (datos.length === 0) {
         const allResponse = await api.getPacientes({});
         const allDatos = allResponse.data || allResponse || [];
@@ -143,10 +111,8 @@ const PortalMedico = () => {
           (p.telefono && p.telefono.includes(query))
         );
       }
-
       setPacientes(datos);
     } catch (err) {
-      console.error('Error buscando:', err);
       setPacientes([]);
     } finally {
       setLoading(false);
@@ -162,9 +128,7 @@ const PortalMedico = () => {
     setEditando(false);
   };
 
-  const irAPerfilFirma = useCallback(() => {
-    navigate('/perfil');
-  }, [navigate]);
+  const irAPerfilFirma = useCallback(() => navigate('/perfil'), [navigate]);
 
   const asegurarFirmaDeSesion = useCallback(() => {
     if (firmaMedico) return true;
@@ -186,14 +150,12 @@ const PortalMedico = () => {
       firmadoPor: (firmado?.data || firmado || {}).firmadoPor || resultadoBase.firmadoPor || medicoSesion,
       validadoPor: (firmado?.data || firmado || {}).validadoPor || resultadoBase.validadoPor
     };
-
     setResultadoDetalle((prev) => (prev && (prev._id || prev.id) === (resultadoBase._id || resultadoBase.id) ? resultadoFirmado : prev));
     return resultadoFirmado;
   }, [asegurarFirmaDeSesion, firmaMedico, medicoSesion]);
 
   const marcarFirmaResultado = useCallback(async (checked) => {
     if (!checked || !resultadoDetalle || resultadoDetalle.firmaDigital) return;
-
     try {
       setFirmandoResultado(true);
       await asegurarResultadoFirmado(resultadoDetalle);
@@ -217,7 +179,6 @@ const PortalMedico = () => {
       alert('Resultado guardado correctamente');
       cargarHistorial(pacienteSeleccionado);
     } catch (err) {
-      console.error('Error guardando:', err);
       alert('Error al guardar: ' + (err.message || 'Error desconocido'));
     } finally {
       setGuardando(false);
@@ -248,13 +209,7 @@ const PortalMedico = () => {
   };
 
   const agregarParametro = () => {
-    const nuevosValores = [...(resultadoDetalle.valores || []), {
-      parametro: '',
-      valor: '',
-      unidad: '',
-      valorReferencia: '',
-      estado: 'normal'
-    }];
+    const nuevosValores = [...(resultadoDetalle.valores || []), { parametro: '', valor: '', unidad: '', valorReferencia: '', estado: 'normal' }];
     setResultadoDetalle({ ...resultadoDetalle, valores: nuevosValores });
   };
 
@@ -276,8 +231,7 @@ const PortalMedico = () => {
   const getSeguroNombre = (pac) => {
     if (!pac?.seguro) return 'Sin seguro';
     if (typeof pac.seguro === 'string') return pac.seguro;
-    if (typeof pac.seguro === 'object') return pac.seguro.nombre || 'Sin seguro';
-    return 'Sin seguro';
+    return pac.seguro.nombre || 'Sin seguro';
   };
 
   const imprimirResultado = async () => {
@@ -286,7 +240,6 @@ const PortalMedico = () => {
     try {
       resultadoActivo = await asegurarResultadoFirmado(resultadoDetalle);
     } catch (err) {
-      alert(err.message || 'No se pudo preparar la firma para imprimir.');
       return;
     }
     if (!resultadoActivo) return;
@@ -299,14 +252,14 @@ const PortalMedico = () => {
     const valoresHTML = (resultadoActivo.valores || []).map(v => {
       const estadoColor = v.estado === 'normal' ? '#d4edda' : v.estado === 'alto' ? '#f8d7da' : '#fff3cd';
       const estadoTexto = v.estado === 'normal' ? '#155724' : v.estado === 'alto' ? '#721c24' : '#856404';
-      return '<tr>' +
-        '<td style="padding:10px;border:1px solid #87CEEB;">' + (v.parametro || '') + '</td>' +
-        '<td style="padding:10px;border:1px solid #87CEEB;text-align:center;font-weight:bold;color:#1a3a5c;">' + (v.valor || '') + ' ' + (v.unidad || '') + '</td>' +
-        '<td style="padding:10px;border:1px solid #87CEEB;text-align:center;font-size:12px;color:#666;">' + (v.valorReferencia || '-') + '</td>' +
-        '<td style="padding:10px;border:1px solid #87CEEB;text-align:center;">' +
-        '<span style="padding:4px 12px;border-radius:12px;font-size:11px;background:' + estadoColor + ';color:' + estadoTexto + ';">' + (v.estado || 'N/A') + '</span>' +
-        '</td>' +
-        '</tr>';
+      return `<tr>
+        <td style="padding:10px;border:1px solid #87CEEB;">${v.parametro || ''}</td>
+        <td style="padding:10px;border:1px solid #87CEEB;text-align:center;font-weight:bold;color:#1a3a5c;">${v.valor || ''} ${v.unidad || ''}</td>
+        <td style="padding:10px;border:1px solid #87CEEB;text-align:center;font-size:12px;color:#666;">${v.valorReferencia || '-'}</td>
+        <td style="padding:10px;border:1px solid #87CEEB;text-align:center;">
+          <span style="padding:4px 12px;border-radius:12px;font-size:11px;background:${estadoColor};color:${estadoTexto};">${v.estado || 'N/A'}</span>
+        </td>
+      </tr>`;
     }).join('');
 
     const edadPaciente = calcularEdad(pacienteSeleccionado.fechaNacimiento);
@@ -315,83 +268,48 @@ const PortalMedico = () => {
     const doctorNombre = resultadoActivo.firmadoPor?.nombre || resultadoActivo.validadoPor?.nombre || resultadoActivo.medico?.nombre || medicoSesion?.nombre || '________________';
     const doctorApellido = resultadoActivo.firmadoPor?.apellido || resultadoActivo.validadoPor?.apellido || resultadoActivo.medico?.apellido || medicoSesion?.apellido || '';
     const firmaActiva = resultadoActivo.firmaDigital || firmaMedico || '';
-    const firmaHtml = firmaActiva
-      ? '<div style="margin-bottom:12px;"><img src="' + firmaActiva + '" alt="Firma del médico" style="max-width:220px;max-height:70px;object-fit:contain;" /></div>'
-      : '<div style="height:60px"></div>';
+    const firmaHtml = firmaActiva ? `<div style="margin-bottom:12px;"><img src="${firmaActiva}" style="max-width:220px;max-height:70px;object-fit:contain;" /></div>` : '<div style="height:60px"></div>';
 
-    let htmlContent = '<!DOCTYPE html><html><head>';
-    htmlContent += '<title>Resultado - ' + pacienteSeleccionado.nombre + '</title>';
-    htmlContent += '<style>';
-    htmlContent += '@page { size: A4; margin: 10mm 15mm; }';
-    htmlContent += 'body { font-family: Arial, sans-serif; margin: 0; padding: 10px; color: #1a3a5c; font-size: 12px; }';
-    htmlContent += '.header { text-align: center; border-bottom: 3px solid #1a3a5c; padding-bottom: 10px; margin-bottom: 15px; }';
-    htmlContent += '.header img { max-width: 180px; }';
-    htmlContent += '.section-title { background: #1a3a5c; color: white; padding: 8px 15px; border-radius: 5px; margin: 15px 0 10px; font-size: 13px; font-weight: bold; }';
-    htmlContent += '.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; background: #f0f8ff; padding: 12px; border-radius: 8px; border-left: 4px solid #1a3a5c; margin-bottom: 15px; }';
-    htmlContent += 'table { width: 100%; border-collapse: collapse; margin: 10px 0; }';
-    htmlContent += 'th { background: #1a3a5c; color: white; padding: 10px; text-align: left; font-size: 11px; }';
-    htmlContent += '.firma { margin-top: 50px; text-align: center; }';
-    htmlContent += '.firma-linea { border-top: 2px solid #1a3a5c; width: 200px; margin: 0 auto; padding-top: 8px; }';
-    htmlContent += '.footer { background: #1a3a5c; color: white; padding: 10px; text-align: center; border-radius: 5px; margin-top: 15px; font-size: 10px; }';
-    htmlContent += '@media print { .no-print { display: none; } }';
-    htmlContent += '</style></head><body>';
-
-    htmlContent += '<div class="header">';
-    htmlContent += '<img src="https://miesperanzalab.com/wp-content/uploads/2024/10/Logo-Mie-esperanza-Lab-Color-400x190-1.png" alt="Mi Esperanza Lab" />';
-    htmlContent += '<div style="font-size:10px;margin-top:5px;">C/ Camino de Cancino #24, Cancino Adentro, Santo Domingo Este, Rep. Dom.<br/>Tel: 849-288-9790 / 809-986-9970 | miesperanzalab@gmail.com</div>';
-    htmlContent += '</div>';
-
-    htmlContent += '<div class="section-title">INFORMACION DEL PACIENTE</div>';
-
-    htmlContent += '<div class="info-grid">';
-    htmlContent += '<div><strong>Paciente:</strong> ' + pacienteSeleccionado.nombre + ' ' + (pacienteSeleccionado.apellido || '') + '</div>';
-    htmlContent += '<div><strong>Cedula:</strong> ' + (pacienteSeleccionado.cedula || 'N/A') + '</div>';
-    htmlContent += '<div><strong>Edad:</strong> ' + edadPaciente + '</div>';
-    htmlContent += '<div><strong>Sexo:</strong> ' + (pacienteSeleccionado.sexo === 'M' ? 'Masculino' : 'Femenino') + '</div>';
-    htmlContent += '<div><strong>Nacionalidad:</strong> ' + (pacienteSeleccionado.nacionalidad || 'Dominicano') + '</div>';
-    htmlContent += '<div><strong>Fecha:</strong> ' + fechaResultado + '</div>';
-    htmlContent += '</div>';
-
-    htmlContent += '<div class="section-title">RESULTADO: ' + nombreEstudio + '</div>';
-
-    htmlContent += '<table><thead><tr>';
-    htmlContent += '<th style="width:35%;">Parametro</th>';
-    htmlContent += '<th style="width:25%;text-align:center;">Resultado</th>';
-    htmlContent += '<th style="width:25%;text-align:center;">Valor Referencia</th>';
-    htmlContent += '<th style="width:15%;text-align:center;">Estado</th>';
-    htmlContent += '</tr></thead><tbody>';
-    htmlContent += valoresHTML || '<tr><td colspan="4" style="padding:20px;text-align:center;color:#999;">Sin valores</td></tr>';
-    htmlContent += '</tbody></table>';
-
-    if (resultadoActivo.interpretacion) {
-      htmlContent += '<div style="background:#e6f3ff;border-left:4px solid #1a3a5c;padding:10px;border-radius:5px;margin:10px 0;">';
-      htmlContent += '<strong>INTERPRETACION:</strong><p style="margin:5px 0 0;">' + resultadoActivo.interpretacion + '</p></div>';
-    }
-
-    if (resultadoActivo.conclusion) {
-      htmlContent += '<div style="background:#e8f5e9;border-left:4px solid #27ae60;padding:10px;border-radius:5px;margin:10px 0;">';
-      htmlContent += '<strong>CONCLUSION:</strong><p style="margin:5px 0 0;">' + resultadoActivo.conclusion + '</p></div>';
-    }
-
-    htmlContent += '<div class="firma">' + firmaHtml + '<div class="firma-linea">Dr(a). ' + doctorNombre + ' ' + doctorApellido + '</div>';
-    htmlContent += '<div style="font-size:10px;color:#666;margin-top:3px;">Firma y Sello</div></div>';
-
-    htmlContent += '<div class="footer"><strong>Gracias por confiar en nosotros!</strong> | <span style="color:#87CEEB;">Su salud es nuestra prioridad</span></div>';
-
-    htmlContent += '<script>';
-    htmlContent += "window.addEventListener('load', function () { setTimeout(function () { window.focus(); window.print(); }, 250); });";
-    htmlContent += "window.addEventListener('afterprint', function () { setTimeout(function () { window.close(); }, 150); });";
-    htmlContent += '</script>';
-
-    htmlContent += '</body></html>';
+    let htmlContent = `<!DOCTYPE html><html><head><title>Resultado - ${pacienteSeleccionado.nombre}</title>
+      <style>
+        @page { size: A4; margin: 10mm 15mm; }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 10px; color: #1a3a5c; font-size: 12px; }
+        .header { text-align: center; border-bottom: 3px solid #1a3a5c; padding-bottom: 10px; margin-bottom: 15px; }
+        .header img { max-width: 180px; }
+        .section-title { background: #1a3a5c; color: white; padding: 8px 15px; border-radius: 5px; margin: 15px 0 10px; font-size: 13px; font-weight: bold; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; background: #f0f8ff; padding: 12px; border-radius: 8px; border-left: 4px solid #1a3a5c; margin-bottom: 15px; }
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        th { background: #1a3a5c; color: white; padding: 10px; text-align: left; font-size: 11px; }
+        .firma { margin-top: 50px; text-align: center; }
+        .firma-linea { border-top: 2px solid #1a3a5c; width: 200px; margin: 0 auto; padding-top: 8px; }
+        .footer { background: #1a3a5c; color: white; padding: 10px; text-align: center; border-radius: 5px; margin-top: 15px; font-size: 10px; }
+      </style></head><body>
+      <div class="header"><img src="https://miesperanzalab.com/wp-content/uploads/2024/10/Logo-Mie-esperanza-Lab-Color-400x190-1.png" alt="Mi Esperanza Lab" /><div style="font-size:10px;margin-top:5px;">C/ Camino de Cancino #24, Cancino Adentro, Santo Domingo Este<br/>Tel: 849-288-9790 / 809-986-9970 | miesperanzalab@gmail.com</div></div>
+      <div class="section-title">INFORMACION DEL PACIENTE</div>
+      <div class="info-grid">
+        <div><strong>Paciente:</strong> ${pacienteSeleccionado.nombre} ${pacienteSeleccionado.apellido || ''}</div>
+        <div><strong>Cedula:</strong> ${pacienteSeleccionado.cedula || 'N/A'}</div>
+        <div><strong>Edad:</strong> ${edadPaciente}</div>
+        <div><strong>Sexo:</strong> ${pacienteSeleccionado.sexo === 'M' ? 'Masculino' : 'Femenino'}</div>
+        <div><strong>Nacionalidad:</strong> ${pacienteSeleccionado.nacionalidad || 'Dominicano'}</div>
+        <div><strong>Fecha:</strong> ${fechaResultado}</div>
+      </div>
+      <div class="section-title">RESULTADO: ${nombreEstudio}</div>
+      <table><thead><tr><th style="width:35%;">Parametro</th><th style="width:25%;text-align:center;">Resultado</th><th style="width:25%;text-align:center;">Valor Referencia</th><th style="width:15%;text-align:center;">Estado</th></tr></thead><tbody>
+      ${valoresHTML || '<tr><td colspan="4" style="padding:20px;text-align:center;color:#999;">Sin valores</td></tr>'}
+      </tbody></table>
+      ${resultadoActivo.interpretacion ? `<div style="background:#e6f3ff;border-left:4px solid #1a3a5c;padding:10px;border-radius:5px;margin:10px 0;"><strong>INTERPRETACION:</strong><p style="margin:5px 0 0;">${resultadoActivo.interpretacion}</p></div>` : ''}
+      ${resultadoActivo.conclusion ? `<div style="background:#e8f5e9;border-left:4px solid #27ae60;padding:10px;border-radius:5px;margin:10px 0;"><strong>CONCLUSION:</strong><p style="margin:5px 0 0;">${resultadoActivo.conclusion}</p></div>` : ''}
+      <div class="firma">${firmaHtml}<div class="firma-linea">Dr(a). ${doctorNombre} ${doctorApellido}</div><div style="font-size:10px;color:#666;margin-top:3px;">Firma y Sello</div></div>
+      <div class="footer"><strong>Gracias por confiar en nosotros!</strong> | <span style="color:#87CEEB;">Su salud es nuestra prioridad</span></div>
+      <script>window.addEventListener('load', function () { setTimeout(function () { window.focus(); window.print(); }, 250); }); window.addEventListener('afterprint', function () { setTimeout(function () { window.close(); }, 150); });</script>
+      </body></html>`;
 
     ventana.document.write(htmlContent);
     ventana.document.close();
     
     setTimeout(() => {
-      if (document.body.contains(iframe)) {
-        document.body.removeChild(iframe);
-      }
+      if (document.body.contains(iframe)) document.body.removeChild(iframe);
     }, 10000);
   };
 
@@ -400,364 +318,309 @@ const PortalMedico = () => {
   }, [debouncedBusqueda, buscarPacientes]);
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1 style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 25, color: colores.azulOscuro }}>
-        <FaUserMd style={{ color: colores.azulCielo }} /> Portal Medico
-      </h1>
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 w-full h-full pb-8">
+      {/* Header moved inside component layout */}
+      <div className="flex justify-between items-center mb-6">
+          <h2 className="text-3xl font-headline font-bold text-[#e0e2ec] tracking-tighter flex items-center gap-3">
+              <span className="material-symbols-outlined text-[#4afdef] text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>medical_information</span>
+              Portal Médico
+          </h2>
+      </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: pacienteSeleccionado ? '350px 1fr' : '1fr', gap: 20 }}>
-        {/* Panel izquierdo: Busqueda */}
-        <div style={{ background: theme.surface, padding: 20, borderRadius: 15, boxShadow: '0 2px 15px rgba(0,0,0,0.1)', borderTop: `5px solid ${colores.azulOscuro}`, border: `1px solid ${theme.border}` }}>
-          <h3 style={{ marginTop: 0, color: colores.azulOscuro }}>Buscar Paciente</h3>
-          <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-            <input
-              placeholder="Nombre, cedula..."
-              value={busqueda}
-              onChange={e => setBusqueda(e.target.value)}
-              style={{ flex: 1, padding: 12, borderRadius: 8, border: `2px solid ${colores.azulCielo}`, background: theme.surface, color: theme.text }}
-            />
-            <button onClick={() => buscarPacientes(busqueda)} disabled={loading}
-              style={{ padding: '12px 20px', background: colores.azulOscuro, color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer' }}>
-              {loading ? <FaSpinner className="spin" /> : <FaSearch />}
-            </button>
+      <div className="flex flex-col md:flex-row gap-6 h-[calc(100vh-12rem)] min-h-[600px]">
+        {/* Left Column: Patient Search & List */}
+        <section className={`transition-all duration-300 flex-shrink-0 flex flex-col border border-white/5 bg-[#191b23] rounded-2xl overflow-hidden shadow-2xl ${pacienteSeleccionado ? 'w-[350px] hidden md:flex' : 'w-full flex'}`}>
+          <div className="p-6 border-b border-white/5 bg-[#1d2027]">
+            <div className="relative group">
+              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-[#4afdef] transition-colors">search</span>
+              <input 
+                className="w-full bg-[#10131a] border border-white/5 rounded-xl pl-12 pr-4 py-3 text-sm font-label focus:ring-1 focus:ring-[#4afdef]/50 focus:border-[#4afdef]/50 text-[#e0e2ec] transition-all placeholder:text-slate-600 outline-none" 
+                placeholder="Buscar paciente por nombre o ID..." 
+                type="text"
+                value={busqueda}
+                onChange={e => setBusqueda(e.target.value)}
+              />
+            </div>
           </div>
 
-          <div style={{ maxHeight: 500, overflow: 'auto' }}>
+          <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-3 custom-scrollbar">
             {loading ? (
-              <div style={{ textAlign: 'center', padding: 30 }}>
-                <FaSpinner className="spin" style={{ fontSize: 30, color: colores.azulCielo }} />
-              </div>
-            ) : pacientes.length === 0 ? (
-              <p style={{ color: theme.textMuted, textAlign: 'center', padding: 20 }}>
-                No hay pacientes
-              </p>
-            ) : (
-              pacientes.map(p => (
-                <div
-                  key={p._id || p.id}
-                  onClick={() => cargarHistorial(p)}
-                  style={{
-                    padding: 15,
-                    border: `2px solid ${(pacienteSeleccionado?._id || pacienteSeleccionado?.id) === (p._id || p.id) ? colores.azulOscuro : theme.border}`,
-                    borderRadius: 10,
-                    marginBottom: 10,
-                    cursor: 'pointer',
-                    background: (pacienteSeleccionado?._id || pacienteSeleccionado?.id) === (p._id || p.id) ? theme.panel : theme.surface,
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 40, height: 40, background: colores.azulCielo, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <FaUser style={{ color: colores.azulOscuro }} />
-                    </div>
-                    <div>
-                      <strong style={{ color: colores.azulOscuro }}>{p.nombre} {p.apellido}</strong>
-                      <div style={{ fontSize: 12, color: theme.textMuted }}>{p.cedula} | {p.telefono}</div>
-                    </div>
-                  </div>
+                <div className="text-center p-8">
+                    <span className="material-symbols-outlined animate-spin text-[#4afdef] text-3xl">autorenew</span>
                 </div>
-              ))
+            ) : pacientes.length === 0 ? (
+                <p className="text-center text-slate-500 font-label text-sm mt-8">No se encontraron pacientes activos</p>
+            ) : (
+                pacientes.map(p => {
+                    const idSelected = pacienteSeleccionado && ((pacienteSeleccionado._id || pacienteSeleccionado.id) === (p._id || p.id));
+                    return (
+                        <div 
+                           key={p._id || p.id} 
+                           onClick={() => cargarHistorial(p)}
+                           className={`p-4 rounded-xl cursor-pointer transition-all border ${idSelected ? 'bg-[#32353c] border-[#4afdef]/30 shadow-[0_0_15px_rgba(74,253,239,0.05)]' : 'bg-transparent border-transparent hover:bg-white/5 hover:border-white/10'}`}
+                        >
+                            <div className="flex justify-between items-start mb-1">
+                                <h4 className={`font-headline font-bold truncate pr-3 ${idSelected ? 'text-white' : 'text-slate-300'}`}>{p.nombre} {p.apellido}</h4>
+                                {idSelected && <span className="text-[9px] font-label px-2 py-0.5 rounded bg-[#4afdef]/10 text-[#4afdef] uppercase tracking-wider flex-shrink-0 border border-[#4afdef]/20">ACTIVO</span>}
+                            </div>
+                            <p className="text-xs text-slate-500 font-label">ID: {p.cedula || '--'}</p>
+                            <div className="mt-2 text-[10px] text-slate-400 font-label flex gap-2">
+                                <span><span className="material-symbols-outlined text-[12px] align-middle">phone_iphone</span> {p.telefono || 'N/A'}</span>
+                            </div>
+                        </div>
+                    );
+                })
             )}
           </div>
-        </div>
+        </section>
 
-        {/* Panel derecho: Historial y Resultados */}
+        {/* Right Column: Patient Data & Results (Only mounts when selected) */}
         {pacienteSeleccionado && (
-          <div style={{ background: theme.surface, padding: 25, borderRadius: 15, boxShadow: '0 2px 15px rgba(0,0,0,0.1)', border: `1px solid ${theme.border}` }}>
-            {/* Info del paciente */}
-            <div style={{ background: theme.panel, padding: 20, borderRadius: 10, marginBottom: 20, borderLeft: `5px solid ${colores.azulOscuro}` }}>
-              <h3 style={{ margin: '0 0 15px', color: colores.azulOscuro }}>
-                {pacienteSeleccionado.nombre} {pacienteSeleccionado.apellido}
-              </h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10, fontSize: 14, color: theme.text }}>
-                <div><strong>Cedula:</strong> {pacienteSeleccionado.cedula}</div>
-                <div><strong>Edad:</strong> {calcularEdad(pacienteSeleccionado.fechaNacimiento)}</div>
-                <div><strong>Sexo:</strong> {pacienteSeleccionado.sexo === 'M' ? 'Masculino' : 'Femenino'}</div>
-                <div><strong>Telefono:</strong> {pacienteSeleccionado.telefono}</div>
-                <div><strong>Nacionalidad:</strong> {pacienteSeleccionado.nacionalidad || 'Dominicano'}</div>
-                <div><strong>Seguro:</strong> {getSeguroNombre(pacienteSeleccionado)}</div>
-              </div>
+          <section className="flex-1 flex flex-col overflow-y-auto custom-scrollbar space-y-6">
+            
+            {/* Patient Demographic Bento Box */}
+            <div className="bg-[#1d2026]/70 backdrop-blur-xl rounded-2xl p-8 border border-white/5 grid grid-cols-2 lg:grid-cols-4 gap-6 shadow-xl relative overflow-hidden">
+                <div className="space-y-1 relative z-10">
+                    <span className="text-[10px] uppercase font-label tracking-widest text-slate-500">Paciente</span>
+                    <p className="text-xl font-headline font-bold text-[#e0e2ec] truncate">{pacienteSeleccionado.nombre} {pacienteSeleccionado.apellido}</p>
+                </div>
+                <div className="space-y-1 relative z-10">
+                    <span className="text-[10px] uppercase font-label tracking-widest text-slate-500">Información</span>
+                    <p className="text-[#e0e2ec] font-label text-sm">{calcularEdad(pacienteSeleccionado.fechaNacimiento)} / {pacienteSeleccionado.sexo === 'M' ? 'Masculino' : 'Femenino'}</p>
+                </div>
+                <div className="space-y-1 relative z-10">
+                    <span className="text-[10px] uppercase font-label tracking-widest text-slate-500">Contacto</span>
+                    <p className="text-[#e0e2ec] font-label text-sm">{pacienteSeleccionado.telefono || 'Sin registrar'}</p>
+                </div>
+                <div className="space-y-1 relative z-10">
+                    <span className="text-[10px] uppercase font-label tracking-widest text-slate-500">Seguro Médico</span>
+                    <p className="text-[#4afdef] font-label text-sm font-bold" style={{textShadow: '0 0 8px rgba(74,253,239,0.3)'}}>{getSeguroNombre(pacienteSeleccionado)}</p>
+                </div>
+                
+                {/* Visual Flair */}
+                <div className="absolute right-0 top-0 w-32 h-32 bg-[#4afdef]/5 rounded-bl-full blur-2xl"></div>
             </div>
 
-            {/* Historial de resultados */}
-            {!resultadoDetalle && (
-              <>
-                <h4 style={{ display: 'flex', alignItems: 'center', gap: 8, color: colores.azulOscuro }}>
-                  <FaFileMedical style={{ color: colores.azulCielo }} /> Historial de Resultados
-                </h4>
-
-                {loadingHistorial ? (
-                  <div style={{ textAlign: 'center', padding: 40 }}>
-                    <FaSpinner className="spin" style={{ fontSize: 40, color: colores.azulCielo }} />
-                  </div>
-                ) : historial.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: 40, color: theme.textMuted }}>
-                    <FaFlask style={{ fontSize: 50, marginBottom: 15, color: colores.azulCielo }} />
-                    <p>No hay resultados registrados para este paciente</p>
-                  </div>
-                ) : (
-                  <div style={{ display: 'grid', gap: 12 }}>
-                    {historial.map(r => (
-                      <div
-                        key={r._id || r.id}
-                        style={{
-                          padding: 15,
-                          border: `2px solid ${r.estado === 'completado' ? '#27ae60' : colores.azulCielo}`,
-                          borderRadius: 10,
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          background: r.estado === 'completado' ? 'rgba(34, 197, 94, 0.12)' : 'rgba(245, 158, 11, 0.12)'
-                        }}
-                      >
-                        <div>
-                          <strong style={{ color: colores.azulOscuro }}>{r.estudio?.nombre || r.nombreEstudio || 'Estudio'}</strong>
-                          <div style={{ fontSize: 12, color: theme.textMuted, marginTop: 5 }}>
-                            {new Date(r.createdAt || r.fecha).toLocaleDateString('es-DO')}
-                            <span style={{
-                              marginLeft: 10,
-                              padding: '3px 10px',
-                              borderRadius: 12,
-                              fontSize: 11,
-                              background: r.estado === 'completado' ? '#d4edda' : '#fff3cd',
-                              color: r.estado === 'completado' ? '#155724' : '#856404'
-                            }}>
-                              {r.estado || 'pendiente'}
-                            </span>
-                          </div>
+            {/* History List or Result View */}
+            {!resultadoDetalle ? (
+                 <div className="space-y-4">
+                     <h3 className="font-headline font-bold text-lg flex items-center gap-2 text-white">
+                         <span className="material-symbols-outlined text-[#4afdef]">history</span>
+                         Historial de Estudios
+                     </h3>
+                     
+                     {loadingHistorial ? (
+                         <div className="p-8 text-center"><span className="material-symbols-outlined animate-spin text-[#4afdef] text-3xl">autorenew</span></div>
+                     ) : historial.length === 0 ? (
+                         <div className="bg-[#191b23] border border-white/5 rounded-2xl p-12 text-center">
+                             <span className="material-symbols-outlined text-[#32353c] text-6xl mb-4" style={{ fontVariationSettings: "'FILL' 1" }}>biotech</span>
+                             <p className="text-slate-400 font-body">No hay resultados registrados en el historial para este paciente.</p>
+                         </div>
+                     ) : (
+                         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                             {historial.map(r => {
+                                 const completado = (r.estado || 'pendiente').toLowerCase() === 'completado';
+                                 return (
+                                     <div key={r._id || r.id} onClick={() => verResultado(r)}
+                                          className="bg-[#1d2026]/70 backdrop-blur-xl p-5 rounded-xl border border-white/5 hover:border-[#4afdef]/30 transition-all cursor-pointer shadow-lg group">
+                                         <div className="flex justify-between items-start mb-4">
+                                             <span className="text-[11px] font-label text-slate-500">{new Date(r.createdAt || r.fecha).toLocaleDateString('es-DO')}</span>
+                                             <span className={`text-[9px] px-2 py-0.5 rounded uppercase tracking-wider font-bold border ${completado ? 'bg-[#4afdef]/10 text-[#4afdef] border-[#4afdef]/20 shadow-[0_0_8px_rgba(74,253,239,0.15)]' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'}`}>
+                                                 {r.estado || 'PENDIENTE'}
+                                             </span>
+                                         </div>
+                                         <h5 className="font-headline font-bold text-slate-200 mb-4 truncate group-hover:text-white transition-colors">{r.estudio?.nombre || r.nombreEstudio || 'Estudio Clínico'}</h5>
+                                         <button className={`${completado ? 'text-[#00e0d3]/70 hover:text-[#00e0d3]' : 'text-slate-500 hover:text-slate-300'} flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest transition-colors`}>
+                                             <span className="material-symbols-outlined text-sm">{completado ? 'visibility' : 'edit_document'}</span> 
+                                             {completado ? 'Ver detalles' : 'Examinar'}
+                                         </button>
+                                     </div>
+                                 );
+                             })}
+                         </div>
+                     )}
+                 </div>
+            ) : (
+                /* Detail Modal / Panel */
+                <div className="bg-[#1d2026]/90 backdrop-blur-2xl rounded-2xl border border-white/5 overflow-hidden flex flex-col shadow-2xl animate-in zoom-in-95 duration-300 relative">
+                    <div className="bg-[#272a31] px-6 py-4 flex justify-between items-center border-b border-white/5">
+                        <div className="flex items-center gap-3">
+                            <button onClick={() => setResultadoDetalle(null)} className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
+                                <span className="material-symbols-outlined">arrow_back</span>
+                            </button>
+                            <div>
+                                <h4 className="font-headline font-bold text-[#e0e2ec]">{resultadoDetalle.estudio?.nombre || resultadoDetalle.nombreEstudio || 'Resultado Clínico'}</h4>
+                                <span className="text-[10px] font-label uppercase tracking-widest text-[#bacac7]">Identificador: #{resultadoDetalle._id?.substring(0,8) || resultadoDetalle.id?.substring(0,8) || 'N/A'}</span>
+                            </div>
                         </div>
-                        <button
-                          onClick={() => verResultado(r)}
-                          style={{
-                            padding: '10px 20px',
-                            background: colores.azulOscuro,
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: 8,
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 8,
-                            fontWeight: 'bold'
-                          }}
-                        >
-                          <FaEye /> Ver / Editar
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
 
-            {/* Detalle del resultado */}
-            {resultadoDetalle && (
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                  <h4 style={{ margin: 0, color: colores.azulOscuro }}>
-                    {resultadoDetalle.estudio?.nombre || resultadoDetalle.nombreEstudio || 'Resultado'}
-                  </h4>
-                  <div style={{ display: 'flex', gap: 10 }}>
-                    {!editando ? (
-                      <>
-                        <button onClick={() => setEditando(true)} style={{
-                          padding: '8px 15px', background: '#f39c12', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5
-                        }}>
-                          <FaEdit /> Editar
-                        </button>
-                        <button onClick={imprimirResultado} style={{
-                          padding: '8px 15px', background: '#27ae60', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5
-                        }}>
-                          <FaPrint /> Imprimir
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button onClick={guardarResultado} disabled={guardando} style={{
-                          padding: '8px 15px', background: '#27ae60', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5
-                        }}>
-                          {guardando ? <FaSpinner className="spin" /> : <FaSave />} Guardar
-                        </button>
-                        <button onClick={() => setEditando(false)} style={{
-                          padding: '8px 15px', background: '#6c757d', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer'
-                        }}>
-                          Cancelar
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
+                        <div className="flex gap-2">
+                             {!editando ? (
+                                <button onClick={() => setEditando(true)} className="px-4 py-2 bg-[#32353c] text-white text-xs font-bold rounded-lg hover:bg-white/10 transition-all flex items-center gap-2 border border-white/5">
+                                    <span className="material-symbols-outlined text-sm">edit</span> Editar
+                                </button>
+                             ) : (
+                                <button onClick={() => setEditando(false)} className="px-4 py-2 bg-transparent text-slate-400 text-xs font-bold rounded-lg hover:text-white transition-all flex items-center gap-2">
+                                    Cancelar
+                                </button>
+                             )}
+                        </div>
+                    </div>
 
-                {/* Tabla de valores */}
-                <div style={{ overflowX: 'auto', marginBottom: 20 }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead>
-                      <tr style={{ background: colores.azulOscuro, color: 'white' }}>
-                        <th style={{ padding: 12, textAlign: 'left' }}>Parametro</th>
-                        <th style={{ padding: 12, textAlign: 'center' }}>Valor</th>
-                        <th style={{ padding: 12, textAlign: 'center' }}>Unidad</th>
-                        <th style={{ padding: 12, textAlign: 'center' }}>Referencia</th>
-                        <th style={{ padding: 12, textAlign: 'center' }}>Estado</th>
-                        {editando && <th style={{ padding: 12, width: 50 }}></th>}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {(resultadoDetalle.valores || []).length === 0 ? (
-                        <tr>
-                          <td colSpan={editando ? 6 : 5} style={{ padding: 30, textAlign: 'center', color: theme.textMuted }}>
-                            {editando ? 'Agregue parametros con el boton de abajo' : 'Sin valores registrados'}
-                          </td>
-                        </tr>
-                      ) : (
-                        (resultadoDetalle.valores || []).map((v, i) => (
-                          <tr key={i} style={{ borderBottom: `1px solid ${theme.borderSoft}` }}>
-                            <td style={{ padding: 10 }}>
-                              {editando ? (
-                                <input value={v.parametro || ''} onChange={e => actualizarValor(i, 'parametro', e.target.value)}
-                                  placeholder="Nombre del parametro"
-                                  style={{ width: '100%', padding: 8, border: `1px solid ${theme.border}`, borderRadius: 4, background: theme.surface, color: theme.text }} />
-                              ) : v.parametro}
-                            </td>
-                            <td style={{ padding: 10, textAlign: 'center' }}>
-                              {editando ? (
-                                <input value={v.valor || ''} onChange={e => actualizarValor(i, 'valor', e.target.value)}
-                                  placeholder="Valor"
-                                  style={{ width: 80, padding: 8, border: `1px solid ${theme.border}`, borderRadius: 4, textAlign: 'center', background: theme.surface, color: theme.text }} />
-                              ) : <strong style={{ color: colores.azulOscuro }}>{v.valor}</strong>}
-                            </td>
-                            <td style={{ padding: 10, textAlign: 'center' }}>
-                              {editando ? (
-                                <input value={v.unidad || ''} onChange={e => actualizarValor(i, 'unidad', e.target.value)}
-                                  placeholder="Unidad"
-                                  style={{ width: 60, padding: 8, border: `1px solid ${theme.border}`, borderRadius: 4, textAlign: 'center', background: theme.surface, color: theme.text }} />
-                              ) : v.unidad}
-                            </td>
-                            <td style={{ padding: 10, textAlign: 'center', color: theme.textMuted }}>
-                              {editando ? (
-                                <input value={v.valorReferencia || ''} onChange={e => actualizarValor(i, 'valorReferencia', e.target.value)}
-                                  placeholder="Ej: 70-100"
-                                  style={{ width: 100, padding: 8, border: `1px solid ${theme.border}`, borderRadius: 4, textAlign: 'center', background: theme.surface, color: theme.text }} />
-                              ) : v.valorReferencia || '-'}
-                            </td>
-                            <td style={{ padding: 10, textAlign: 'center' }}>
-                              {editando ? (
-                                <select value={v.estado || 'normal'} onChange={e => actualizarValor(i, 'estado', e.target.value)}
-                                  style={{ padding: 8, border: `1px solid ${theme.border}`, borderRadius: 4, background: theme.surface, color: theme.text }}>
-                                  <option value="normal">Normal</option>
-                                  <option value="alto">Alto</option>
-                                  <option value="bajo">Bajo</option>
-                                </select>
-                              ) : (
-                                <span style={{
-                                  padding: '4px 12px', borderRadius: 12, fontSize: 12,
-                                  background: v.estado === 'normal' ? '#d4edda' : v.estado === 'alto' ? '#f8d7da' : '#fff3cd',
-                                  color: v.estado === 'normal' ? '#155724' : v.estado === 'alto' ? '#721c24' : '#856404'
-                                }}>
-                                  {v.estado || 'N/A'}
-                                </span>
-                              )}
-                            </td>
+                    <div className="p-6 md:p-8 space-y-8 no-scrollbar overflow-y-auto">
+                        {/* Table of values */}
+                        <div className="rounded-xl border border-[#32353c] overflow-hidden bg-[#10131a]/50">
+                            <table className="w-full text-left font-label">
+                                <thead>
+                                    <tr className="text-[10px] text-slate-500 uppercase tracking-widest border-b border-[#3b4a48]/50 bg-[#191b23]">
+                                        <th className="px-6 py-3 font-medium">Parámetro</th>
+                                        <th className="px-6 py-3 font-medium text-center">Valor</th>
+                                        <th className="px-6 py-3 font-medium text-center">Unidad</th>
+                                        <th className="px-6 py-3 font-medium text-center">Rango Ref.</th>
+                                        <th className="px-6 py-3 font-medium text-center">Estado</th>
+                                        {editando && <th className="px-6 py-3 font-medium"></th>}
+                                    </tr>
+                                </thead>
+                                <tbody className="text-sm divide-y divide-[#3b4a48]/30">
+                                    {(!resultadoDetalle.valores || resultadoDetalle.valores.length === 0) ? (
+                                        <tr><td colSpan={editando ? 6 : 5} className="py-8 text-center text-slate-500 text-xs">{editando ? 'No hay parámetros. Añada uno.' : 'Sin valores registrados'}</td></tr>
+                                    ) : (
+                                        resultadoDetalle.valores.map((v, i) => (
+                                            <tr key={i} className="hover:bg-white/5 transition-colors">
+                                                <td className="px-6 py-4 font-medium text-slate-300">
+                                                    {editando ? <input className="w-full bg-[#1d2027] border border-[#3b4a48] rounded p-2 text-xs text-white focus:border-[#4afdef] outline-none" value={v.parametro} onChange={e => actualizarValor(i, 'parametro', e.target.value)} placeholder="Parámetro" /> : v.parametro}
+                                                </td>
+                                                <td className="px-6 py-4 text-center">
+                                                    {editando ? <input className="w-20 bg-[#1d2027] border border-[#3b4a48] rounded p-2 text-xs text-white text-center focus:border-[#4afdef] outline-none" value={v.valor} onChange={e => actualizarValor(i, 'valor', e.target.value)} placeholder="Valor" /> : <span className="font-bold text-[#4afdef]" style={{textShadow: '0 0 6px rgba(74,253,239,0.3)'}}>{v.valor}</span>}
+                                                </td>
+                                                <td className="px-6 py-4 text-slate-400 text-center text-xs">
+                                                    {editando ? <input className="w-16 bg-[#1d2027] border border-[#3b4a48] rounded p-2 text-xs text-white text-center focus:border-[#4afdef] outline-none" value={v.unidad} onChange={e => actualizarValor(i, 'unidad', e.target.value)} placeholder="Unidad" /> : v.unidad}
+                                                </td>
+                                                <td className="px-6 py-4 text-slate-500 text-center text-xs">
+                                                    {editando ? <input className="w-24 bg-[#1d2027] border border-[#3b4a48] rounded p-2 text-xs text-white text-center focus:border-[#4afdef] outline-none" value={v.valorReferencia} onChange={e => actualizarValor(i, 'valorReferencia', e.target.value)} placeholder="Ref." /> : (v.valorReferencia || '-')}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex justify-center items-center">
+                                                        {editando ? (
+                                                            <select className="bg-[#1d2027] border border-[#3b4a48] rounded p-2 text-[10px] text-white uppercase focus:border-[#4afdef] outline-none appearance-none font-bold" value={v.estado} onChange={e => actualizarValor(i, 'estado', e.target.value)}>
+                                                                <option value="normal">Normal</option>
+                                                                <option value="alto">Alto</option>
+                                                                <option value="bajo">Bajo</option>
+                                                            </select>
+                                                        ) : (
+                                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[10px] font-bold uppercase border ${v.estado === 'normal' || v.estado === 'Normal' ? 'bg-[#00ded1]/10 text-[#00ded1] border-[#00ded1]/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'}`}>
+                                                                {v.estado === 'normal' || v.estado === 'Normal' ? <div className="w-1.5 h-1.5 rounded-full bg-[#00ded1]"></div> : <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></div>}
+                                                                {v.estado || 'N/A'}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                {editando && (
+                                                    <td className="px-6 py-4 text-right">
+                                                        <button onClick={() => eliminarParametro(i)} className="text-rose-400 hover:text-rose-300 p-1"><span className="material-symbols-outlined text-sm">delete</span></button>
+                                                    </td>
+                                                )}
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
                             {editando && (
-                              <td style={{ padding: 10 }}>
-                                <button onClick={() => eliminarParametro(i)} style={{ background: '#e74c3c', color: 'white', border: 'none', borderRadius: 4, padding: '5px 10px', cursor: 'pointer' }}>×</button>
-                              </td>
+                                <div className="p-4 bg-[#191b23] border-t border-[#3b4a48]/50 flex justify-center">
+                                    <button onClick={agregarParametro} className="text-xs font-bold text-[#4afdef] hover:text-[#00e0d3] flex items-center gap-2"><span className="material-symbols-outlined text-sm">add_circle</span> Añadir Parámetro</button>
+                                </div>
                             )}
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                  {editando && (
-                    <button onClick={agregarParametro} style={{
-                      marginTop: 10, padding: '10px 20px', background: colores.azulCielo, color: colores.azulOscuro, border: 'none', borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, fontWeight: 'bold'
-                    }}>
-                      <FaPlus /> Agregar Parametro
-                    </button>
-                  )}
+                        </div>
+
+                        {/* Textareas */}
+                        <div className="space-y-6">
+                            <div>
+                                <label className="text-[10px] font-label uppercase tracking-widest text-slate-500 mb-2 block">Interpretación Clínica</label>
+                                {editando ? (
+                                    <textarea className="w-full bg-[#191b23] border border-[#3b4a48] rounded-xl p-4 text-sm font-body text-slate-200 focus:border-[#4afdef] outline-none min-h-[100px] resize-none transition-all placeholder:text-slate-600" value={resultadoDetalle.interpretacion || ''} onChange={e => setResultadoDetalle({...resultadoDetalle, interpretacion: e.target.value})} placeholder="Elaborar interpretación..." />
+                                ) : (
+                                    <div className="bg-[#191b23] border border-white/5 rounded-xl p-4 min-h-[80px]">
+                                        <p className="text-sm text-slate-300 font-body leading-relaxed">{resultadoDetalle.interpretacion || 'Ninguna interpretación adjunta.'}</p>
+                                    </div>
+                                )}
+                            </div>
+                            
+                            {editando && (
+                                <div>
+                                    <label className="text-[10px] font-label uppercase tracking-widest text-slate-500 mb-2 block">Conclusión</label>
+                                    <textarea className="w-full bg-[#191b23] border border-[#3b4a48] rounded-xl p-4 text-sm font-body text-slate-200 focus:border-[#4afdef] outline-none min-h-[80px] resize-none transition-all placeholder:text-slate-600" value={resultadoDetalle.conclusion || ''} onChange={e => setResultadoDetalle({...resultadoDetalle, conclusion: e.target.value})} placeholder="Conclusión final..." />
+                                </div>
+                            )}
+                            
+                            {!editando && resultadoDetalle.conclusion && (
+                                <div>
+                                    <label className="text-[10px] font-label uppercase tracking-widest text-slate-500 mb-2 block">Conclusión</label>
+                                    <div className="bg-[#4afdef]/5 border border-[#4afdef]/20 rounded-xl p-4 relative overflow-hidden">
+                                        <div className="absolute top-0 left-0 w-1 h-full bg-[#4afdef]"></div>
+                                        <p className="text-sm text-[#4afdef] font-body leading-relaxed">{resultadoDetalle.conclusion}</p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Signature Section */}
+                        <div className={`p-6 bg-surface-container-lowest rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4 border ${resultadoDetalle.firmaDigital ? 'border-[#00e0d3]/30 shadow-[0_0_15px_rgba(0,224,211,0.05)]' : 'border-white/5'}`}>
+                            <div className="flex items-center gap-4">
+                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center border ${resultadoDetalle.firmaDigital ? 'bg-[#00e0d3]/10 border-[#00e0d3]/20' : 'bg-[#191b23] border-white/10'}`}>
+                                    <span className={`material-symbols-outlined ${resultadoDetalle.firmaDigital ? 'text-[#00e0d3]' : 'text-slate-500'}`} style={{ fontVariationSettings: "'FILL' 1" }}>{resultadoDetalle.firmaDigital ? 'verified' : 'draw'}</span>
+                                </div>
+                                <div>
+                                    <p className="font-headline font-bold text-white">Validación de Especialista</p>
+                                    <p className="text-[11px] text-slate-500 font-label tracking-wide">
+                                        {resultadoDetalle.firmaDigital
+                                          ? `Firmado por Dr(a). ${resultadoDetalle.firmadoPor?.nombre || resultadoDetalle.validadoPor?.nombre || medicoSesion?.nombre || 'Médico'}`
+                                          : firmaMedico ? 'Firma biometrada disponible en sesión' : 'Requiere registrar firma en su perfil'}
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            {/* Checkbox logic styled beautifully */}
+                            <label className={`flex items-center gap-3 ${resultadoDetalle.firmaDigital ? 'cursor-default' : 'cursor-pointer group'}`}>
+                                <span className={`text-sm font-label font-bold tracking-wide transition-colors ${resultadoDetalle.firmaDigital ? 'text-[#00e0d3]' : 'text-slate-400 group-hover:text-white'}`}>
+                                    {firmandoResultado ? 'Validando...' : resultadoDetalle.firmaDigital ? 'Validado y Firmado' : 'Integrar Firma'}
+                                </span>
+                                <div className={`w-6 h-6 rounded flex items-center justify-center border transition-all ${resultadoDetalle.firmaDigital ? 'bg-[#00e0d3] border-[#00e0d3]' : 'bg-[#191b23] border-[#3b4a48] group-hover:border-[#4afdef]'}`}>
+                                    <span className={`material-symbols-outlined text-[16px] text-zinc-900 ${resultadoDetalle.firmaDigital ? 'block' : 'hidden'}`} style={{ fontVariationSettings: "'FILL' 1, 'wght' 700" }}>check</span>
+                                </div>
+                                <input className="hidden" type="checkbox" checked={Boolean(resultadoDetalle.firmaDigital)} disabled={firmandoResultado || resultadoDetalle.firmaDigital} onChange={(e) => marcarFirmaResultado(e.target.checked)}/>
+                            </label>
+                        </div>
+
+                    </div>
+                    
+                    {/* Action Bar Base */}
+                    <div className="p-6 bg-[#1d2027]/70 backdrop-blur-3xl border-t border-white/5 flex gap-4 mt-auto">
+                        {editando ? (
+                            <button onClick={guardarResultado} disabled={guardando} className="flex-1 py-3 px-6 rounded-xl font-headline text-sm font-bold flex items-center justify-center gap-2 bg-[#4afdef] text-slate-900 shadow-[0_0_20px_rgba(74,253,239,0.3)] hover:shadow-[0_0_30px_rgba(74,253,239,0.5)] transition-all">
+                                {guardando ? <span className="material-symbols-outlined animate-spin text-sm">autorenew</span> : <span className="material-symbols-outlined text-sm">save</span>}
+                                Guardar Cambios
+                            </button>
+                        ) : (
+                            <>
+                                {resultadoDetalle.estado !== 'completado' && (
+                                    <button onClick={validarResultado} disabled={guardando} className="flex-1 py-3 px-6 rounded-xl font-headline text-[13px] font-bold flex items-center justify-center gap-2 bg-gradient-to-br from-[#4afdef] to-[#00e0d3] text-slate-900 shadow-[0_0_20px_rgba(74,253,239,0.2)] hover:shadow-[0_0_30px_rgba(74,253,239,0.4)] transition-all">
+                                        {guardando ? <span className="material-symbols-outlined animate-spin text-sm">autorenew</span> : <span className="material-symbols-outlined text-sm">verified</span>}
+                                        Aprobar y Finalizar
+                                    </button>
+                                )}
+                                <button onClick={imprimirResultado} className="px-6 py-3 rounded-xl border border-[#3b4a48] bg-[#191b23] font-headline text-[13px] text-slate-300 font-bold flex items-center gap-2 hover:bg-white/5 hover:text-white transition-all">
+                                    <span className="material-symbols-outlined text-sm">print</span>
+                                    Dossier / Impresión
+                                </button>
+                            </>
+                        )}
+                    </div>
                 </div>
-
-                {/* Interpretacion */}
-                <div style={{ marginBottom: 15 }}>
-                  <label style={{ fontWeight: 'bold', color: colores.azulOscuro, display: 'block', marginBottom: 5 }}>Interpretacion:</label>
-                  {editando ? (
-                    <textarea value={resultadoDetalle.interpretacion || ''}
-                      onChange={e => setResultadoDetalle({ ...resultadoDetalle, interpretacion: e.target.value })}
-                      placeholder="Escriba la interpretacion de los resultados..."
-                      style={{ width: '100%', padding: 10, borderRadius: 6, border: `1px solid ${theme.border}`, minHeight: 80, background: theme.surface, color: theme.text }} />
-                  ) : (
-                    <p style={{ background: theme.panel, padding: 12, borderRadius: 6, margin: 0, borderLeft: `4px solid ${colores.azulOscuro}`, color: theme.text }}>
-                      {resultadoDetalle.interpretacion || 'Sin interpretacion'}
-                    </p>
-                  )}
-                </div>
-
-                {/* Conclusion */}
-                <div style={{ marginBottom: 20 }}>
-                  <label style={{ fontWeight: 'bold', color: colores.azulOscuro, display: 'block', marginBottom: 5 }}>Conclusion:</label>
-                  {editando ? (
-                    <textarea value={resultadoDetalle.conclusion || ''}
-                      onChange={e => setResultadoDetalle({ ...resultadoDetalle, conclusion: e.target.value })}
-                      placeholder="Escriba la conclusion..."
-                      style={{ width: '100%', padding: 10, borderRadius: 6, border: `1px solid ${theme.border}`, minHeight: 80, background: theme.surface, color: theme.text }} />
-                  ) : (
-                    <p style={{ background: 'rgba(34, 197, 94, 0.12)', padding: 12, borderRadius: 6, margin: 0, borderLeft: '4px solid #27ae60', color: theme.text }}>
-                      {resultadoDetalle.conclusion || 'Sin conclusion'}
-                    </p>
-                  )}
-                </div>
-
-                {/* Firma Digital */}
-                <div style={{ marginBottom: 20, padding: 15, border: `2px solid ${resultadoDetalle.firmaDigital ? '#27ae60' : colores.azulCielo}`, borderRadius: 10, background: resultadoDetalle.firmaDigital ? '#f8fff8' : '#fffef8' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: resultadoDetalle.firmaDigital ? 'default' : 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={Boolean(resultadoDetalle.firmaDigital)}
-                      disabled={firmandoResultado}
-                      onChange={(e) => marcarFirmaResultado(e.target.checked)}
-                      style={{ width: 18, height: 18, accentColor: '#27ae60', cursor: resultadoDetalle.firmaDigital ? 'default' : 'pointer' }}
-                    />
-                    <span style={{ fontWeight: 'bold', color: colores.azulOscuro, display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <FaSignature style={{ color: colores.azulCielo }} />
-                      {firmandoResultado ? 'Firmando resultado...' : 'Firmar resultado'}
-                    </span>
-                  </label>
-
-                  <p style={{ margin: '10px 0 0', fontSize: 12, color: theme.textMuted }}>
-                    {resultadoDetalle.firmaDigital
-                      ? `Firmado por Dr(a). ${resultadoDetalle.firmadoPor?.nombre || resultadoDetalle.validadoPor?.nombre || medicoSesion?.nombre || 'Médico'} ${resultadoDetalle.firmadoPor?.apellido || resultadoDetalle.validadoPor?.apellido || medicoSesion?.apellido || ''}`
-                      : firmaMedico
-                        ? 'Marque el check para aplicar la firma guardada en su sesión.'
-                        : 'Primero debe crear o cargar la firma en Mi Perfil.'}
-                  </p>
-
-                  {!firmaMedico && !resultadoDetalle.firmaDigital && (
-                    <button onClick={irAPerfilFirma} style={{
-                      marginTop: 12, padding: '10px 18px', background: '#8e44ad', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, fontWeight: 'bold'
-                    }}>
-                      <FaSignature /> Ir a Mi Perfil
-                    </button>
-                  )}
-                </div>
-
-                {/* Botones de accion */}
-                {resultadoDetalle.estado !== 'completado' && !editando && (
-                  <button onClick={validarResultado} disabled={guardando} style={{
-                    width: '100%', padding: 15, background: '#27ae60', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 'bold', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 10
-                  }}>
-                    {guardando ? <FaSpinner className="spin" /> : <FaCheck />} Validar y Completar Resultado
-                  </button>
-                )}
-
-                <button onClick={() => setResultadoDetalle(null)} style={{
-                  width: '100%', padding: 12, background: '#6c757d', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 'bold'
-                }}>
-                  Volver al Historial
-                </button>
-              </div>
             )}
-          </div>
+          </section>
         )}
       </div>
+
     </div>
   );
 };

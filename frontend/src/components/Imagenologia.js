@@ -1,26 +1,9 @@
-/**
- * Imagenologia.js
- * Módulo de imagenología con visor DICOM (Cornerstone.js)
- *
- * Roles:
- *  - admin / medico  → pueden ver Y editar el reporte
- *  - laboratorio / recepcion → solo pueden ver (modo solo lectura)
- *
- * Plantillas de la doctora:
- *  - Presets de texto guardados en localStorage (clave: "imgPlantillasDoctora")
- *  - La doctora puede crear, editar, eliminar y aplicar sus propias plantillas
- */
 import React, { Suspense, lazy, useState, useEffect, useRef, useCallback } from 'react';
-import {
-  FaXRay, FaUpload, FaSave, FaCheck, FaSpinner,
-  FaEye, FaArrowLeft, FaPrint, FaPlus, FaTrash, FaPencilAlt,
-} from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
 const DicomViewer = lazy(() => import('./DicomViewer'));
 
-/* ─── Plantillas de tipo de estudio (campos dinámicos) ──────── */
 const TIPO_PLANTILLAS = [
   { id: 'general', label: 'General', campos: ['tecnica', 'hallazgos', 'impresion', 'recomendaciones'] },
   { id: 'torax', label: 'Tórax / Rx Tórax', campos: ['tecnica', 'hallazgos', 'impresion', 'recomendaciones'] },
@@ -40,33 +23,20 @@ const CAMPO_LABELS = {
 };
 
 const ESTADO_COLORES = {
-  pendiente: { bg: '#fff3cd', color: '#856404' },
-  en_proceso: { bg: '#cce5ff', color: '#004085' },
-  completado: { bg: '#d4edda', color: '#155724' },
-};
-
-const theme = {
-  surface: 'var(--legacy-surface)',
-  surfaceMuted: 'var(--legacy-surface-muted)',
-  panel: 'var(--legacy-surface-panel)',
-  border: 'var(--legacy-border)',
-  borderSoft: 'var(--legacy-border-soft)',
-  text: 'var(--legacy-text)',
-  textStrong: 'var(--legacy-text-strong)',
-  textMuted: 'var(--legacy-text-muted)',
-  accentStrong: 'var(--legacy-accent-strong)'
+  pendiente: { bg: 'bg-amber-500/10 border-amber-500/20', filter: 'text-amber-500', name: 'PENDIENTE' },
+  en_proceso: { bg: 'bg-blue-500/10 border-blue-500/20', filter: 'text-blue-500', name: 'EN PROCESO' },
+  completado: { bg: 'bg-[#4afdef]/10 border-[#4afdef]/20 shadow-[0_0_8px_rgba(74,253,239,0.15)]', filter: 'text-[#4afdef]', name: 'COMPLETADO' },
 };
 
 function ViewerLoadingFallback() {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', background: '#08111b', color: '#dbeafe', gap: 12, flexDirection: 'column' }}>
-      <FaSpinner className="spin" style={{ fontSize: 28, color: '#87CEEB' }} />
-      <div style={{ fontSize: 14, fontWeight: 600 }}>Cargando visor DICOM...</div>
+    <div className="flex flex-col items-center justify-center h-full w-full bg-[#0b0e15] text-[#4afdef] gap-3">
+      <span className="material-symbols-outlined animate-spin text-4xl">autorenew</span>
+      <div className="text-sm font-headline tracking-widest uppercase">Inicializando Motor DICOM...</div>
     </div>
   );
 }
 
-/* ─── Helper: obtener rol del usuario actual ─────────────────── */
 function getRol() {
   try {
     const uStr = localStorage.getItem('user') || sessionStorage.getItem('user');
@@ -84,7 +54,6 @@ function puedeEditar() {
   const r = getRol(); return r === 'admin' || r === 'medico';
 }
 
-/* ─── Plantillas guardables (localStorage) ──────────────────── */
 const LS_KEY = 'imgPlantillasDoctora';
 function cargarPlantillasGuardadas() {
   try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); } catch { return []; }
@@ -93,7 +62,6 @@ function guardarPlantillasLS(lista) {
   localStorage.setItem(LS_KEY, JSON.stringify(lista));
 }
 
-/* ═══════════════════ COMPONENTE PRINCIPAL ══════════════════════ */
 const Imagenologia = () => {
   const navigate = useNavigate();
   const [vista, setVista] = useState('lista');
@@ -102,29 +70,27 @@ const Imagenologia = () => {
   const [filtroEstado, setFiltroEstado] = useState('pendiente');
   const [estudioActual, setEstudioActual] = useState(null);
   const [imagenes, setImagenes] = useState([]);
-
-  // Reporte
+  
   const [reporte, setReporte] = useState({});
   const [tipoPlantilla, setTipoPlantilla] = useState('general');
   const [guardando, setGuardando] = useState(false);
   const [subiendo, setSubiendo] = useState(false);
   const [firmandoResultado, setFirmandoResultado] = useState(false);
-
-  // Plantillas guardadas de la doctora
+  
   const [plantillasDoctora, setPlantillasDoctora] = useState(cargarPlantillasGuardadas);
   const [mostrarGestorPlantillas, setMostrarGestorPlantillas] = useState(false);
-  const [plantillaEditando, setPlantillaEditando] = useState(null); // {nombre, reporte}
+  const [plantillaEditando, setPlantillaEditando] = useState(null); 
   const [nombreNuevaPlantilla, setNombreNuevaPlantilla] = useState('');
-  const [mostrarSoloVisor, setMostrarSoloVisor] = useState(false); // Ocultar panel de reporte
-  const [imagenesParaImprimir, setImagenesParaImprimir] = useState([]); // Cola de imágenes para imprimir (1 o 2)
-  const [ajustes, setAjustes] = useState(null); // WW/WC inicial del WS
+  const [mostrarSoloVisor, setMostrarSoloVisor] = useState(false); 
+  const [imagenesParaImprimir, setImagenesParaImprimir] = useState([]); 
+  const [ajustes, setAjustes] = useState(null); 
 
   const fileInputRef = useRef(null);
-  const guardadoTimeoutRef = useRef(null); // Para debounce del auto-guardado
+  const guardadoTimeoutRef = useRef(null); 
   const canEdit = puedeEditar();
   const rol = getRol();
+  const sesion = getUsuarioSesion();
 
-  /* ─── Persistir plantillas doctora ──────────────────────────── */
   useEffect(() => { guardarPlantillasLS(plantillasDoctora); }, [plantillasDoctora]);
 
   const cargarEstudios = useCallback(async () => {
@@ -146,7 +112,7 @@ const Imagenologia = () => {
     setImagenes([]);
     setMostrarSoloVisor(false);
     setImagenesParaImprimir([]);
-    setAjustes(null); // Nuevo estado
+    setAjustes(null); 
     try {
       const ws = await api.getImagenologiaWorkspace(estudio._id || estudio.id);
       const data = ws?.data || ws || {};
@@ -190,27 +156,23 @@ const Imagenologia = () => {
     if (!estudioActual || !canEdit) return;
     setGuardando(true);
     try {
-      const payload = {
-        reporte: reporteOpcional || reporte,
-        plantilla: tipoPlantilla
-      };
+      const payload = { reporte: reporteOpcional || reporte, plantilla: tipoPlantilla };
       if (ajustesOpcionales) payload.ajustes = ajustesOpcionales;
       await api.updateImagenologiaWorkspace(estudioActual._id || estudioActual.id, payload);
-      if (!ajustesOpcionales) alert('Reporte guardado correctamente'); // Solo avisar si fue guardado manual
+      if (!ajustesOpcionales) alert('Reporte guardado correctamente'); 
     } catch (err) { if (!ajustesOpcionales) alert('Error: ' + err.message); }
     finally { setGuardando(false); }
   };
 
   const handleCambioAjustesVisor = useCallback((nuevosAjustes) => {
     setAjustes(nuevosAjustes);
-    // Auto-guardado silencioso con Debounce (evitar spam al arrastrar WW/WL/Zoom)
     if (canEdit && estudioActual) {
       if (guardadoTimeoutRef.current) clearTimeout(guardadoTimeoutRef.current);
       guardadoTimeoutRef.current = setTimeout(() => {
         guardarReporte(reporte, nuevosAjustes);
-      }, 1500); // Guardar 1.5s después de dejar de mover
+      }, 1500); 
     }
-  }, [canEdit, estudioActual, reporte]); // eslint-disable-line
+  }, [canEdit, estudioActual, reporte]);
 
   const finalizarReporte = async () => {
     if (!estudioActual || !canEdit) return;
@@ -242,14 +204,12 @@ const Imagenologia = () => {
 
   const marcarFirmaResultado = async (checked) => {
     if (!checked || !estudioActual || estudioActual.firmaDigital) return;
-
     const usuarioSesion = getUsuarioSesion();
     if (!usuarioSesion?.firmaDigital) {
       alert('Debe registrar su firma en Mi Perfil antes de firmar el reporte.');
       navigate('/perfil');
       return;
     }
-
     try {
       setFirmandoResultado(true);
       const firmado = await api.firmarResultado(estudioActual._id || estudioActual.id);
@@ -268,7 +228,6 @@ const Imagenologia = () => {
     }
   };
 
-  /* ─── Plantillas guardadas de la doctora ───────────────────── */
   const guardarComoPlantilla = () => {
     const nombre = nombreNuevaPlantilla.trim() || `Plantilla ${plantillasDoctora.length + 1}`;
     const nueva = { id: Date.now().toString(), nombre, tipoPlantilla, reporte: { ...reporte } };
@@ -280,6 +239,7 @@ const Imagenologia = () => {
   const aplicarPlantillaGuardada = (pt) => {
     setReporte({ ...pt.reporte });
     setTipoPlantilla(pt.tipoPlantilla || 'general');
+    setMostrarGestorPlantillas(false);
   };
 
   const eliminarPlantillaGuardada = (id) => {
@@ -290,22 +250,19 @@ const Imagenologia = () => {
   const actualizarPlantillaGuardada = () => {
     if (!plantillaEditando) return;
     setPlantillasDoctora(prev => prev.map(p =>
-      p.id === plantillaEditando.id
-        ? { ...p, nombre: plantillaEditando.nombre, reporte: plantillaEditando.reporte, tipoPlantilla: plantillaEditando.tipoPlantilla }
-        : p
+      p.id === plantillaEditando.id ? { ...p, nombre: plantillaEditando.nombre, reporte: plantillaEditando.reporte, tipoPlantilla: plantillaEditando.tipoPlantilla } : p
     ));
     setPlantillaEditando(null);
     alert('Plantilla actualizada');
   };
 
-  /* ─── Capturar imagen para imprimir ────────────────────────── */
   const agregarImagenAImprimir = () => {
     if (window.__capturarVisorDicomActivo) {
       const durl = window.__capturarVisorDicomActivo();
       if (durl) {
         setImagenesParaImprimir(prev => {
           const arr = [...prev, durl];
-          if (arr.length > 2) return arr.slice(arr.length - 2); // Mantener máx 2
+          if (arr.length > 2) return arr.slice(arr.length - 2); 
           return arr;
         });
         alert('Imagen capturada para imprimir. Ya van ' + (imagenesParaImprimir.length + 1) + '. Vaya a "Imprimir Imagen"');
@@ -329,30 +286,16 @@ const Imagenologia = () => {
     const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
     const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Impresión de Imagen</title>
-      <style>
-      @page{size:A4;margin:10mm}body{font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:0;color:#333}
-      .hdr{display:flex;justify-content:space-between;border-bottom:2px solid #1a3a5c;padding-bottom:5px;margin-bottom:10px}
-      .hdr h3{margin:0;color:#1a3a5c;font-size:14px} .hdr p{margin:0;font-size:10px;color:#666}
-      .img-container{text-align:center;margin-bottom:15px;height:45vh;display:flex;align-items:center;justify-content:center;background:#000;border-radius:4px;overflow:hidden}
-      .img-container img{max-width:100%;max-height:100%;object-fit:contain}
-      @media print{.np{display:none}}
-      </style></head><body>
-      <div class="np" style="text-align:center;padding:10px;background:#f0f0f0;margin-bottom:15px">
-        <button onclick="window.print()" style="padding:10px 20px;font-size:16px;cursor:pointer">🖨️ Imprimir</button>
-      </div>
-      <div class="hdr">
-        <div><h3>${esc(empresa.nombre || 'Centro Diagnóstico')}</h3><p>Estudio: ${esc(estudio.nombre)}</p></div>
-        <div style="text-align:right"><h3>Paciente: ${esc(paciente.nombre)} ${esc(paciente.apellido)}</h3><p>Cód: ${estudioActual?.codigo || ''} · ${new Date().toLocaleDateString('es-DO')}</p></div>
-      </div>
-      ${imagenesParaImprimir.map(img => `<div class="img-container"><img src="${img}" /></div>`).join('')}
-      </body></html>`;
+      <style>@page{size:A4;margin:10mm}body{font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:0;color:#333} .hdr{display:flex;justify-content:space-between;border-bottom:2px solid #1a3a5c;padding-bottom:5px;margin-bottom:10px} .hdr h3{margin:0;color:#1a3a5c;font-size:14px} .hdr p{margin:0;font-size:10px;color:#666} .img-container{text-align:center;margin-bottom:15px;height:45vh;display:flex;align-items:center;justify-content:center;background:#000;border-radius:4px;overflow:hidden} .img-container img{max-width:100%;max-height:100%;object-fit:contain} @media print{.np{display:none}}</style></head><body>
+      <div class="np" style="text-align:center;padding:10px;background:#f0f0f0;margin-bottom:15px"><button onclick="window.print()" style="padding:10px 20px;font-size:16px;cursor:pointer">🖨️ Imprimir</button></div>
+      <div class="hdr"><div><h3>${esc(empresa.nombre || 'Centro Diagnóstico')}</h3><p>Estudio: ${esc(estudio.nombre)}</p></div><div style="text-align:right"><h3>Paciente: ${esc(paciente.nombre)} ${esc(paciente.apellido)}</h3><p>Cód: ${estudioActual?.codigo || ''} · ${new Date().toLocaleDateString('es-DO')}</p></div></div>
+      ${imagenesParaImprimir.map(img => `<div class="img-container"><img src="${img}" /></div>`).join('')}</body></html>`;
 
     const w = window.open('', 'ImprimirImagen', 'width=850,height=1100');
     w.document.write(html); w.document.close();
     setTimeout(() => w.print(), 800);
   };
 
-  /* ─── Imprimir reporte (solo texto) ────────────────────────── */
   const imprimirReporte = async () => {
     let empresa = {};
     try { const r = await fetch('/api/configuracion/empresa'); empresa = await r.json(); } catch { }
@@ -369,16 +312,13 @@ const Imagenologia = () => {
         const firmado = await api.firmarResultado(estudioActual._id || estudioActual.id);
         const dataFirmada = firmado?.data || firmado || {};
         estudioParaImprimir = {
-          ...estudioActual,
-          ...dataFirmada,
+          ...estudioActual, ...dataFirmada,
           firmaDigital: dataFirmada.firmaDigital || usuarioSesion.firmaDigital,
           firmadoPor: dataFirmada.firmadoPor || estudioActual.firmadoPor || null,
           validadoPor: dataFirmada.validadoPor || estudioActual.validadoPor || null
         };
         setEstudioActual(estudioParaImprimir);
-      } catch (err) {
-        console.error('No se pudo persistir la firma antes de imprimir:', err);
-      }
+      } catch (err) {}
     }
 
     const paciente = estudioParaImprimir?.paciente || {};
@@ -389,33 +329,18 @@ const Imagenologia = () => {
     const firmaActiva = estudioParaImprimir?.firmaDigital || usuarioSesion?.firmaDigital || '';
     const medicoFirmanteNombre = estudioParaImprimir?.firmadoPor?.nombre || estudioParaImprimir?.validadoPor?.nombre || usuarioSesion?.nombre || reporte?.medico_firmante || 'Médico Informante';
     const medicoFirmanteApellido = estudioParaImprimir?.firmadoPor?.apellido || estudioParaImprimir?.validadoPor?.apellido || usuarioSesion?.apellido || '';
+    
     const camposHtml = tpl.campos.map(c => {
       const v = reporte[c] || ''; if (!v) return '';
       return `<div style="margin-bottom:14px"><h4 style="margin:0 0 5px;color:#1a3a5c;font-size:13px;text-transform:uppercase">${esc(CAMPO_LABELS[c] || c)}</h4><p style="margin:0;line-height:1.7;white-space:pre-wrap;color:#2d3748">${esc(v)}</p></div>`;
     }).join('');
-    const firmaHtml = firmaActiva
-      ? `<div style="margin-bottom:10px"><img src="${firmaActiva}" alt="Firma del médico" style="max-width:220px;max-height:70px;object-fit:contain" /></div>`
-      : '<div style="height:60px"></div>';
+    
+    const firmaHtml = firmaActiva ? `<div style="margin-bottom:10px"><img src="${firmaActiva}" alt="Firma del médico" style="max-width:220px;max-height:70px;object-fit:contain" /></div>` : '<div style="height:60px"></div>';
+    
     const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Reporte Imagenología</title>
-    <style>@page{size:A4;margin:12mm 15mm}body{font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#2d3748}
-    .hdr{display:flex;align-items:center;gap:16px;border-bottom:3px solid #1a3a5c;padding-bottom:12px;margin-bottom:16px}
-    .hdr img{max-height:60px;object-fit:contain}.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;background:#f0f8ff;padding:12px;border-radius:8px;border-left:4px solid #1a3a5c;margin-bottom:16px}
-    .item strong{display:block;font-size:10px;color:#888;text-transform:uppercase}.item span{font-size:13px;font-weight:600;color:#1a3a5c}
-    .sec{background:#1a3a5c;color:white;padding:8px 14px;border-radius:6px;font-size:12px;font-weight:700;margin:16px 0 10px}
-    .firma{margin-top:50px;display:flex;justify-content:flex-end}.fb{text-align:center;width:220px}
-    .fl{border-top:2px solid #1a3a5c;padding-top:8px;font-size:11px;color:#666}
-    .ft{margin-top:30px;padding-top:10px;border-top:1px solid #e2e8f0;text-align:center;color:#aaa;font-size:10px}
-    @media print{.np{display:none}}</style></head><body>
-    <div class="hdr">${empresa.logo_resultados ? `<img src="${esc(empresa.logo_resultados)}" onerror="this.style.display='none'">` : '<span style="font-size:28px">🏥</span>'}
-      <div><h2 style="margin:0 0 3px;font-size:16px;color:#1a3a5c">${esc(empresa.nombre || 'Centro Diagnóstico')}</h2>
-      <p style="margin:0;color:#666;font-size:11px">${esc(empresa.empresa_direccion || '')}${empresa.empresa_telefono ? ' · ' + esc(empresa.empresa_telefono) : ''}</p>
-      <p style="color:#2980b9;font-weight:600;margin:2px 0 0">REPORTE DE IMAGENOLOGÍA</p></div></div>
-    <div class="grid">
-      <div class="item"><strong>Paciente</strong><span>${esc(paciente.nombre)} ${esc(paciente.apellido)}</span></div>
-      <div class="item"><strong>Cédula</strong><span>${esc(paciente.cedula || 'N/A')}</span></div>
-      <div class="item"><strong>Estudio</strong><span>${esc(estudio.nombre || 'Estudio de imagen')}</span></div>
-      <div class="item"><strong>Fecha</strong><span>${fecha}</span></div>
-    </div>
+    <style>@page{size:A4;margin:12mm 15mm}body{font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#2d3748} .hdr{display:flex;align-items:center;gap:16px;border-bottom:3px solid #1a3a5c;padding-bottom:12px;margin-bottom:16px} .hdr img{max-height:60px;object-fit:contain}.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;background:#f0f8ff;padding:12px;border-radius:8px;border-left:4px solid #1a3a5c;margin-bottom:16px} .item strong{display:block;font-size:10px;color:#888;text-transform:uppercase}.item span{font-size:13px;font-weight:600;color:#1a3a5c} .sec{background:#1a3a5c;color:white;padding:8px 14px;border-radius:6px;font-size:12px;font-weight:700;margin:16px 0 10px} .firma{margin-top:50px;display:flex;justify-content:flex-end}.fb{text-align:center;width:220px} .fl{border-top:2px solid #1a3a5c;padding-top:8px;font-size:11px;color:#666} .ft{margin-top:30px;padding-top:10px;border-top:1px solid #e2e8f0;text-align:center;color:#aaa;font-size:10px} @media print{.np{display:none}}</style></head><body>
+    <div class="hdr">${empresa.logo_resultados ? `<img src="${esc(empresa.logo_resultados)}" onerror="this.style.display='none'">` : '<span style="font-size:28px">🏥</span>'} <div><h2 style="margin:0 0 3px;font-size:16px;color:#1a3a5c">${esc(empresa.nombre || 'Centro Diagnóstico')}</h2> <p style="margin:0;color:#666;font-size:11px">${esc(empresa.empresa_direccion || '')}${empresa.empresa_telefono ? ' · ' + esc(empresa.empresa_telefono) : ''}</p> <p style="color:#2980b9;font-weight:600;margin:2px 0 0">REPORTE DE IMAGENOLOGÍA</p></div></div>
+    <div class="grid"><div class="item"><strong>Paciente</strong><span>${esc(paciente.nombre)} ${esc(paciente.apellido)}</span></div><div class="item"><strong>Cédula</strong><span>${esc(paciente.cedula || 'N/A')}</span></div><div class="item"><strong>Estudio</strong><span>${esc(estudio.nombre || 'Estudio de imagen')}</span></div><div class="item"><strong>Fecha</strong><span>${fecha}</span></div></div>
     ${camposHtml ? `<div class="sec">REPORTE MÉDICO</div>${camposHtml}` : '<p style="color:#888;font-style:italic">Sin reporte completado</p>'}
     <div class="firma"><div class="fb">${firmaHtml}<div class="fl"><strong>Firma y Sello</strong><br/>Dr(a). ${esc(medicoFirmanteNombre)} ${esc(medicoFirmanteApellido)}</div></div></div>
     <div class="ft">${esc(empresa.nombre || 'Centro Diagnóstico')} · ${new Date().toLocaleString('es-DO')}</div>
@@ -426,312 +351,323 @@ const Imagenologia = () => {
     setTimeout(() => w.print(), 500);
   };
 
-  /* ══════════════════ VISTA LISTA ════════════════════════════════ */
+  const tipoActual = TIPO_PLANTILLAS.find(p => p.id === tipoPlantilla) || TIPO_PLANTILLAS[0];
+
   if (vista === 'lista') {
     return (
-      <div style={{ padding: 20 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h1 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 10, color: '#1a3a5c' }}>
-            <FaXRay style={{ color: '#87CEEB' }} /> Imagenología
-            <span style={{ fontSize: 13, background: '#e8f4fd', color: '#1565c0', padding: '3px 10px', borderRadius: 12, fontWeight: 600, marginLeft: 6 }}>
-              {rol.charAt(0).toUpperCase() + rol.slice(1)}
-            </span>
-          </h1>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {['', 'pendiente', 'en_proceso', 'completado'].map(e => (
-              <button key={e} onClick={() => setFiltroEstado(e)} style={{
-                padding: '8px 14px', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 'bold',
-                background: filtroEstado === e ? '#1a3a5c' : '#f0f0f0',
-                color: filtroEstado === e ? 'white' : '#333', fontSize: 13,
-              }}>{e === '' ? 'Todos' : e.replace('_', ' ')}</button>
-            ))}
-          </div>
+      <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 w-full h-full pb-8">
+        <div className="flex justify-between items-center mb-6">
+            <h2 className="text-3xl font-headline font-bold text-[#e0e2ec] tracking-tighter flex items-center gap-3">
+                <span className="material-symbols-outlined text-[#4afdef] text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>medical_information</span>
+                Imagenología
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#32353c] text-[#bacac7] font-label uppercase tracking-widest ml-2 border border-white/5">
+                    {rol.charAt(0).toUpperCase() + rol.slice(1)}
+                </span>
+            </h2>
+            <div className="flex gap-2 bg-[#1d2027] p-1.5 rounded-xl border border-white/5">
+              {['', 'pendiente', 'en_proceso', 'completado'].map(e => (
+                <button key={e} onClick={() => setFiltroEstado(e)} 
+                        className={`px-4 py-2 rounded-lg font-label text-[11px] font-bold uppercase tracking-wider transition-all ${filtroEstado === e ? 'bg-[#32353c] text-white shadow-md' : 'bg-transparent text-[#849491] hover:text-[#bacac7] hover:bg-white/5'}`}>
+                    {e === '' ? 'Todos' : e.replace('_', ' ')}
+                </button>
+              ))}
+            </div>
         </div>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 60 }}><FaSpinner className="spin" style={{ fontSize: 40, color: '#87CEEB' }} /></div>
+            <div className="text-center p-16"><span className="material-symbols-outlined animate-spin text-[#4afdef] text-4xl">autorenew</span></div>
         ) : estudios.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 60, background: theme.surface, borderRadius: 15, border: `1px solid ${theme.border}` }}>
-            <FaXRay style={{ fontSize: 60, color: '#ddd', marginBottom: 16 }} />
-            <p style={{ color: theme.textMuted, fontSize: 17 }}>No hay estudios {filtroEstado ? `"${filtroEstado}"` : ''}</p>
-          </div>
+            <div className="bg-[#191b23] border border-white/5 rounded-2xl p-16 text-center shadow-xl">
+                <span className="material-symbols-outlined text-[#32353c] text-6xl mb-6" style={{ fontVariationSettings: "'FILL' 1" }}>biotech</span>
+                <p className="text-slate-400 font-body text-lg">No hay estudios {filtroEstado ? `"${filtroEstado.replace('_', ' ')}"` : 'registrados'}</p>
+            </div>
         ) : (
-          <div style={{ background: theme.surface, borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 10px rgba(0,0,0,0.08)', border: `1px solid ${theme.border}` }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ background: theme.surfaceMuted }}>
-                  {['Código', 'Paciente', 'Estudio', 'Imágenes', 'Estado', 'Fecha', 'Acciones'].map(h => (
-                    <th key={h} style={{ padding: '13px 14px', textAlign: ['Imágenes', 'Estado', 'Acciones'].includes(h) ? 'center' : 'left', color: theme.textMuted, fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.4px' }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {estudios.map(e => {
-                  const est = ESTADO_COLORES[e.estado] || ESTADO_COLORES.pendiente;
-                  return (
-                    <tr key={e._id || e.id} style={{ borderBottom: `1px solid ${theme.borderSoft}` }} onMouseEnter={ev => ev.currentTarget.style.background = theme.surfaceMuted} onMouseLeave={ev => ev.currentTarget.style.background = theme.surface}>
-                      <td style={{ padding: '12px 14px', fontFamily: 'monospace', fontSize: 13, color: theme.accentStrong, fontWeight: 700 }}>{e.codigo || e._id?.slice(-6).toUpperCase()}</td>
-                      <td style={{ padding: '12px 14px', fontWeight: 600, color: theme.textStrong }}>{e.paciente?.nombre} {e.paciente?.apellido}</td>
-                      <td style={{ padding: '12px 14px', color: theme.text }}>{e.estudio?.nombre || 'Estudio de imagen'}</td>
-                      <td style={{ padding: '12px 14px', textAlign: 'center' }}>
-                        <span style={{ background: '#e8f4fd', color: '#1565c0', padding: '3px 10px', borderRadius: 12, fontSize: 12, fontWeight: 700 }}>{(e.imagenes || []).length}</span>
-                      </td>
-                      <td style={{ padding: '12px 14px', textAlign: 'center' }}>
-                        <span style={{ padding: '4px 12px', borderRadius: 12, fontSize: 12, fontWeight: 700, background: est.bg, color: est.color }}> {(e.estado || 'pendiente').replace('_', ' ')} </span>
-                      </td>
-                      <td style={{ padding: '12px 14px', color: theme.textMuted, fontSize: 13 }}>{new Date(e.createdAt || e.fecha).toLocaleDateString('es-DO')}</td>
-                      <td style={{ padding: '12px 14px', textAlign: 'center' }}>
-                        <button onClick={() => abrirVisor(e)} style={{ padding: '8px 16px', background: '#1a3a5c', color: 'white', border: 'none', borderRadius: 7, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 700, fontSize: 13 }}>
-                          <FaEye /> {canEdit ? 'Abrir Visor' : 'Ver Imágenes'}
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+            <div className="bg-[#191b23] border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
+              <table className="w-full text-left font-label">
+                <thead>
+                  <tr className="bg-[#1d2027] text-[10px] text-[#849491] uppercase tracking-widest border-b border-[#3b4a48]/50">
+                    <th className="px-6 py-4 font-bold">Código</th>
+                    <th className="px-6 py-4 font-bold">Paciente</th>
+                    <th className="px-6 py-4 font-bold">Estudio</th>
+                    <th className="px-6 py-4 font-bold text-center">Imágenes</th>
+                    <th className="px-6 py-4 font-bold text-center">Estado</th>
+                    <th className="px-6 py-4 font-bold">Fecha</th>
+                    <th className="px-6 py-4 font-bold text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className="text-sm divide-y divide-[#3b4a48]/30">
+                  {estudios.map(e => {
+                    const est = ESTADO_COLORES[e.estado] || ESTADO_COLORES.pendiente;
+                    return (
+                      <tr key={e._id || e.id} className="hover:bg-[#1d2027]/50 transition-colors">
+                        <td className="px-6 py-4 font-bold text-[#4afdef] text-[12px] uppercase">
+                            {e.codigo || e._id?.slice(-6).toUpperCase()}
+                        </td>
+                        <td className="px-6 py-4 font-bold text-white">
+                            {e.paciente?.nombre} {e.paciente?.apellido}
+                        </td>
+                        <td className="px-6 py-4 text-[#cfd3db]">
+                            {e.estudio?.nombre || 'Estudio de imagen'}
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                            <span className="bg-[#32353c] text-[#cfd3db] px-3 py-1 rounded-md text-[11px] font-bold border border-white/5">
+                                {(e.imagenes || []).length}
+                            </span>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-[10px] font-bold border ${est.bg} ${est.filter}`}>
+                                {est.name}
+                            </span>
+                        </td>
+                        <td className="px-6 py-4 text-[#849491] text-[12px]">
+                            {new Date(e.createdAt || e.fecha).toLocaleDateString('es-DO')}
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                            <button onClick={() => abrirVisor(e)} className="px-4 py-2 bg-[#2d3038] text-white rounded-lg text-xs font-bold hover:bg-[#32353c] border border-white/5 transition-all flex items-center justify-center gap-2 w-full max-w-[130px] mx-auto group">
+                                <span className="material-symbols-outlined text-[16px] text-[#4afdef] group-hover:animate-pulse">visibility</span>
+                                {canEdit ? 'Visor' : 'Imágenes'}
+                            </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
         )}
       </div>
     );
   }
 
-  /* ══════════════════ VISTA VISOR ════════════════════════════════ */
-
-  // handleCambioAjustesVisor fue movido arriba para que acceda al ref del timeout
-
-  const tipoActual = TIPO_PLANTILLAS.find(p => p.id === tipoPlantilla) || TIPO_PLANTILLAS[0];
-
+  // --- VISOR MODE ---
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 60px)', background: '#0d1520', overflow: 'hidden' }}>
-
-      {/* ── Header ── */}
-      <div style={{ background: '#111d2c', borderBottom: '1px solid rgba(255,255,255,0.1)', padding: '9px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, gap: 8, flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={() => { setVista('lista'); cargarEstudios(); }}
-            style={{ padding: '7px 13px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center', gap: 5, fontSize: 13 }}>
-            <FaArrowLeft /> Volver
-          </button>
-          <div>
-            <div style={{ color: 'white', fontWeight: 700, fontSize: 15 }}>{estudioActual?.paciente?.nombre} {estudioActual?.paciente?.apellido}</div>
-            <div style={{ color: '#82b1ff', fontSize: 12 }}>{estudioActual?.estudio?.nombre || 'Estudio de imagen'} &nbsp;·&nbsp; Cód: {estudioActual?.codigo || estudioActual?._id?.slice(-6).toUpperCase()}</div>
-          </div>
-        </div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <button onClick={() => setMostrarSoloVisor(!mostrarSoloVisor)} style={{ padding: '7px 13px', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, marginRight: 15 }}>
-            {mostrarSoloVisor ? '👁 Mostrar Reporte' : '👁 Ocultar Reporte'}
-          </button>
-          {/* Solo médico/admin puede subir */}
-          {canEdit && (
-            <label style={{ padding: '7px 13px', background: '#1565c0', color: 'white', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, fontWeight: 700, fontSize: 13 }}>
-              {subiendo ? <FaSpinner className="spin" /> : <FaUpload />}
-              {subiendo ? 'Subiendo…' : 'Subir DICOM'}
-              <input ref={fileInputRef} type="file" accept=".dcm,.DCM,image/*" multiple style={{ display: 'none' }} onChange={handleSubirImagenes} />
-            </label>
-          )}
-
-          {/* Controles de Impresión Separados */}
-          <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: 3, gap: 3 }}>
-            <button onClick={agregarImagenAImprimir} style={{ padding: '4px 9px', background: '#3949ab', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12 }} title="Capturar imagen actual para imprimir">
-              📸 Capturar Imagen ({imagenesParaImprimir.length}/2)
+    <div className="fixed inset-0 z-50 bg-[#10131a] flex flex-col text-[#e0e2ec] font-body selection:bg-[#4afdef]/30 overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+      
+      {/* Top Navbar */}
+      <nav className="flex items-center justify-between px-6 py-3 bg-[rgba(29,32,38,0.7)] backdrop-blur-2xl border-b border-white/5 h-16 shrink-0 shadow-lg">
+        <div className="flex items-center gap-6">
+            <button onClick={() => setVista('lista')} className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-white/5 transition-all active:scale-95 text-[#e0e2ec] border border-transparent hover:border-white/10">
+                <span className="material-symbols-outlined">arrow_back</span>
             </button>
-            {imagenesParaImprimir.length > 0 && (
-              <>
-                <button onClick={limpiarImpresion} style={{ padding: '4px 9px', background: '#e53935', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12 }} title="Limpiar imágenes">🗑</button>
-                <button onClick={imprimirImagenesSola} style={{ padding: '4px 9px', background: '#1e88e5', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 700, fontSize: 12 }}>
-                  🖨️ Imprimir Imagen
-                </button>
-              </>
-            )}
-          </div>
-
-          <button onClick={imprimirReporte} style={{ padding: '7px 13px', background: '#6a1b9a', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, fontWeight: 700, fontSize: 13, marginLeft: 15 }}>
-            <FaPrint /> Imprimir Reporte
-          </button>
-
-          {canEdit && (
-            <>
-              <button onClick={() => guardarReporte()} disabled={guardando} style={{ padding: '7px 13px', background: '#2e7d32', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, fontWeight: 700, fontSize: 13 }}>
-                {guardando ? <FaSpinner className="spin" /> : <FaSave />} Guardar
-              </button>
-              <button onClick={finalizarReporte} disabled={guardando} style={{ padding: '7px 13px', background: '#e65100', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, fontWeight: 700, fontSize: 13 }}>
-                <FaCheck /> Finalizar
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* ── Cuerpo ── */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-
-        {/* Visor DICOM */}
-        <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-          <Suspense fallback={<ViewerLoadingFallback />}>
-            <DicomViewer
-              imagenes={imagenes}
-              ajustesIniciales={ajustes || {}}
-              onCambioAjustes={handleCambioAjustesVisor}
-              estiloContenedor={{ borderRadius: 0 }}
-            />
-          </Suspense>
+            <div className="flex flex-col">
+                <h1 className="font-headline font-bold text-lg tracking-tight flex items-center gap-2 text-white">
+                    {estudioActual?.paciente?.nombre} {estudioActual?.paciente?.apellido}
+                </h1>
+                <p className="font-label text-xs text-[#849491] uppercase tracking-tighter">
+                    {estudioActual?.estudio?.nombre || 'ESTUDIO CLÍNICO'} 
+                    <span className="mx-2">|</span> 
+                    <span className="text-[#cfd3db]">ID: {estudioActual?.codigo || estudioActual?._id?.slice(-8).toUpperCase()}</span>
+                </p>
+            </div>
         </div>
 
-        {/* ── Panel derecho: Reporte médico ── */}
-        {!mostrarSoloVisor && (
-          <div style={{ width: 310, flexShrink: 0, background: theme.surfaceMuted, borderLeft: `1px solid ${theme.border}`, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div className="flex items-center gap-3">
+             <button onClick={() => setMostrarSoloVisor(!mostrarSoloVisor)} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-transparent border border-transparent hover:border-white/10 hover:bg-white/5 transition-all font-label text-sm text-[#bacac7] mr-4">
+                <span className="material-symbols-outlined text-sm">{mostrarSoloVisor ? 'layers' : 'layers_clear'}</span>
+                {mostrarSoloVisor ? 'Mostrar Dashboard' : 'Modo Teatro'}
+            </button>
 
-            {/* Header panel */}
-            <div style={{ background: '#1a3a5c', color: 'white', padding: '11px 14px', fontWeight: 700, fontSize: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
-              <span>📋 Reporte Médico</span>
-              {canEdit && (
-                <button onClick={() => setMostrarGestorPlantillas(g => !g)}
-                  title="Gestionar plantillas de la doctora"
-                  style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', borderRadius: 6, padding: '4px 8px', cursor: 'pointer', fontSize: 12 }}>
-                  📁 Mis Plantillas
-                </button>
-              )}
-            </div>
-
-            {/* ── Modal gestor de plantillas ── */}
-            {mostrarGestorPlantillas && canEdit && (
-              <div style={{ background: theme.surface, borderBottom: `2px solid ${theme.border}`, padding: 12, flexShrink: 0, maxHeight: 320, overflowY: 'auto' }}>
-                <div style={{ fontWeight: 700, color: theme.accentStrong, fontSize: 13, marginBottom: 8 }}>📁 Plantillas de la Doctora</div>
-
-                {/* Lista de plantillas guardadas */}
-                {plantillasDoctora.length === 0 ? (
-                  <p style={{ color: theme.textMuted, fontSize: 12, margin: '0 0 8px' }}>Sin plantillas guardadas aún.</p>
-                ) : plantillasDoctora.map(pt => (
-                  <div key={pt.id} style={{ background: theme.panel, border: `1px solid ${theme.border}`, borderRadius: 8, padding: '8px 10px', marginBottom: 7, display: 'flex', alignItems: 'center', gap: 5 }}>
-                    {plantillaEditando?.id === pt.id ? (
-                      <>
-                        <input value={plantillaEditando.nombre} onChange={e => setPlantillaEditando(p => ({ ...p, nombre: e.target.value }))}
-                          style={{ flex: 1, padding: '4px 8px', borderRadius: 6, border: `1px solid ${theme.border}`, fontSize: 12, background: theme.surface, color: theme.text }} />
-                        <button onClick={actualizarPlantillaGuardada} style={{ background: '#27ae60', color: 'white', border: 'none', borderRadius: 5, padding: '4px 8px', cursor: 'pointer', fontSize: 11 }}>✓</button>
-                        <button onClick={() => setPlantillaEditando(null)} style={{ background: theme.surfaceMuted, color: theme.text, border: 'none', borderRadius: 5, padding: '4px 8px', cursor: 'pointer', fontSize: 11 }}>✕</button>
-                      </>
-                    ) : (
-                      <>
-                        <span style={{ flex: 1, fontWeight: 600, fontSize: 13, color: theme.accentStrong }}>{pt.nombre}</span>
-                        <span style={{ fontSize: 10, color: theme.textMuted, marginRight: 4 }}>{(TIPO_PLANTILLAS.find(t => t.id === pt.tipoPlantilla) || {}).label}</span>
-                        <button onClick={() => aplicarPlantillaGuardada(pt)} title="Aplicar" style={{ background: '#1565c0', color: 'white', border: 'none', borderRadius: 5, padding: '4px 8px', cursor: 'pointer', fontSize: 11 }}>Aplicar</button>
-                        <button onClick={() => setPlantillaEditando({ ...pt })} title="Editar nombre" style={{ background: theme.surfaceMuted, color: theme.text, border: 'none', borderRadius: 5, padding: '4px 6px', cursor: 'pointer', fontSize: 12 }}><FaPencilAlt /></button>
-                        <button onClick={() => eliminarPlantillaGuardada(pt.id)} title="Eliminar" style={{ background: '#ffebee', color: '#e53935', border: 'none', borderRadius: 5, padding: '4px 6px', cursor: 'pointer', fontSize: 12 }}><FaTrash /></button>
-                      </>
-                    )}
-                  </div>
-                ))}
-
-                {/* Guardar reporte actual como plantilla */}
-                <div style={{ borderTop: `1px solid ${theme.border}`, paddingTop: 8, display: 'flex', gap: 6 }}>
-                  <input value={nombreNuevaPlantilla} onChange={e => setNombreNuevaPlantilla(e.target.value)}
-                    placeholder="Nombre de la nueva plantilla…"
-                    style={{ flex: 1, padding: '6px 9px', borderRadius: 7, border: `1px solid ${theme.border}`, fontSize: 12, background: theme.surface, color: theme.text }} />
-                  <button onClick={guardarComoPlantilla} style={{ background: '#1a3a5c', color: 'white', border: 'none', borderRadius: 7, padding: '6px 10px', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <FaPlus /> Guardar
-                  </button>
-                </div>
-                <p style={{ fontSize: 10, color: theme.textMuted, margin: '4px 0 0' }}>Guarda el reporte actual como plantilla reutilizable</p>
-              </div>
-            )}
-
-            {/* ── Formulario del reporte ── */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: 13 }}>
-
-              {/* Aviso solo lectura */}
-              {!canEdit && (
-                <div style={{ background: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.24)', borderRadius: 8, padding: '8px 12px', marginBottom: 12, fontSize: 12, color: '#e65100', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  👁 Modo solo lectura — solo la doctora puede editar el reporte
-                </div>
-              )}
-
-              {canEdit && (
-                <div style={{ marginBottom: 12, padding: '10px 12px', borderRadius: 10, border: `1px solid ${estudioActual?.firmaDigital ? '#86efac' : theme.border}`, background: estudioActual?.firmaDigital ? '#f0fdf4' : theme.surface }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: estudioActual?.firmaDigital ? 'default' : 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={Boolean(estudioActual?.firmaDigital)}
-                      disabled={firmandoResultado}
-                      onChange={(e) => marcarFirmaResultado(e.target.checked)}
-                      style={{ width: 18, height: 18, accentColor: '#16a34a', cursor: estudioActual?.firmaDigital ? 'default' : 'pointer' }}
-                    />
-                    <span style={{ fontSize: 13, fontWeight: 700, color: theme.textStrong }}>
-                      {firmandoResultado ? 'Firmando resultado...' : 'Firmar resultado'}
-                    </span>
-                  </label>
-                  <div style={{ marginTop: 8, fontSize: 12, color: theme.textMuted }}>
-                    {estudioActual?.firmaDigital
-                      ? `Firmado por Dr(a). ${estudioActual?.firmadoPor?.nombre || estudioActual?.validadoPor?.nombre || getUsuarioSesion()?.nombre || 'Médico'} ${estudioActual?.firmadoPor?.apellido || estudioActual?.validadoPor?.apellido || getUsuarioSesion()?.apellido || ''}`
-                      : getUsuarioSesion()?.firmaDigital
-                        ? 'Marque el check para aplicar la firma guardada en su sesión.'
-                        : 'No hay firma cargada en la sesión. Regístrela en Mi Perfil.'}
-                  </div>
-                </div>
-              )}
-
-              {/* Selector tipo de estudio */}
-              <div style={{ marginBottom: 12 }}>
-                <label style={{ fontSize: 11, fontWeight: 700, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: '0.4px', display: 'block', marginBottom: 4 }}>Tipo de Estudio</label>
-                <select value={tipoPlantilla} onChange={e => setTipoPlantilla(e.target.value)} disabled={!canEdit}
-                  style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: `1.5px solid ${theme.border}`, fontSize: 13, background: canEdit ? theme.surface : theme.surfaceMuted, color: theme.text }}>
-                  {TIPO_PLANTILLAS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
-                </select>
-              </div>
-
-              {/* Plantillas rápidas de la doctora (aplicar sin abrir gestor) */}
-              {canEdit && plantillasDoctora.length > 0 && (
-                <div style={{ marginBottom: 12 }}>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: '0.4px', display: 'block', marginBottom: 5 }}>Aplicar Plantilla Rápida</label>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-                    {plantillasDoctora.map(pt => (
-                      <button key={pt.id} onClick={() => aplicarPlantillaGuardada(pt)} style={{ padding: '5px 10px', background: theme.panel, border: `1px solid ${theme.border}`, color: '#1565c0', borderRadius: 6, cursor: 'pointer', fontSize: 11, fontWeight: 600 }}>
-                        {pt.nombre}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Campos dinámicos de la plantilla */}
-              {tipoActual.campos.map(campo => (
-                <div key={campo} style={{ marginBottom: 11 }}>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: '0.4px', display: 'block', marginBottom: 4 }}>
-                    {CAMPO_LABELS[campo] || campo}
-                  </label>
-                  {campo === 'birads' ? (
-                    <select value={reporte[campo] || ''} onChange={e => canEdit && setReporte(p => ({ ...p, [campo]: e.target.value }))} disabled={!canEdit}
-                      style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: `1.5px solid ${theme.border}`, fontSize: 13, background: canEdit ? theme.surface : theme.surfaceMuted, color: theme.text }}>
-                      <option value="">Seleccionar BIRADS</option>
-                      {['0', '1', '2', '3', '4A', '4B', '4C', '5', '6'].map(b => <option key={b} value={b}>BIRADS {b}</option>)}
-                    </select>
-                  ) : (
-                    <textarea
-                      value={reporte[campo] || ''}
-                      onChange={e => canEdit && setReporte(p => ({ ...p, [campo]: e.target.value }))}
-                      readOnly={!canEdit}
-                      placeholder={canEdit ? `${CAMPO_LABELS[campo]}…` : '(sin información)'}
-                      rows={campo === 'hallazgos' ? 5 : 3}
-                      style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: `1.5px solid ${theme.border}`, fontSize: 13, resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit', lineHeight: 1.5, background: canEdit ? theme.surface : theme.surfaceMuted, cursor: canEdit ? 'text' : 'default', color: theme.text }}
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Botones inferiores — solo si puede editar */}
             {canEdit && (
-              <div style={{ padding: 11, borderTop: '1px solid #e0e6ef', display: 'flex', flexDirection: 'column', gap: 7, flexShrink: 0 }}>
-                <button onClick={() => guardarReporte()} disabled={guardando} style={{ padding: '10px', background: '#1565c0', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontSize: 13 }}>
-                  {guardando ? <FaSpinner className="spin" /> : <FaSave />} Guardar Borrador
-                </button>
-                <button onClick={finalizarReporte} disabled={guardando} style={{ padding: '10px', background: '#2e7d32', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontSize: 13 }}>
-                  <FaCheck /> Finalizar y Completar
-                </button>
-              </div>
+                <label className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-all font-label text-sm cursor-pointer hover:text-white group">
+                    {subiendo ? <span className="material-symbols-outlined animate-spin text-[#4afdef] text-sm">autorenew</span> : <span className="material-symbols-outlined text-[#4afdef] text-sm group-hover:animate-pulse">upload_file</span>}
+                    {subiendo ? 'Subiendo...' : 'Subir DICOM'}
+                    <input ref={fileInputRef} type="file" accept=".dcm,.DCM,image/*" multiple style={{ display: 'none' }} onChange={handleSubirImagenes} />
+                </label>
             )}
-          </div>
-        )}
-      </div>
+
+            <div className="h-6 w-px bg-white/10 mx-1"></div>
+            
+            <button onClick={agregarImagenAImprimir} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-all font-label text-sm group">
+                <span className="material-symbols-outlined text-[#cfd3db] text-sm group-hover:text-white">photo_camera</span>
+                Capturar <span className="text-[10px] bg-white/10 px-1.5 rounded">{imagenesParaImprimir.length}/2</span>
+            </button>
+
+            {imagenesParaImprimir.length > 0 && (
+                <>
+                    <button onClick={limpiarImpresion} className="flex items-center justify-center p-2 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition-all" title="Limpiar imágenes capturadas">
+                        <span className="material-symbols-outlined text-sm">delete</span>
+                    </button>
+                    <button onClick={imprimirImagenesSola} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#32353c] border border-white/10 hover:bg-[#464950] transition-all font-label text-sm text-white font-bold ml-2">
+                        Imprimir Imagen
+                    </button>
+                </>
+            )}
+
+            <div className="h-6 w-px bg-white/10 mx-1"></div>
+
+            <button onClick={imprimirReporte} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#32353c] border border-white/10 hover:bg-white/20 transition-all font-label text-sm font-bold text-white shadow-md">
+                <span className="material-symbols-outlined text-sm">print</span>
+                Dossier
+            </button>
+
+            <div className="h-6 w-px bg-white/10 mx-2"></div>
+            <div className="flex items-center gap-3 pl-2">
+                <div className="text-right hidden sm:block">
+                    <p className="text-xs font-bold font-headline text-[#00ded1] uppercase">{sesion?.nombre || 'Médico'}</p>
+                    <p className="text-[10px] text-[#849491] font-label uppercase">Staff Radiología</p>
+                </div>
+                <div className="w-10 h-10 rounded-full bg-[#32353c] border border-[#00ded1]/30 overflow-hidden flex items-center justify-center text-[#bacac7]">
+                    <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>person</span>
+                </div>
+            </div>
+        </div>
+      </nav>
+
+      {/* Main Content Split */}
+      <main className="flex-1 flex overflow-hidden">
+          
+          {/* Main DICOM Viewport (Left Area) */}
+          <section className="flex-1 bg-[#0b0e15] relative overflow-hidden flex flex-col items-center justify-center">
+             <Suspense fallback={<ViewerLoadingFallback />}>
+                <DicomViewer
+                  imagenes={imagenes}
+                  ajustesIniciales={ajustes || {}}
+                  onCambioAjustes={handleCambioAjustesVisor}
+                  estiloContenedor={{ borderRadius: 0, width: '100%', height: '100%', border: 'none' }}
+                />
+              </Suspense>
+          </section>
+
+          {/* Right Sidebar (Report Editor) */}
+          {!mostrarSoloVisor && (
+              <aside className="w-[380px] bg-[#1d2027]/70 backdrop-blur-2xl border-l border-white/5 flex flex-col shadow-[-10px_0_30px_rgba(0,0,0,0.5)] z-40 transition-all shrink-0">
+                  <header className="p-6 pb-4 flex items-center justify-between border-b border-white/5">
+                      <div>
+                          <h2 className="font-headline font-bold text-lg text-white flex items-center gap-2">
+                              <span className="material-symbols-outlined text-[#00ded1]">edit_note</span>
+                              Reporte Médico
+                          </h2>
+                          <p className="text-[10px] font-label text-[#849491] uppercase tracking-widest mt-1">Editor de Diagnóstico</p>
+                      </div>
+                      
+                      {canEdit && (
+                          <div className="relative">
+                            <button onClick={() => setMostrarGestorPlantillas(!mostrarGestorPlantillas)} className={`p-2 rounded-lg text-[#bacac7] transition-all ${mostrarGestorPlantillas ? 'bg-[#32353c] text-white' : 'hover:bg-white/5'}`} title="Plantillas">
+                                <span className="material-symbols-outlined">folder_special</span>
+                            </button>
+                            
+                            {/* Templates Dropdown Overlay */}
+                            {mostrarGestorPlantillas && (
+                                <div className="absolute right-0 top-12 w-72 bg-[#1d2027] border border-white/10 rounded-xl shadow-2xl p-4 z-50 animate-in slide-in-from-top-2">
+                                    <div className="font-bold text-[#e0e2ec] text-xs mb-3 uppercase tracking-widest flex items-center gap-2"><span className="material-symbols-outlined text-[16px]">bookmark_added</span> Mis Plantillas</div>
+                                    <div className="max-h-48 overflow-y-auto custom-scrollbar space-y-2 mb-3 pr-2">
+                                        {plantillasDoctora.length === 0 ? (
+                                            <p className="text-[#849491] text-[11px]">No hay plantillas guardadas.</p>
+                                        ) : plantillasDoctora.map(pt => (
+                                            <div key={pt.id} className="bg-[#272a31] p-2 rounded-lg border border-white/5 flex flex-col gap-2">
+                                                {plantillaEditando?.id === pt.id ? (
+                                                    <div className="flex gap-2">
+                                                        <input value={plantillaEditando.nombre} onChange={e => setPlantillaEditando(p => ({...p, nombre: e.target.value}))} className="flex-1 bg-[#10131a] border border-white/10 rounded px-2 py-1 text-xs text-white outline-none focus:border-[#4afdef]"/>
+                                                        <button onClick={actualizarPlantillaGuardada} className="bg-emerald-500/20 text-emerald-400 p-1 rounded"><span className="material-symbols-outlined text-xs">check</span></button>
+                                                        <button onClick={() => setPlantillaEditando(null)} className="bg-white/5 text-slate-400 p-1 rounded"><span className="material-symbols-outlined text-xs">close</span></button>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center justify-between">
+                                                        <div>
+                                                            <div className="text-xs font-bold text-[#cfd3db]">{pt.nombre}</div>
+                                                            <div className="text-[9px] text-[#849491] uppercase">{TIPO_PLANTILLAS.find(t=>t.id===pt.tipoPlantilla)?.label || ''}</div>
+                                                        </div>
+                                                        <div className="flex gap-1 border-l border-white/10 pl-2">
+                                                            <button onClick={() => aplicarPlantillaGuardada(pt)} className="p-1 text-[#4afdef] hover:bg-[#4afdef]/10 rounded" title="Aplicar"><span className="material-symbols-outlined text-[14px]">done_all</span></button>
+                                                            <button onClick={() => setPlantillaEditando({...pt})} className="p-1 text-[#bacac7] hover:bg-white/10 rounded"><span className="material-symbols-outlined text-[14px]">edit</span></button>
+                                                            <button onClick={() => eliminarPlantillaGuardada(pt.id)} className="p-1 text-rose-400 hover:bg-rose-500/10 rounded"><span className="material-symbols-outlined text-[14px]">delete</span></button>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="flex gap-2 pt-3 border-t border-white/5">
+                                        <input value={nombreNuevaPlantilla} onChange={e=>setNombreNuevaPlantilla(e.target.value)} placeholder="Nueva plantilla..." className="flex-1 bg-[#10131a] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-[#4afdef] placeholder:text-[#849491]"/>
+                                        <button onClick={guardarComoPlantilla} className="bg-[#4afdef]/20 text-[#4afdef] hover:bg-[#4afdef]/30 border border-[#4afdef]/30 rounded-lg px-2.5 flex items-center justify-center transition-colors"><span className="material-symbols-outlined text-sm">add</span></button>
+                                    </div>
+                                </div>
+                            )}
+                          </div>
+                      )}
+                  </header>
+
+                  <div className="flex-1 overflow-y-auto custom-scrollbar px-6 space-y-6 pt-5 pb-8">
+                       {!canEdit && (
+                            <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 flex gap-3 items-center">
+                                <span className="material-symbols-outlined text-amber-500 text-[18px]">visibility</span>
+                                <span className="text-xs text-amber-500/90 font-label leading-tight">Modo solo lectura. Reservado para el personal médico.</span>
+                            </div>
+                       )}
+
+                       {/* Status / Signature Box */}
+                       {canEdit && (
+                           <div className={`flex items-center justify-between p-4 rounded-xl border transition-all ${estudioActual?.firmaDigital ? 'bg-[#4afdef]/5 border-[#4afdef]/30 shadow-[0_0_15px_rgba(74,253,239,0.05)]' : 'bg-[#191b23] border-white/5'}`}>
+                               <div>
+                                   <span className={`text-xs font-bold ${estudioActual?.firmaDigital ? 'text-[#4afdef]' : 'text-slate-300'}`}>Firma Digital</span>
+                                   <p className="text-[9px] font-label text-[#849491] uppercase mt-0.5 max-w-[180px] leading-tight truncate">
+                                       {estudioActual?.firmaDigital ? `Verificada por Dr(a). ${estudioActual?.firmadoPor?.nombre || sesion?.nombre}` : 'Requiere validación final'}
+                                   </p>
+                               </div>
+                               <label className={`relative inline-flex items-center ${estudioActual?.firmaDigital ? 'cursor-default' : 'cursor-pointer'}`}>
+                                    <input type="checkbox" className="sr-only peer" checked={Boolean(estudioActual?.firmaDigital)} disabled={firmandoResultado || estudioActual?.firmaDigital} onChange={e=>marcarFirmaResultado(e.target.checked)}/>
+                                    <div className="w-9 h-5 bg-[#32353c] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-[#10131a] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#bacac7] after:border-white/10 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#00ded1] peer-checked:after:bg-[#10131a]"></div>
+                                </label>
+                           </div>
+                       )}
+
+                       <div className="space-y-4">
+                           <div className="space-y-1.5">
+                               <label className="text-[9px] font-label text-[#849491] uppercase tracking-widest ml-1 font-bold">Tipo de Estudio</label>
+                               <select value={tipoPlantilla} onChange={e => setTipoPlantilla(e.target.value)} disabled={!canEdit}
+                                       className="w-full bg-[#32353c] border border-transparent rounded-lg text-[13px] font-label py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-[#4afdef]/50 text-white appearance-none disabled:opacity-70 disabled:bg-[#191b23]">
+                                   {TIPO_PLANTILLAS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
+                               </select>
+                           </div>
+                           
+                           {tipoActual.campos.includes('birads') && (
+                               <div className="space-y-1.5">
+                                   <label className="text-[9px] font-label text-[#849491] uppercase tracking-widest ml-1 font-bold">Categoría BIRADS</label>
+                                   <select value={reporte['birads'] || ''} onChange={e => canEdit && setReporte(p => ({...p, birads: e.target.value}))} disabled={!canEdit}
+                                           className="w-full bg-[#32353c] border border-transparent rounded-lg text-[13px] font-label py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-[#4afdef]/50 text-white appearance-none disabled:opacity-70 disabled:bg-[#191b23]">
+                                       <option value="">Seleccionar BIRADS</option>
+                                       {['0', '1', '2', '3', '4A', '4B', '4C', '5', '6'].map(b => <option key={b} value={b}>BIRADS {b}</option>)}
+                                   </select>
+                               </div>
+                           )}
+                       </div>
+
+                       {/* Dynamic Text Areas */}
+                       <div className="space-y-5">
+                            {tipoActual.campos.filter(c => c !== 'birads').map(campo => (
+                                <div key={campo} className="group flex flex-col">
+                                    <label className="text-[9px] font-label text-[#849491] uppercase tracking-widest ml-1 mb-1.5 font-bold transition-colors group-focus-within:text-[#4afdef]">{CAMPO_LABELS[campo]}</label>
+                                    <textarea 
+                                        value={reporte[campo] || ''}
+                                        onChange={e => canEdit && setReporte(p => ({...p, [campo]: e.target.value}))}
+                                        readOnly={!canEdit}
+                                        placeholder={canEdit ? 'Esperando entrada...' : 'Sin información.'}
+                                        className={`w-full bg-[#191b23] border border-[#32353c] border-b-2 group-focus-within:border-b-[#4afdef] rounded-lg text-[13px] font-body text-[#e0e2ec] p-3 focus:outline-none transition-all resize-none custom-scrollbar placeholder:text-[#849491]/40 ${!canEdit ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                        style={{ minHeight: campo === 'hallazgos' ? '140px' : '80px' }}
+                                    />
+                                </div>
+                            ))}
+                       </div>
+                  </div>
+
+                  {canEdit && (
+                      <footer className="p-6 pt-5 border-t border-white/5 bg-[#1a1d24]/90 space-y-3 shrink-0">
+                          <button onClick={() => guardarReporte()} disabled={guardando} 
+                                  className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl font-headline text-[13px] font-bold text-[#bacac7] hover:text-white transition-all flex justify-center items-center gap-2">
+                               {guardando ? <span className="material-symbols-outlined animate-spin text-[16px]">autorenew</span> : null}
+                               {guardando ? 'Guardando...' : 'Guardar Borrador'}
+                          </button>
+                          <button onClick={finalizarReporte} disabled={guardando} 
+                                  className="w-full py-3 bg-gradient-to-br from-[#4afdef] to-[#00ded1] text-slate-900 font-headline font-black rounded-xl text-[13px] hover:shadow-[0_0_20px_rgba(74,253,239,0.3)] hover:scale-[0.99] transition-all flex items-center justify-center gap-2 shadow-lg">
+                              <span className="material-symbols-outlined text-[18px]">verified</span>
+                              Finalizar y Completar
+                          </button>
+                      </footer>
+                  )}
+              </aside>
+          )}
+
+      </main>
     </div>
   );
 };

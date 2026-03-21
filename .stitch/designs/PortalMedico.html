@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Portal Médico | MedTech OS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "inverse-surface": "#e0e2ec",
+                "surface": "#10131a",
+                "secondary-fixed": "#e0e2eb",
+                "surface-variant": "#32353c",
+                "inverse-primary": "#006a63",
+                "on-primary-fixed-variant": "#00504b",
+                "primary-fixed-dim": "#00ded1",
+                "tertiary-container": "#47fbed",
+                "on-error-container": "#ffdad6",
+                "inverse-on-surface": "#2d3038",
+                "secondary": "#c4c6cf",
+                "primary-fixed": "#47fbed",
+                "secondary-container": "#464950",
+                "outline-variant": "#3b4a48",
+                "tertiary-fixed-dim": "#00ded1",
+                "surface-bright": "#363941",
+                "primary": "#ffffff",
+                "on-primary-container": "#00716a",
+                "on-secondary-fixed": "#181c22",
+                "surface-container-low": "#191b23",
+                "on-primary": "#003733",
+                "background": "#10131a",
+                "on-error": "#690005",
+                "surface-container-lowest": "#0b0e15",
+                "tertiary-fixed": "#47fbed",
+                "on-tertiary-fixed": "#00201e",
+                "on-secondary-container": "#b6b8c1",
+                "on-primary-fixed": "#00201d",
+                "primary-container": "#47fbed",
+                "surface-tint": "#00ded1",
+                "on-surface": "#e0e2ec",
+                "tertiary": "#ffffff",
+                "surface-container-high": "#272a31",
+                "on-background": "#e0e2ec",
+                "surface-container": "#1d2027",
+                "on-secondary": "#2d3037",
+                "secondary-fixed-dim": "#c4c6cf",
+                "on-tertiary-fixed-variant": "#00504b",
+                "surface-container-highest": "#32353c",
+                "on-surface-variant": "#bacac7",
+                "on-tertiary": "#003733",
+                "on-tertiary-container": "#00716a",
+                "error": "#ffb4ab",
+                "surface-dim": "#10131a",
+                "on-secondary-fixed-variant": "#44474e",
+                "outline": "#849491",
+                "error-container": "#93000a"
+              },
+              fontFamily: {
+                "headline": ["Space Grotesk"],
+                "body": ["Manrope"],
+                "label": ["Inter"]
+              },
+              borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+            },
+          },
+        }
+      </script>
+<style>
+        .glass-panel {
+            background: rgba(29, 32, 38, 0.7);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+        }
+        .diagnostic-glow {
+            text-shadow: 0 0 8px rgba(74, 253, 239, 0.5);
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary-fixed/30 selection:text-primary-fixed">
+<!-- Sidebar Navigation (Derived from JSON) -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-[#1d2026]/70 backdrop-blur-[24px] flex flex-col py-6 gap-2 z-50 shadow-2xl hidden md:flex">
+<div class="px-6 mb-8">
+<h1 class="text-[#4afdef] font-headline font-black text-xl tracking-tighter">MedTech OS</h1>
+<p class="text-slate-500 text-xs font-label">Obsidian Lab v2.0</p>
+</div>
+<nav class="flex-1 px-4 space-y-1 overflow-y-auto no-scrollbar">
+<div class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:translate-x-1 transition-transform text-slate-500 hover:text-slate-200 hover:bg-white/5 rounded-xl">
+<span class="material-symbols-outlined" data-icon="grid_view">grid_view</span>
+<span class="font-label text-sm">Dashboard</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:translate-x-1 transition-transform bg-[#4afdef]/10 text-[#4afdef] border-r-2 border-[#4afdef] shadow-[inset_-10px_0_20px_rgba(74,253,239,0.1)] rounded-xl">
+<span class="material-symbols-outlined" data-icon="how_to_reg">how_to_reg</span>
+<span class="font-label text-sm">Registro</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:translate-x-1 transition-transform text-slate-500 hover:text-slate-200 hover:bg-white/5 rounded-xl">
+<span class="material-symbols-outlined" data-icon="medical_services">medical_services</span>
+<span class="font-label text-sm">Consulta</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:translate-x-1 transition-transform text-slate-500 hover:text-slate-200 hover:bg-white/5 rounded-xl">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+<span class="font-label text-sm">Facturas</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:translate-x-1 transition-transform text-slate-500 hover:text-slate-200 hover:bg-white/5 rounded-xl">
+<span class="material-symbols-outlined" data-icon="sheild_with_heart">shield_with_heart</span>
+<span class="font-label text-sm">Médico</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:translate-x-1 transition-transform text-slate-500 hover:text-slate-200 hover:bg-white/5 rounded-xl">
+<span class="material-symbols-outlined" data-icon="biotech">biotech</span>
+<span class="font-label text-sm">Resultados</span>
+</div>
+</nav>
+<div class="px-4 mt-auto">
+<div class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:translate-x-1 transition-transform text-slate-500 hover:text-slate-200 hover:bg-white/5 rounded-xl">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-label text-sm">Logout</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="md:ml-64 min-h-screen flex flex-col">
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 right-0 left-0 md:left-64 h-20 bg-[#10131a]/70 backdrop-blur-xl z-40 flex justify-between items-center px-8 shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
+<h2 class="text-2xl font-headline font-bold text-[#4afdef] tracking-tighter">Portal Médico</h2>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4">
+<button class="text-slate-400 hover:text-[#4afdef] transition-colors duration-300 scale-95 active:scale-90">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-slate-400 hover:text-[#4afdef] transition-colors duration-300 scale-95 active:scale-90">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+</div>
+<div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center border border-white/5 overflow-hidden">
+<img alt="Doctor Profile" class="w-full h-full object-cover" data-alt="Close up profile of a medical professional" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA990MNVkirKzQjovzIMhMgNfC_lRfXaPcPzaRZoNJx4142p_FyA9_oI3R7FQH2f9GC_Ee25a342pMAOfxL3v1obNaU0tojcuZcD8W7i6IWpcXsv6pwm1BKU9BunR9zOrJweImsp9umydSp9rkEDqZRZuVFCEWxz9W56Dd98S_faJfhk14mje-c6jey6kEZge08jMkLFeSlwx9HsZEt2y-A11mlFGTxk3qHpkbxuEjLo5LDY4exZSEAKWJ_GSfKbXaPb0wkxd7r_731"/>
+</div>
+</div>
+</header>
+<!-- Main Workspace Layout -->
+<div class="mt-20 flex-1 flex overflow-hidden">
+<!-- Left Column: Patient Search & List -->
+<section class="w-[350px] flex-shrink-0 flex flex-col border-r border-white/5 bg-surface-container-low overflow-hidden">
+<div class="p-6">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary-fixed transition-colors" data-icon="search">search</span>
+<input class="w-full bg-surface-container-highest border-none rounded-xl pl-12 pr-4 py-3 text-sm font-label focus:ring-2 focus:ring-primary-fixed/50 transition-all placeholder:text-slate-600" placeholder="Buscar paciente..." type="text"/>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto no-scrollbar p-4 space-y-3">
+<!-- Active Patient Card -->
+<div class="p-4 rounded-xl bg-surface-container-highest border border-primary-fixed/20 shadow-[0_0_15px_rgba(74,253,239,0.1)] cursor-pointer transition-all">
+<div class="flex justify-between items-start mb-1">
+<h4 class="font-headline font-bold text-on-surface">Elena Rodriguez</h4>
+<span class="text-[10px] font-label px-2 py-0.5 rounded bg-primary-fixed/10 text-primary-fixed uppercase tracking-wider">Activo</span>
+</div>
+<p class="text-xs text-slate-400 font-label">ID: #MT-88291</p>
+<div class="mt-3 flex gap-2 overflow-hidden">
+<span class="text-[10px] bg-surface-container-high px-2 py-1 rounded-md text-slate-300">Hemoglobina</span>
+<span class="text-[10px] bg-surface-container-high px-2 py-1 rounded-md text-slate-300">Perfil Lipídico</span>
+</div>
+</div>
+<!-- Inactive Patient Cards -->
+<div class="p-4 rounded-xl bg-transparent border border-transparent hover:bg-white/5 cursor-pointer transition-all">
+<h4 class="font-headline font-semibold text-slate-300">Marcos Valenzuela</h4>
+<p class="text-xs text-slate-500 font-label">ID: #MT-90122</p>
+</div>
+<div class="p-4 rounded-xl bg-transparent border border-transparent hover:bg-white/5 cursor-pointer transition-all">
+<h4 class="font-headline font-semibold text-slate-300">Clara Smith</h4>
+<p class="text-xs text-slate-500 font-label">ID: #MT-77123</p>
+</div>
+<div class="p-4 rounded-xl bg-transparent border border-transparent hover:bg-white/5 cursor-pointer transition-all">
+<h4 class="font-headline font-semibold text-slate-300">Javier Ortega</h4>
+<p class="text-xs text-slate-500 font-label">ID: #MT-66254</p>
+</div>
+</div>
+</section>
+<!-- Right Column: Patient Data & Results -->
+<section class="flex-1 flex flex-col p-8 overflow-y-auto no-scrollbar space-y-8">
+<!-- Patient Demographic Bento Box -->
+<div class="glass-panel rounded-2xl p-8 border border-white/5 grid grid-cols-4 gap-8">
+<div class="space-y-1">
+<span class="text-[10px] uppercase font-label tracking-widest text-slate-500">Paciente</span>
+<p class="text-xl font-headline font-bold text-on-surface">Elena Rodriguez</p>
+</div>
+<div class="space-y-1">
+<span class="text-[10px] uppercase font-label tracking-widest text-slate-500">Información</span>
+<p class="text-on-surface font-label">34 años / Femenino</p>
+</div>
+<div class="space-y-1">
+<span class="text-[10px] uppercase font-label tracking-widest text-slate-500">Contacto</span>
+<p class="text-on-surface font-label">+34 621 990 122</p>
+</div>
+<div class="space-y-1">
+<span class="text-[10px] uppercase font-label tracking-widest text-slate-500">Seguro</span>
+<p class="text-[#4afdef] font-label diagnostic-glow">Premium Blue Health</p>
+</div>
+</div>
+<!-- History List -->
+<div class="space-y-4">
+<h3 class="font-headline font-bold text-lg flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-fixed" data-icon="history">history</span>
+                        Historial de Estudios
+                    </h3>
+<div class="flex gap-4 overflow-x-auto no-scrollbar pb-2">
+<div class="min-w-[300px] glass-panel p-5 rounded-xl border border-white/5 hover:border-primary-fixed/20 transition-all cursor-pointer">
+<div class="flex justify-between items-start mb-4">
+<span class="text-xs font-label text-slate-500">12 Oct, 2023</span>
+<span class="bg-primary-fixed/10 text-primary-fixed text-[10px] px-2 py-0.5 rounded font-bold diagnostic-glow">COMPLETADO</span>
+</div>
+<h5 class="font-headline font-bold mb-4">Hemoglobina Glicosilada</h5>
+<button class="text-primary-fixed/70 hover:text-primary-fixed flex items-center gap-2 text-xs transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="visibility">visibility</span> Ver detalles
+                            </button>
+</div>
+<div class="min-w-[300px] glass-panel p-5 rounded-xl border border-white/5 hover:border-primary-fixed/20 transition-all cursor-pointer">
+<div class="flex justify-between items-start mb-4">
+<span class="text-xs font-label text-slate-500">08 Oct, 2023</span>
+<span class="bg-amber-500/10 text-amber-500 text-[10px] px-2 py-0.5 rounded font-bold">PENDIENTE</span>
+</div>
+<h5 class="font-headline font-bold mb-4">Perfil Lipídico Avanzado</h5>
+<button class="text-slate-500 hover:text-white flex items-center gap-2 text-xs transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="edit">edit</span> Editar solicitud
+                            </button>
+</div>
+<div class="min-w-[300px] glass-panel p-5 rounded-xl border border-white/5 hover:border-primary-fixed/20 transition-all cursor-pointer opacity-50">
+<div class="flex justify-between items-start mb-4">
+<span class="text-xs font-label text-slate-500">15 Sep, 2023</span>
+<span class="bg-primary-fixed/10 text-primary-fixed text-[10px] px-2 py-0.5 rounded font-bold diagnostic-glow">COMPLETADO</span>
+</div>
+<h5 class="font-headline font-bold mb-4">Uroanálisis Completo</h5>
+<button class="text-primary-fixed/70 hover:text-primary-fixed flex items-center gap-2 text-xs transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="visibility">visibility</span> Ver detalles
+                            </button>
+</div>
+</div>
+</div>
+<!-- Result Detail View -->
+<div class="glass-panel rounded-2xl border border-white/5 overflow-hidden flex flex-col">
+<div class="bg-surface-container-high px-8 py-4 flex justify-between items-center">
+<h4 class="font-headline font-bold text-on-surface">Hemoglobina Glicosilada (HbA1c)</h4>
+<span class="text-xs font-label text-slate-400">Referencia: LAB-X220</span>
+</div>
+<!-- Borderless glass data table -->
+<div class="p-8">
+<table class="w-full text-left font-label">
+<thead>
+<tr class="text-[10px] text-slate-500 uppercase tracking-widest border-b border-white/5">
+<th class="pb-4 font-medium">Parámetro</th>
+<th class="pb-4 font-medium">Valor</th>
+<th class="pb-4 font-medium">Unidad</th>
+<th class="pb-4 font-medium">Referencia</th>
+<th class="pb-4 font-medium">Estado</th>
+</tr>
+</thead>
+<tbody class="text-sm">
+<tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
+<td class="py-4 font-medium text-slate-300">HbA1c Total</td>
+<td class="py-4 font-bold text-[#4afdef] diagnostic-glow">5.4</td>
+<td class="py-4 text-slate-400">%</td>
+<td class="py-4 text-slate-400">4.0 - 5.6</td>
+<td class="py-4">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-primary-fixed animate-pulse"></div>
+<span class="text-[10px] font-bold text-primary-fixed uppercase">Normal</span>
+</div>
+</td>
+</tr>
+<tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
+<td class="py-4 font-medium text-slate-300">Glucosa Promedio Estimada</td>
+<td class="py-4 font-bold text-[#4afdef] diagnostic-glow">108</td>
+<td class="py-4 text-slate-400">mg/dL</td>
+<td class="py-4 text-slate-400">70 - 126</td>
+<td class="py-4">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-primary-fixed"></div>
+<span class="text-[10px] font-bold text-primary-fixed uppercase">Normal</span>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+<!-- Interpretations -->
+<div class="mt-8 space-y-4">
+<label class="text-xs uppercase font-label tracking-widest text-slate-500">Interpretación Clínica</label>
+<div class="bg-surface-container-lowest rounded-xl p-4 min-h-[120px] border-b border-primary-fixed/30 relative">
+<p class="text-sm text-slate-300 font-body leading-relaxed">
+                                    Los niveles de HbA1c se encuentran dentro de los rangos óptimos. Se observa un control glucémico adecuado durante los últimos 3 meses. No se requieren ajustes terapéuticos inmediatos. Continuar con plan nutricional actual.
+                                </p>
+<div class="absolute bottom-2 right-4 flex items-center gap-2 opacity-50">
+<span class="material-symbols-outlined text-xs" data-icon="auto_fix_high">auto_fix_high</span>
+<span class="text-[10px] font-label">Asistente IA</span>
+</div>
+</div>
+</div>
+<!-- Signature Section -->
+<div class="mt-8 p-6 bg-surface-container-lowest rounded-xl flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high flex items-center justify-center border border-white/5">
+<span class="material-symbols-outlined text-primary-fixed" data-icon="draw">draw</span>
+</div>
+<div>
+<p class="font-headline font-bold text-on-surface">Validación de Especialista</p>
+<p class="text-xs text-slate-500 font-label">Dr. Julian Casablancas | Mat. 99281</p>
+</div>
+</div>
+<label class="flex items-center gap-3 cursor-pointer group">
+<span class="text-sm font-label text-slate-400 group-hover:text-primary-fixed transition-colors">Firmar resultado</span>
+<div class="w-6 h-6 rounded bg-surface-container-highest border border-white/10 flex items-center justify-center transition-all group-active:scale-90">
+<span class="material-symbols-outlined text-sm text-primary-fixed hidden group-hover:block" data-icon="check">check</span>
+</div>
+<input class="hidden" type="checkbox"/>
+</label>
+</div>
+</div>
+<!-- Global Actions -->
+<div class="p-8 pt-0 flex gap-4">
+<button class="flex-1 py-4 px-6 rounded-xl font-headline font-bold flex items-center justify-center gap-3 bg-gradient-to-br from-[#4afdef] to-[#00e0d3] text-on-primary-fixed shadow-[0_0_20px_rgba(74,253,239,0.2)] hover:shadow-[0_0_30px_rgba(74,253,239,0.4)] transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined" data-icon="verified">verified</span>
+                            Validar y Completar Resultado
+                        </button>
+<button class="px-8 py-4 rounded-xl border border-white/10 bg-white/5 font-headline font-bold flex items-center gap-3 hover:bg-white/10 transition-all">
+<span class="material-symbols-outlined" data-icon="print">print</span>
+                            Imprimir
+                        </button>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Biometric Sparkline Decoration (Absolute positioned for visual depth) -->
+<div class="fixed bottom-10 right-10 w-48 h-24 glass-panel rounded-xl border border-white/5 p-4 pointer-events-none opacity-40 z-0">
+<div class="flex justify-between items-center mb-2">
+<span class="text-[8px] uppercase tracking-tighter text-slate-500">Live Telemetry</span>
+<div class="w-1.5 h-1.5 rounded-full bg-primary-fixed animate-ping"></div>
+</div>
+<svg class="w-full h-12" viewbox="0 0 100 40">
+<path d="M0 30 Q 10 30 15 10 T 30 25 T 45 15 T 60 30 T 75 10 T 90 25 L 100 25" fill="none" stroke="#4afdef" stroke-width="2"></path>
+<path d="M0 30 Q 10 30 15 10 T 30 25 T 45 15 T 60 30 T 75 10 T 90 25 L 100 25 L 100 40 L 0 40 Z" fill="url(#grad)" opacity="0.1"></path>
+<defs>
+<lineargradient id="grad" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" style="stop-color:#4afdef;stop-opacity:1"></stop>
+<stop offset="100%" style="stop-color:#4afdef;stop-opacity:0"></stop>
+</lineargradient>
+</defs>
+</svg>
+</div>
+</body></html>

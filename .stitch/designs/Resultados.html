@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Clinical Intelligence - Gestión de Resultados</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary-container": "#00716a",
+              "surface-tint": "#00ded1",
+              "tertiary-fixed": "#47fbed",
+              "surface-variant": "#32353c",
+              "tertiary": "#ffffff",
+              "primary-fixed": "#47fbed",
+              "surface-container": "#1d2027",
+              "on-surface": "#e0e2ec",
+              "primary": "#ffffff",
+              "primary-fixed-dim": "#00ded1",
+              "surface-dim": "#10131a",
+              "secondary-fixed": "#b3eee6",
+              "on-secondary": "#003733",
+              "surface-bright": "#363941",
+              "on-primary-container": "#00716a",
+              "surface-container-high": "#272a31",
+              "surface-container-lowest": "#0b0e15",
+              "tertiary-container": "#47fbed",
+              "inverse-surface": "#e0e2ec",
+              "error": "#ffb4ab",
+              "on-primary": "#003733",
+              "on-tertiary": "#003733",
+              "outline-variant": "#3b4a48",
+              "primary-container": "#47fbed",
+              "secondary": "#98d1ca",
+              "surface-container-low": "#191b23",
+              "on-secondary-container": "#87c0b9",
+              "inverse-primary": "#006a63",
+              "surface": "#10131a",
+              "tertiary-fixed-dim": "#00ded1",
+              "on-primary-fixed-variant": "#00504b",
+              "secondary-fixed-dim": "#98d1ca",
+              "on-tertiary-fixed": "#00201e",
+              "secondary-container": "#104f4a",
+              "surface-container-highest": "#32353c",
+              "on-error": "#690005",
+              "on-error-container": "#ffdad6",
+              "on-background": "#e0e2ec",
+              "inverse-on-surface": "#2d3038",
+              "on-primary-fixed": "#00201d",
+              "on-surface-variant": "#bacac7",
+              "background": "#10131a",
+              "outline": "#849491",
+              "error-container": "#93000a",
+              "on-tertiary-fixed-variant": "#00504b",
+              "on-secondary-fixed": "#00201d",
+              "on-secondary-fixed-variant": "#104f4a"
+            },
+            fontFamily: {
+              "headline": ["Space Grotesk"],
+              "body": ["Manrope"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .glass-panel {
+        background: rgba(29, 32, 39, 0.7);
+        backdrop-filter: blur(24px);
+      }
+      .diagnostic-glow {
+        box-shadow: 0 0 15px rgba(71, 251, 237, 0.06);
+      }
+      .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary-fixed/30">
+<!-- SideNavBar -->
+<aside class="fixed inset-y-0 left-0 flex flex-col z-50 h-screen w-64 border-r border-cyan-900/15 bg-slate-950/70 backdrop-blur-xl shadow-[0_0_15px_rgba(71,251,237,0.06)]">
+<div class="p-8">
+<h1 class="text-2xl font-['Space_Grotesk'] font-bold text-cyan-400 tracking-tighter">Clinical OS</h1>
+<p class="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-label mt-1">Precise Ether</p>
+</div>
+<nav class="flex-1 px-4 space-y-1 overflow-y-auto hide-scrollbar">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-slate-200 transition-colors hover:bg-slate-800/50" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-['Space_Grotesk'] font-bold tracking-tight">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-slate-200 transition-colors hover:bg-slate-800/50" href="#">
+<span class="material-symbols-outlined">how_to_reg</span>
+<span class="font-['Space_Grotesk'] font-bold tracking-tight">Registro</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-slate-200 transition-colors hover:bg-slate-800/50" href="#">
+<span class="material-symbols-outlined">medical_services</span>
+<span class="font-['Space_Grotesk'] font-bold tracking-tight">Consulta</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-slate-200 transition-colors hover:bg-slate-800/50" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="font-['Space_Grotesk'] font-bold tracking-tight">Facturas</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-slate-200 transition-colors hover:bg-slate-800/50" href="#">
+<span class="material-symbols-outlined">person_4</span>
+<span class="font-['Space_Grotesk'] font-bold tracking-tight">Médico</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg bg-cyan-950/40 text-cyan-400 border-r-2 border-cyan-400 transition-all duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined">biotech</span>
+<span class="font-['Space_Grotesk'] font-bold tracking-tight">Resultados</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-slate-200 transition-colors hover:bg-slate-800/50" href="#">
+<span class="material-symbols-outlined">image</span>
+<span class="font-['Space_Grotesk'] font-bold tracking-tight">Imágenes</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-slate-200 transition-colors hover:bg-slate-800/50" href="#">
+<span class="material-symbols-outlined">account_circle</span>
+<span class="font-['Space_Grotesk'] font-bold tracking-tight">Mi Perfil</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-slate-200 transition-colors hover:bg-slate-800/50" href="#">
+<span class="material-symbols-outlined">admin_panel_settings</span>
+<span class="font-['Space_Grotesk'] font-bold tracking-tight">Administración</span>
+</a>
+</nav>
+<div class="p-4 border-t border-cyan-900/15">
+<button class="w-full py-3 px-4 rounded bg-error/10 text-error font-headline text-xs tracking-widest uppercase hover:bg-error/20 transition-all">
+                Emergency Alert
+            </button>
+</div>
+</aside>
+<!-- TopAppBar -->
+<header class="fixed top-0 right-0 left-64 flex items-center justify-between px-8 z-40 h-16 border-b border-cyan-900/15 bg-slate-950/70 backdrop-blur-2xl shadow-[0_4px_20px_rgba(0,0,0,0.4)]">
+<div class="flex items-center flex-1 max-w-xl">
+<div class="relative w-full group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-cyan-400 transition-colors">search</span>
+<input class="w-full bg-slate-900/30 border-none rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-1 focus:ring-cyan-400/50 placeholder:text-slate-600 transition-all font-label" placeholder="Buscar pacientes o folios..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-slate-400 hover:text-cyan-400 transition-all active:scale-95">notifications</button>
+<button class="material-symbols-outlined text-slate-400 hover:text-cyan-400 transition-all active:scale-95">dark_mode</button>
+<button class="material-symbols-outlined text-slate-400 hover:text-cyan-400 transition-all active:scale-95">settings</button>
+</div>
+<div class="h-8 w-[1px] bg-cyan-900/20"></div>
+<div class="flex items-center gap-3">
+<div class="text-right">
+<p class="text-xs font-headline text-cyan-400">Dr. Obsidian</p>
+<p class="text-[10px] text-slate-500 font-label">Chief Medical Officer</p>
+</div>
+<img alt="Dr. Obsidian Profile" class="w-10 h-10 rounded-full border border-cyan-400/30 object-cover" data-alt="Male doctor profile portrait with obsidian tones" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDS_2_lK4aEQ8IZbj4KdXS2Ycxmn8vE3thP_La9XYQsXuOgbp32D6zR1Dr8IUX0lnqR0XLqezLj3PqzVb7pdwd2bCJCzFFTA_hlMDHadGFNhaqHUWymFWPetUQ0qe6H3gSxQE9JaJhkF5RBRvhUD1szUzne57eVnEto1zl_bIe30vqU3M47HqcWVc1eh6D_-FBZjRRDz7mhoTtxLb79OUxneeCiAEKXu38aqz2FNKW06grlLlzh4Fm8QZPk7bq99woQkxBzL8dpYLr5"/>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="ml-64 pt-24 pb-12 px-12 min-h-screen relative">
+<!-- Page Header -->
+<header class="mb-10 flex justify-between items-end">
+<div>
+<h2 class="text-4xl font-headline font-bold tracking-tight text-on-surface">Gestión de Resultados</h2>
+<p class="text-on-surface-variant font-body mt-2">Monitoreo y carga de reportes de laboratorio en tiempo real.</p>
+</div>
+<div class="flex gap-4">
+<button class="px-6 py-2.5 bg-secondary-container text-on-secondary-container rounded-lg font-headline text-sm font-bold flex items-center gap-2 hover:bg-secondary-container/80 transition-all">
+<span class="material-symbols-outlined text-lg">download</span>
+                    Exportar Reporte
+                </button>
+<button class="px-6 py-2.5 bg-gradient-to-r from-primary-fixed-dim to-on-tertiary-container text-on-primary font-headline text-sm font-bold rounded-lg shadow-[0_0_15px_rgba(71,251,237,0.2)] hover:shadow-[0_0_25px_rgba(71,251,237,0.3)] transition-all">
+                    Nuevo Resultado
+                </button>
+</div>
+</header>
+<!-- Header Card: Summary of Urgent -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+<div class="col-span-2 glass-panel p-8 rounded-xl border border-white/5 relative overflow-hidden">
+<div class="relative z-10">
+<h3 class="font-headline text-xl font-bold mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-error" style="font-variation-settings: 'FILL' 1;">warning</span>
+                        Citas pendientes de resultado
+                    </h3>
+<div class="flex gap-12 mt-6">
+<div>
+<p class="text-4xl font-headline font-bold text-primary-fixed">12</p>
+<p class="text-xs font-label uppercase tracking-widest text-on-surface-variant mt-1">Urgentes</p>
+</div>
+<div class="h-12 w-[1px] bg-white/5"></div>
+<div>
+<p class="text-4xl font-headline font-bold text-secondary">28</p>
+<p class="text-xs font-label uppercase tracking-widest text-on-surface-variant mt-1">En Proceso</p>
+</div>
+<div class="h-12 w-[1px] bg-white/5"></div>
+<div>
+<p class="text-4xl font-headline font-bold text-on-surface-variant">04</p>
+<p class="text-xs font-label uppercase tracking-widest text-on-surface-variant mt-1">Críticos</p>
+</div>
+</div>
+</div>
+<!-- Abstract visual element -->
+<div class="absolute -right-10 -bottom-10 w-48 h-48 bg-cyan-400/5 rounded-full blur-3xl"></div>
+</div>
+<div class="bg-surface-container p-8 rounded-xl border border-white/5 flex flex-col justify-center">
+<p class="text-sm font-label text-on-surface-variant mb-2">Productividad Diaria</p>
+<div class="flex items-baseline gap-2">
+<span class="text-5xl font-headline font-bold text-primary-fixed">94%</span>
+<span class="text-primary-fixed-dim material-symbols-outlined text-xl">trending_up</span>
+</div>
+<p class="text-xs text-on-surface-variant/60 mt-4 leading-relaxed">
+                    El tiempo promedio de respuesta ha disminuido un <span class="text-primary-fixed">12%</span> esta semana.
+                </p>
+</div>
+</section>
+<!-- Filter Bar -->
+<section class="flex flex-wrap items-center gap-4 mb-6">
+<div class="relative flex-1 min-w-[300px]">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant/50">search</span>
+<input class="w-full bg-surface-container border border-white/5 rounded-lg pl-12 pr-4 py-3 text-sm font-label focus:ring-1 focus:ring-primary-fixed/30 transition-all outline-none" placeholder="Buscar por paciente, estudio o folio..." type="text"/>
+</div>
+<div class="flex items-center gap-3">
+<select class="bg-surface-container border border-white/5 rounded-lg px-4 py-3 text-sm font-label text-on-surface-variant outline-none focus:ring-1 focus:ring-primary-fixed/30 appearance-none min-w-[160px]">
+<option>Estado: Todos</option>
+<option>Pendiente</option>
+<option>En Proceso</option>
+<option>Completado</option>
+</select>
+<select class="bg-surface-container border border-white/5 rounded-lg px-4 py-3 text-sm font-label text-on-surface-variant outline-none focus:ring-1 focus:ring-primary-fixed/30 appearance-none min-w-[160px]">
+<option>Especialidad</option>
+<option>Hematología</option>
+<option>Química Clínica</option>
+<option>Inmunología</option>
+</select>
+<button class="p-3 bg-surface-container border border-white/5 rounded-lg text-on-surface-variant hover:text-primary-fixed transition-colors">
+<span class="material-symbols-outlined">filter_list</span>
+</button>
+</div>
+</section>
+<!-- Data Table Container -->
+<section class="glass-panel rounded-xl border border-white/5 overflow-hidden shadow-2xl">
+<table class="w-full text-left border-collapse">
+<thead class="bg-white/5">
+<tr>
+<th class="px-8 py-5 text-xs font-label uppercase tracking-widest text-on-surface-variant">Fecha</th>
+<th class="px-8 py-5 text-xs font-label uppercase tracking-widest text-on-surface-variant">Paciente</th>
+<th class="px-8 py-5 text-xs font-label uppercase tracking-widest text-on-surface-variant">Estudio</th>
+<th class="px-8 py-5 text-xs font-label uppercase tracking-widest text-on-surface-variant text-center">Estado</th>
+<th class="px-8 py-5 text-xs font-label uppercase tracking-widest text-on-surface-variant text-right">Acciones</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-white/5">
+<!-- Row 1 -->
+<tr class="hover:bg-white/5 transition-colors group">
+<td class="px-8 py-5 font-label text-sm text-on-surface-variant">24 Oct 2023, 09:15</td>
+<td class="px-8 py-5">
+<div class="flex flex-col">
+<span class="font-headline font-bold text-on-surface">Valentina Mendoza</span>
+<span class="text-[10px] text-on-surface-variant/60 font-label">ID: 44291-B</span>
+</div>
+</td>
+<td class="px-8 py-5 font-body text-sm text-on-surface">Biometría Hemática Completa</td>
+<td class="px-8 py-5 text-center">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                                Pendiente
+                            </span>
+</td>
+<td class="px-8 py-5 text-right">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary-fixed transition-all">edit_note</button>
+<button class="material-symbols-outlined ml-4 text-on-surface-variant hover:text-primary-fixed transition-all">more_vert</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-white/5 transition-colors group">
+<td class="px-8 py-5 font-label text-sm text-on-surface-variant">24 Oct 2023, 08:42</td>
+<td class="px-8 py-5">
+<div class="flex flex-col">
+<span class="font-headline font-bold text-on-surface">Alejandro Ruiz</span>
+<span class="text-[10px] text-on-surface-variant/60 font-label">ID: 10292-X</span>
+</div>
+</td>
+<td class="px-8 py-5 font-body text-sm text-on-surface">Perfil Lipídico</td>
+<td class="px-8 py-5 text-center">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-cyan-400/10 text-cyan-400 border border-cyan-400/20">
+                                En Proceso
+                            </span>
+</td>
+<td class="px-8 py-5 text-right">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary-fixed transition-all">edit_note</button>
+<button class="material-symbols-outlined ml-4 text-on-surface-variant hover:text-primary-fixed transition-all">more_vert</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-white/5 transition-colors group">
+<td class="px-8 py-5 font-label text-sm text-on-surface-variant">23 Oct 2023, 16:20</td>
+<td class="px-8 py-5">
+<div class="flex flex-col">
+<span class="font-headline font-bold text-on-surface">Elena Soler</span>
+<span class="text-[10px] text-on-surface-variant/60 font-label">ID: 88210-C</span>
+</div>
+</td>
+<td class="px-8 py-5 font-body text-sm text-on-surface">Glucosa en Ayunas</td>
+<td class="px-8 py-5 text-center">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-green-500/10 text-green-500 border border-green-500/20">
+                                Completado
+                            </span>
+</td>
+<td class="px-8 py-5 text-right">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary-fixed transition-all">visibility</button>
+<button class="material-symbols-outlined ml-4 text-on-surface-variant hover:text-primary-fixed transition-all">more_vert</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-white/5 transition-colors group">
+<td class="px-8 py-5 font-label text-sm text-on-surface-variant">23 Oct 2023, 14:10</td>
+<td class="px-8 py-5">
+<div class="flex flex-col">
+<span class="font-headline font-bold text-on-surface">Roberto Garza</span>
+<span class="text-[10px] text-on-surface-variant/60 font-label">ID: 33910-K</span>
+</div>
+</td>
+<td class="px-8 py-5 font-body text-sm text-on-surface">Examen General de Orina</td>
+<td class="px-8 py-5 text-center">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-green-500/10 text-green-500 border border-green-500/20">
+                                Completado
+                            </span>
+</td>
+<td class="px-8 py-5 text-right">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary-fixed transition-all">visibility</button>
+<button class="material-symbols-outlined ml-4 text-on-surface-variant hover:text-primary-fixed transition-all">more_vert</button>
+</td>
+</tr>
+</tbody>
+</table>
+<footer class="p-6 border-t border-white/5 flex items-center justify-between">
+<p class="text-xs font-label text-on-surface-variant/60">Mostrando 4 de 128 resultados</p>
+<div class="flex gap-2">
+<button class="w-8 h-8 flex items-center justify-center rounded border border-white/5 text-on-surface-variant hover:bg-white/5 transition-colors">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded bg-primary-fixed/20 text-primary-fixed text-xs font-bold">1</button>
+<button class="w-8 h-8 flex items-center justify-center rounded border border-white/5 text-on-surface-variant hover:bg-white/5 transition-colors text-xs">2</button>
+<button class="w-8 h-8 flex items-center justify-center rounded border border-white/5 text-on-surface-variant hover:bg-white/5 transition-colors">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</footer>
+</section>
+<!-- Data Entry Modal Overlay (Simulated) -->
+<div class="fixed inset-0 z-[60] flex items-center justify-center px-4 bg-slate-950/60 backdrop-blur-sm">
+<div class="bg-surface-container-highest w-full max-w-2xl rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.6)] border border-white/10 overflow-hidden">
+<div class="p-6 border-b border-white/5 flex items-center justify-between bg-white/5">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-primary-fixed/10 flex items-center justify-center text-primary-fixed">
+<span class="material-symbols-outlined">add_box</span>
+</div>
+<div>
+<h3 class="font-headline font-bold text-lg">Carga de Resultados</h3>
+<p class="text-xs text-on-surface-variant font-label">Paciente: Valentina Mendoza • Biometría Hemática</p>
+</div>
+</div>
+<button class="text-on-surface-variant hover:text-error transition-colors">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="p-8">
+<div class="grid grid-cols-2 gap-6">
+<div class="space-y-2">
+<label class="text-[10px] font-label uppercase tracking-widest text-on-surface-variant">Parámetro</label>
+<input class="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-lg p-3 text-sm font-label focus:ring-1 focus:ring-primary-fixed focus:border-primary-fixed outline-none transition-all" type="text" value="Hemoglobina"/>
+</div>
+<div class="space-y-2">
+<label class="text-[10px] font-label uppercase tracking-widest text-on-surface-variant">Estado</label>
+<select class="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-lg p-3 text-sm font-label focus:ring-1 focus:ring-primary-fixed outline-none transition-all appearance-none">
+<option>Normal</option>
+<option>Crítico Bajo</option>
+<option>Crítico Alto</option>
+<option>Observación</option>
+</select>
+</div>
+<div class="space-y-2">
+<label class="text-[10px] font-label uppercase tracking-widest text-on-surface-variant">Valor</label>
+<input class="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-lg p-3 text-sm font-label focus:ring-1 focus:ring-primary-fixed outline-none transition-all" type="text" value="14.5"/>
+</div>
+<div class="space-y-2">
+<label class="text-[10px] font-label uppercase tracking-widest text-on-surface-variant">Unidad</label>
+<input class="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-lg p-3 text-sm font-label focus:ring-1 focus:ring-primary-fixed outline-none transition-all" type="text" value="g/dL"/>
+</div>
+<div class="col-span-2 space-y-2">
+<label class="text-[10px] font-label uppercase tracking-widest text-on-surface-variant">Rango de Referencia</label>
+<div class="flex items-center gap-4">
+<input class="flex-1 bg-surface-container-lowest border border-outline-variant/30 rounded-lg p-3 text-sm font-label focus:ring-1 focus:ring-primary-fixed outline-none transition-all" type="text" value="12.0"/>
+<span class="text-on-surface-variant">-</span>
+<input class="flex-1 bg-surface-container-lowest border border-outline-variant/30 rounded-lg p-3 text-sm font-label focus:ring-1 focus:ring-primary-fixed outline-none transition-all" type="text" value="16.0"/>
+</div>
+</div>
+<div class="col-span-2 space-y-2">
+<label class="text-[10px] font-label uppercase tracking-widest text-on-surface-variant">Notas del Laboratorio</label>
+<textarea class="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-lg p-3 text-sm font-label focus:ring-1 focus:ring-primary-fixed outline-none transition-all resize-none" placeholder="Observaciones adicionales..." rows="3"></textarea>
+</div>
+</div>
+</div>
+<div class="p-6 bg-white/5 border-t border-white/5 flex gap-4 justify-end">
+<button class="px-6 py-2.5 rounded-lg font-headline text-sm font-bold text-on-surface-variant hover:bg-white/10 transition-all">Cancelar</button>
+<button class="px-8 py-2.5 rounded-lg bg-gradient-to-r from-cyan-400 to-on-tertiary-container text-on-primary font-headline text-sm font-bold shadow-[0_0_20px_rgba(71,251,237,0.3)] hover:shadow-[0_0_30px_rgba(71,251,237,0.5)] transition-all">Guardar</button>
+</div>
+</div>
+</div>
+</main>
+<!-- Background Elements -->
+<div class="fixed top-0 left-0 w-full h-full pointer-events-none -z-10 overflow-hidden">
+<div class="absolute top-[10%] right-[10%] w-[500px] h-[500px] bg-cyan-900/10 rounded-full blur-[120px]"></div>
+<div class="absolute bottom-[10%] left-[20%] w-[400px] h-[400px] bg-cyan-400/5 rounded-full blur-[100px]"></div>
+</div>
+</body></html>
