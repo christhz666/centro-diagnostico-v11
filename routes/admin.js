@@ -20,7 +20,7 @@ const { registerValidation, idValidation } = require('../middleware/validators')
 router.get('/usuarios/offline-sync', getUsuariosParaSyncOffline);
 
 router.use(protect);
-router.use(authorize('admin'));
+router.use(authorize('admin', 'super-admin'));
 
 router.get('/medicos', getMedicos);
 router.get('/estadisticas-medicos', getEstadisticasMedicos);

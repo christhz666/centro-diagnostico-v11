@@ -227,6 +227,10 @@ class ApiService {
         return this.request('/dashboard/stats');
     }
 
+    async getNotificaciones() {
+        return this.request('/dashboard/notificaciones');
+    }
+
     async getCitasHoy() {
         const data = await this.request('/citas/hoy');
         if (Array.isArray(data)) return data;

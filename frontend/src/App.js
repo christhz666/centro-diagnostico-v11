@@ -38,6 +38,8 @@ function App() {
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches));
   const [runTour, setRunTour] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
+  const [notificaciones, setNotificaciones] = useState([]);
+  const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [empresaConfig, setEmpresaConfig] = useState({});
 
   // Load empresa config (public endpoint, no auth needed)
@@ -119,6 +121,25 @@ function App() {
       return nextUser;
     });
   };
+
+  // Poll for notifications
+  useEffect(() => {
+    if (user && user.role === 'medico') {
+      const fetchNotif = async () => {
+        try {
+          const res = await api.getNotificaciones();
+          if (res && res.success) {
+            setNotificaciones(res.data || []);
+          }
+        } catch (e) {
+          console.error("Error fetching notifs", e);
+        }
+      };
+      fetchNotif();
+      const intervalId = setInterval(fetchNotif, 20000);
+      return () => clearInterval(intervalId);
+    }
+  }, [user]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -337,10 +358,54 @@ function App() {
                         <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24" }}>{darkMode ? 'light_mode' : 'dark_mode'}</span>
                       </button>
 
-                      {/* Utilities */}
-                      <button className="text-gray-500 dark:text-[#bacac7] hover:text-primary dark:hover:text-[#3df5e7] transition-colors focus:ring-1 focus:ring-[#3df5e7]/40 p-1.5 rounded-full hidden sm:block">
-                        <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24" }}>notifications</span>
-                      </button>
+                      {/* Utilities - Notifications */}
+                      <div className="relative">
+                        <button onClick={() => setShowNotifMenu(!showNotifMenu)} className="relative text-gray-500 dark:text-[#bacac7] hover:text-primary dark:hover:text-[#3df5e7] transition-colors focus:ring-1 focus:ring-[#3df5e7]/40 p-1.5 rounded-full hidden sm:block">
+                          <span className={`material-symbols-outlined text-[22px] ${notificaciones.length > 0 ? 'text-[#3df5e7]' : ''}`} style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24" }}>notifications</span>
+                          {notificaciones.length > 0 && (
+                            <span className="absolute top-1 right-1 flex h-2 w-2">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                            </span>
+                          )}
+                        </button>
+
+                        {/* Dropdown Menu */}
+                        {showNotifMenu && (
+                          <div className="absolute top-10 right-0 w-80 bg-white dark:bg-[#1d2027] border border-gray-200 dark:border-white/10 rounded-xl shadow-[0_15px_40px_rgba(0,0,0,0.12)] z-50 overflow-hidden transform opacity-100 scale-100 transition-all origin-top-right">
+                            <div className="px-4 py-3 border-b border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-black/20 flex justify-between items-center">
+                              <h3 className="text-sm font-bold text-gray-900 dark:text-white">Notificaciones</h3>
+                              <span className="text-xs bg-[#3df5e7]/10 text-[#3df5e7] px-2 py-0.5 rounded-full font-bold">{notificaciones.length}</span>
+                            </div>
+                            <div className="max-h-80 overflow-y-auto custom-scrollbar">
+                              {notificaciones.length === 0 ? (
+                                <div className="p-6 text-center text-sm text-gray-500 dark:text-[#bacac7] flex flex-col items-center">
+                                  <span className="material-symbols-outlined text-4xl mb-2 opacity-50">notifications_paused</span>
+                                  No tienes alertas nuevas
+                                </div>
+                              ) : (
+                                notificaciones.map(n => (
+                                  <div key={n.id} className="p-4 border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors cursor-pointer group flex gap-3">
+                                    <div className={`mt-0.5 w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${n.tipo === 'IMAGENES_SUBIDAS' ? 'bg-[#3df5e7]/10 text-[#3df5e7]' : 'bg-primary/10 text-primary'}`}>
+                                      <span className="material-symbols-outlined text-sm">{n.tipo === 'IMAGENES_SUBIDAS' ? 'imagesmode' : 'science'}</span>
+                                    </div>
+                                    <div className="flex-1">
+                                      <p className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-[#3df5e7] transition-colors">{n.titulo}</p>
+                                      <p className="text-xs text-gray-600 dark:text-[#bacac7] mt-1 leading-snug">{n.mensaje}</p>
+                                      <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-2 font-medium">{new Date(n.fecha).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                                    </div>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                            {notificaciones.length > 0 && (
+                               <div className="p-2 bg-gray-50 dark:bg-black/20 border-t border-gray-100 dark:border-white/5 text-center cursor-pointer hover:bg-gray-100 dark:hover:bg-white/5 transition-colors">
+                                 <span className="text-xs font-bold text-[#3df5e7]">Cerrar</span>
+                               </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
                       <div className="w-px h-6 bg-gray-300 dark:bg-[#454850]/40 mx-2 hidden sm:block"></div>
 
                       {/* Profile Section */}
