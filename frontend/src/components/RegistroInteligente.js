@@ -12,6 +12,8 @@ const RegistroInteligente = () => {
   const [pacienteSeleccionado, setPacienteSeleccionado] = useState(null);
   const [estudios, setEstudios] = useState([]);
   const [estudiosSeleccionados, setEstudiosSeleccionados] = useState([]);
+  const [medicos, setMedicos] = useState([]);
+  const [medicoSeleccionado, setMedicoSeleccionado] = useState('');
   const [loading, setLoading] = useState(false);
   const [facturaGenerada, setFacturaGenerada] = useState(null);
   const [metodoPago, setMetodoPago] = useState('efectivo');
@@ -27,7 +29,14 @@ const RegistroInteligente = () => {
     nacionalidad: 'Dominicano', tipoSangre: '', seguroNombre: '', seguroNumeroAfiliado: ''
   });
 
-  useEffect(() => { fetchEstudios(); }, []);
+  useEffect(() => { fetchEstudios(); fetchMedicos(); }, []);
+
+  const fetchMedicos = async () => {
+    try {
+      const response = await api.getMedicos();
+      setMedicos(response.data || []);
+    } catch(err) { setMedicos([]); }
+  };
 
   const fetchEstudios = async () => {
     try {
@@ -142,6 +151,7 @@ const RegistroInteligente = () => {
         metodoPago: metodoPago,
         pagado: montoPagado >= calcularTotal(),
         estado: 'completada',
+        ...(medicoSeleccionado ? { medico: medicoSeleccionado } : {}),
         ...(sucursalRayosXId ? { sucursalRayosX: sucursalRayosXId } : {})
       };
       const citaRes = await api.createCita(citaData);
@@ -156,6 +166,7 @@ const RegistroInteligente = () => {
         montoPagado: montoPagado, metodoPago,
         estado: montoPagado >= calcularTotal() ? 'pagada' : 'emitida',
         datosCliente: { nombre: `${pacienteSeleccionado.nombre} ${pacienteSeleccionado.apellido}`, cedula: pacienteSeleccionado.cedula || '', telefono: pacienteSeleccionado.telefono || '' },
+        ...(medicoSeleccionado ? { medico: medicoSeleccionado } : {}),
         ...(sucursalRayosXId ? { sucursal: sucursalRayosXId } : {})
       };
       const factRes = await api.createFactura(facturaData);
@@ -169,7 +180,7 @@ const RegistroInteligente = () => {
   const reiniciar = () => {
     setModoPaciente('nuevo');
     setPaso(1); setBusqueda(''); setPacientes([]); setPacienteSeleccionado(null); setEstudiosSeleccionados([]);
-    setFacturaGenerada(null); setMostrarFactura(false); setDescuento(0); setMontoPagado(0);
+    setFacturaGenerada(null); setMostrarFactura(false); setDescuento(0); setMontoPagado(0); setMedicoSeleccionado('');
     setNuevoPaciente({ nombre: '', apellido: '', cedula: '', esMenor: false, telefono: '', email: '', fechaNacimiento: '', sexo: 'M', nacionalidad: 'Dominicano', tipoSangre: '', seguroNombre: '', seguroNumeroAfiliado: '' });
   };
 
@@ -400,6 +411,24 @@ const RegistroInteligente = () => {
                                 </div>
                             </div>
                         ))}
+                        
+                        {estudiosSeleccionados.length > 0 && (
+                            <div className="mt-4 pt-4 border-t border-white/5">
+                                <label className="block text-[10px] text-[#4afdef] font-bold uppercase tracking-widest mb-2">Médico Tratante / Referidor</label>
+                                <select 
+                                    value={medicoSeleccionado} 
+                                    onChange={(e) => setMedicoSeleccionado(e.target.value)}
+                                    className="w-full bg-[#10131a] border border-[#32353c] rounded-xl text-white font-body py-2.5 px-3 focus:border-[#4afdef] focus:ring-1 focus:ring-[#4afdef] transition-all outline-none text-sm"
+                                >
+                                    <option value="">-- Sin Médico Asignado --</option>
+                                    {medicos.map(m => (
+                                        <option key={m._id} value={m._id}>
+                                            Dr(a). {m.nombre} {m.apellido} - {m.especialidad || 'General'}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
                     </div>
 
                     <div className="p-5 bg-gradient-to-t from-[#10131a] to-[#1d2027]/90 space-y-4 shrink-0 border-t border-white/5">

@@ -16,6 +16,7 @@ const Facturas = lazy(() => import('./components/Facturas'));
 const PortalMedico = lazy(() => import('./components/PortalMedico'));
 const AdminPanel = lazy(() => import('./components/AdminPanel'));
 const AdminUsuarios = lazy(() => import('./components/AdminUsuarios'));
+const AdminMedicos = lazy(() => import('./components/AdminMedicos'));
 const GestionEstudios = lazy(() => import('./components/GestionEstudios'));
 const Resultados = lazy(() => import('./components/Resultados'));
 const ConsultaRapida = lazy(() => import('./components/ConsultaRapida'));
@@ -187,12 +188,12 @@ function App() {
   return (
     <OfflineScreen>
       <Router>
-        <div className={`min-h-screen flex flex-col transition-colors duration-300 bg-[#0b0e15] text-[#f2f3fd] selection:bg-[#3df5e7]/30 selection:text-[#3df5e7] overflow-x-hidden relative font-body`}>
+        <div className={`min-h-screen flex flex-col transition-colors duration-300 bg-slate-50 text-slate-900 dark:bg-[#0b0e15] dark:text-[#f2f3fd] selection:bg-[#3df5e7]/30 selection:text-[#3df5e7] overflow-x-hidden relative font-body`}>
           
           {/* Ambient Glow Backgrounds */}
           <div className="fixed inset-0 pointer-events-none z-0">
-            <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at 0% 0%, rgba(61, 245, 231, 0.05) 0%, transparent 50%)' }}></div>
-            <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at 100% 100%, rgba(16, 79, 74, 0.2) 0%, transparent 50%)' }}></div>
+            <div className={`absolute inset-0 transition-opacity duration-300 ${darkMode ? 'opacity-100' : 'opacity-0'}`} style={{ background: 'radial-gradient(circle at 0% 0%, rgba(61, 245, 231, 0.05) 0%, transparent 50%)' }}></div>
+            <div className={`absolute inset-0 transition-opacity duration-300 ${darkMode ? 'opacity-100' : 'opacity-0'}`} style={{ background: 'radial-gradient(circle at 100% 100%, rgba(16, 79, 74, 0.2) 0%, transparent 50%)' }}></div>
           </div>
 
           <PortalPacienteRoute>
@@ -222,7 +223,7 @@ function App() {
 
                   {/* Sidebar Navigation */}
                   <aside className={`fixed top-0 bottom-0 left-0 z-50 flex flex-col py-8 px-4 gap-y-6 transition-all duration-300 ease-in-out font-display tracking-tight
-                      bg-[rgba(22,26,34,0.8)] backdrop-blur-[24px] border-r border-white/5 shadow-[20px_0px_40px_rgba(0,0,0,0.2)]
+                      bg-white/80 dark:bg-[rgba(22,26,34,0.8)] backdrop-blur-[24px] border-r border-gray-200 dark:border-white/5 shadow-[20px_0px_40px_rgba(0,0,0,0.05)] dark:shadow-[20px_0px_40px_rgba(0,0,0,0.2)]
                       ${isMobile
                           ? (sidebarOpen ? 'w-72 translate-x-0' : '-translate-x-full w-72')
                           : (sidebarOpen ? 'w-64 translate-x-0' : 'w-20 translate-x-0')}
@@ -289,6 +290,7 @@ function App() {
                             <div className={`overflow-hidden transition-all duration-300 ${adminOpen && (sidebarOpen || isMobile) ? 'max-h-96 mt-1 opacity-100' : 'max-h-0 opacity-0'}`}>
                               <div className="ml-9 space-y-1 border-l border-[#3df5e7]/20 pl-3">
                                 <NavLink to="/admin/usuarios" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#3df5e7] font-bold bg-[#3df5e7]/5' : 'text-[#d6e6e3]/60 hover:text-[#3df5e7]'}`}>Usuarios</NavLink>
+                                <NavLink to="/admin/medicos" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#3df5e7] font-bold bg-[#3df5e7]/5' : 'text-[#d6e6e3]/60 hover:text-[#3df5e7]'}`}>Médicos (Horarios)</NavLink>
                                 <NavLink to="/admin/equipos" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#3df5e7] font-bold bg-[#3df5e7]/5' : 'text-[#d6e6e3]/60 hover:text-[#3df5e7]'}`}>Equipos</NavLink>
                                 <NavLink to="/admin/estudios" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#3df5e7] font-bold bg-[#3df5e7]/5' : 'text-[#d6e6e3]/60 hover:text-[#3df5e7]'}`}>Catálogo</NavLink>
                                 <NavLink to="/admin" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#3df5e7] font-bold bg-[#3df5e7]/5' : 'text-[#d6e6e3]/60 hover:text-[#3df5e7]'}`}>Configuración</NavLink>
@@ -311,7 +313,7 @@ function App() {
                   </aside>
 
                   {/* TopAppBar */}
-                  <header className={`fixed top-0 right-0 h-16 bg-[rgba(16,19,27,0.7)] backdrop-blur-[16px] z-40 flex items-center justify-between px-4 lg:px-8 gap-x-6 border-b border-white/5 font-body text-sm transition-all duration-300
+                  <header className={`fixed top-0 right-0 h-16 bg-white/80 dark:bg-[rgba(16,19,27,0.7)] backdrop-blur-[16px] z-40 flex items-center justify-between px-4 lg:px-8 gap-x-6 border-b border-gray-200 dark:border-white/5 font-body text-sm transition-all duration-300
                     ${!isMobile ? (sidebarOpen ? 'left-64' : 'left-20') : 'left-0'}
                   `}>
                     <div className="flex items-center gap-4">
@@ -330,17 +332,22 @@ function App() {
                     </div>
 
                     <div className="flex items-center gap-x-4">
+                      {/* Theme Toggle Button */}
+                      <button onClick={() => setDarkMode(!darkMode)} className="text-gray-500 dark:text-[#bacac7] hover:text-primary dark:hover:text-[#3df5e7] transition-colors p-2 rounded-full border border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-white/5 bg-white dark:bg-[#161a22] flex items-center justify-center">
+                        <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24" }}>{darkMode ? 'light_mode' : 'dark_mode'}</span>
+                      </button>
+
                       {/* Utilities */}
-                      <button className="text-[#bacac7] hover:text-[#3df5e7] transition-colors focus:ring-1 focus:ring-[#3df5e7]/40 p-1.5 rounded-full hidden sm:block">
+                      <button className="text-gray-500 dark:text-[#bacac7] hover:text-primary dark:hover:text-[#3df5e7] transition-colors focus:ring-1 focus:ring-[#3df5e7]/40 p-1.5 rounded-full hidden sm:block">
                         <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24" }}>notifications</span>
                       </button>
-                      <div className="w-px h-6 bg-[#454850]/40 mx-2 hidden sm:block"></div>
+                      <div className="w-px h-6 bg-gray-300 dark:bg-[#454850]/40 mx-2 hidden sm:block"></div>
 
                       {/* Profile Section */}
                       <div className="flex items-center gap-x-3 group cursor-pointer" onClick={() => {/* profile nav logic if needed */}}>
                         <div className="hidden sm:flex flex-col items-end">
-                          <span className="text-on-surface font-semibold text-[13px] group-hover:text-primary transition-colors">{user.nombre || user.username || 'Dr. Lumina'}</span>
-                          <span className="text-[#bacac7] text-[10px] uppercase tracking-wider opacity-60">{rol}</span>
+                          <span className="text-gray-800 dark:text-white font-semibold text-[13px] group-hover:text-primary transition-colors">{user.nombre || user.username || 'Dr. Lumina'}</span>
+                          <span className="text-gray-500 dark:text-[#bacac7] text-[10px] uppercase tracking-wider opacity-60">{rol}</span>
                         </div>
                         <div className="relative">
                           <div className="w-9 h-9 rounded-lg bg-[#272c37] border border-[#454850]/50 group-hover:border-[#3df5e7]/50 transition-all flex items-center justify-center font-bold text-sm text-[#00e0d3]">
@@ -367,6 +374,7 @@ function App() {
                         <Route path="/perfil" element={<Perfil user={user} onUserUpdate={handleUserUpdate} />} />
                         <Route path="/admin" element={<AdminPanel />} />
                         <Route path="/admin/usuarios" element={<AdminUsuarios />} />
+                        <Route path="/admin/medicos" element={<AdminMedicos />} />
                         <Route path="/admin/equipos" element={<AdminEquipos />} />
                         <Route path="/admin/estudios" element={<GestionEstudios />} />
                         <Route path="/contabilidad" element={<Contabilidad />} />
@@ -419,6 +427,7 @@ function PageTitle() {
     '/imagenologia': 'Imagenología',
     '/admin': 'Personalización',
     '/admin/usuarios': 'Usuarios',
+    '/admin/medicos': 'Médicos y Productividad',
     '/admin/equipos': 'Equipos',
     '/admin/estudios': 'Catálogo de Estudios',
     '/contabilidad': 'Contabilidad',

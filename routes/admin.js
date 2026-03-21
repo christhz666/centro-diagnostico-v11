@@ -9,7 +9,8 @@ const {
     resetPassword,
     getMedicos,
     getRoles,
-    getUsuariosParaSyncOffline
+    getUsuariosParaSyncOffline,
+    getEstadisticasMedicos
 } = require('../controllers/adminController');
 const { protect, authorize } = require('../middleware/auth');
 const { registerValidation, idValidation } = require('../middleware/validators');
@@ -22,6 +23,7 @@ router.use(protect);
 router.use(authorize('admin'));
 
 router.get('/medicos', getMedicos);
+router.get('/estadisticas-medicos', getEstadisticasMedicos);
 router.get('/roles', getRoles);
 
 

@@ -65,6 +65,15 @@ const userSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
+    horarios: [{
+        dia: { 
+            type: String, 
+            enum: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'] 
+        },
+        horaInicio: String,
+        horaFin: String,
+        area: String
+    }],
     licenciaMedica: {
         type: String,
         trim: true

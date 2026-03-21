@@ -259,7 +259,7 @@ exports.resetPassword = async (req, res, next) => {
 exports.getMedicos = async (req, res, next) => {
     try {
         const medicos = await User.find({ role: 'medico', activo: true })
-            .select('nombre apellido especialidad licenciaMedica email telefono')
+            .select('nombre apellido especialidad licenciaMedica email telefono horarios')
             .sort('apellido nombre');
 
         res.json({
@@ -284,6 +284,92 @@ exports.getUsuariosParaSyncOffline = async (req, res, next) => {
             count: usuarios.length,
             data: usuarios
         });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Obtener estadísticas de productividad de médicos
+// @route   GET /api/admin/estadisticas-medicos
+exports.getEstadisticasMedicos = async (req, res, next) => {
+    try {
+        const Cita = require('../models/Cita');
+        const Estudio = require('../models/Estudio');
+        
+        let matchStage = { medico: { $exists: true, $ne: null } };
+        if (req.query.fechaInicio && req.query.fechaFin) {
+            matchStage.fecha = { 
+                $gte: new Date(req.query.fechaInicio),
+                $lte: new Date(req.query.fechaFin)
+            };
+        }
+
+        const stats = await Cita.aggregate([
+            { $match: matchStage },
+            { $unwind: "$estudios" },
+            { 
+               $group: { 
+                  _id: { medico: "$medico", estudio: "$estudios.estudio" },
+                  pacientes: { $addToSet: "$paciente" },
+                  totalEstudios: { $sum: 1 }
+               } 
+            },
+            {
+               $group: {
+                  _id: "$_id.medico",
+                  estudiosRealizados: {
+                      $push: {
+                          estudioId: "$_id.estudio",
+                          cantidad: "$totalEstudios"
+                      }
+                  },
+                  totalPacientes: { $sum: { $size: "$pacientes" } },
+                  totalEstudiosGlobal: { $sum: "$totalEstudios" }
+               }
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "_id",
+                    foreignField: "_id",
+                    as: "medicoInfo"
+                }
+            },
+            { $unwind: "$medicoInfo" },
+            {
+                $project: {
+                    medicoId: "$_id",
+                    nombre: "$medicoInfo.nombre",
+                    apellido: "$medicoInfo.apellido",
+                    especialidad: "$medicoInfo.especialidad",
+                    totalPacientes: 1,
+                    totalEstudios: "$totalEstudiosGlobal",
+                    estudiosRealizados: 1
+                }
+            }
+        ]);
+        
+        // Populando estudios
+        const statsConEstudios = await Promise.all(stats.map(async (stat) => {
+            const estudiosDetails = await Promise.all(stat.estudiosRealizados.map(async (e) => {
+                const est = await Estudio.findById(e.estudioId).select('nombre');
+                return {
+                    nombre: est ? est.nombre : 'Estudio Desconocido',
+                    cantidad: e.cantidad
+                };
+            }));
+            return {
+                _id: stat.medicoId,
+                nombre: stat.nombre,
+                apellido: stat.apellido,
+                especialidad: stat.especialidad,
+                totalPacientes: stat.totalPacientes,
+                totalEstudios: stat.totalEstudios,
+                estudios: estudiosDetails
+            };
+        }));
+
+        res.json({ success: true, count: statsConEstudios.length, data: statsConEstudios });
     } catch (error) {
         next(error);
     }
