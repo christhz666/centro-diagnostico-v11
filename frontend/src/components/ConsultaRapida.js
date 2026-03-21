@@ -82,7 +82,24 @@ const ConsultaRapida = () => {
      ─  Nombre o cédula          →  TODO el historial del paciente
   ──────────────────────────────────────────────────────────────── */
   const buscarPorCodigo = useCallback(async (codigoIn) => {
-    const raw = (codigoIn || codigo).trim();
+    let raw = (codigoIn || codigo).trim();
+    
+    // Si el scanner leyó la URL completa del QR impreso
+    if (raw.includes('?qr=')) {
+      try {
+        let urlString = raw;
+        if (!urlString.startsWith('http')) {
+           urlString = 'http://placeholder.com/' + urlString;
+        }
+        const url = new URL(urlString);
+        const qrParam = url.searchParams.get('qr');
+        if (qrParam) raw = qrParam;
+      } catch (e) {
+        const match = raw.match(/[?&]qr=([^&/]+)/);
+        if (match) raw = match[1];
+      }
+    }
+
     const codigoLimpio = raw.toUpperCase();
     if (!codigoLimpio) return;
 
