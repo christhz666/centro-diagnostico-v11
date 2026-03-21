@@ -213,9 +213,11 @@ const RegistroInteligente = () => {
     <div style={{ padding: '32px', maxWidth: 1400, margin: '0 auto' }}>
       <style>{`
         .clinical-step { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .clinical-input { background: var(--legacy-surface); border: 1.5px solid var(--legacy-border); border-radius: 8px; padding: 12px 16px; color: var(--legacy-text); width: 100%; outline: none; transition: all 0.2s; font-size: 14px; }
-        .clinical-input:focus { border-color: #2563eb; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08); }
-        .clinical-label { font-size: 12px; font-weight: 700; color: var(--legacy-text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: block; }
+        .clinical-input { border-radius: 8px; padding: 12px 16px; width: 100%; outline: none; transition: all 0.2s; font-size: 14px; }
+        .dark .clinical-input { background: #000000; border: 1px solid rgba(255,255,255,0.1); color: #fff; box-shadow: inset 0 0 20px rgba(0, 246, 255, 0.05); }
+        :not(.dark) .clinical-input { background: #fff; border: 1.5px solid #e5e7eb; color: #1e293b; }
+        .clinical-input:focus { border-color: #00F6FF; box-shadow: 0 0 0 4px rgba(0, 246, 255, 0.1); }
+        .clinical-label { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; display: block; font-family: 'Space Grotesk', sans-serif; }
         .clinical-form-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
         .clinical-form-span-2 { grid-column: span 2; }
         .clinical-form-span-4 { grid-column: 1 / -1; }
@@ -250,16 +252,13 @@ const RegistroInteligente = () => {
           { step: 2, label: 'Servicios Médicos', icon: <FaStethoscope /> },
           { step: 3, label: 'Liquidación', icon: <FaWallet /> }
         ].map((s, i) => (
-          <div key={i} style={{
-            flex: 1, padding: '16px 20px', borderRadius: 10,
-            background: paso === s.step ? 'var(--legacy-surface-hover)' : 'var(--legacy-surface)',
-            border: `1px solid ${paso === s.step ? 'rgba(96, 165, 250, 0.35)' : 'var(--legacy-border)'}`,
+          <div key={i} className={`glass-card ${paso === s.step ? 'ring-2 ring-primary bg-primary/5' : ''}`} style={{
+            flex: 1, padding: '16px 20px',
             display: 'flex', alignItems: 'center', gap: 14,
-            boxShadow: paso === s.step ? '0 4px 6px -1px rgba(37, 99, 235, 0.1)' : 'none'
           }}>
             <div style={{
-              width: 32, height: 32, borderRadius: 6, background: paso >= s.step ? '#2563eb' : 'var(--legacy-surface-muted)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', color: paso >= s.step ? 'white' : 'var(--legacy-text-muted)', fontSize: 13
+              width: 32, height: 32, borderRadius: 6, background: paso >= s.step ? '#00F6FF' : 'var(--legacy-surface-muted)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', color: paso >= s.step ? '#000' : 'var(--legacy-text-muted)', fontSize: 13, fontWeight: 800
             }}>
               {paso > s.step ? <FaCheck /> : s.icon}
             </div>
@@ -274,7 +273,7 @@ const RegistroInteligente = () => {
       {/* ── PASO 1: PACIENTE ── */}
       {paso === 1 && (
         <div className="clinical-step" style={{ maxWidth: modoPaciente === 'nuevo' ? 1160 : 840, margin: '0 auto' }}>
-          <div style={{ background: 'var(--legacy-surface)', padding: modoPaciente === 'nuevo' ? 24 : 32, borderRadius: 12, border: '1px solid var(--legacy-border)', boxShadow: 'var(--shadow)' }}>
+          <div className="glass-card" style={{ padding: modoPaciente === 'nuevo' ? 24 : 32 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 28, flexWrap: 'wrap' }}>
               <div>
                 <h3 style={{ margin: '0 0 8px', color: 'var(--color-dark)', fontSize: 18, fontWeight: 800 }}>Identificación del Paciente</h3>
@@ -393,7 +392,7 @@ const RegistroInteligente = () => {
                   </div>
                 </div>
 
-                <button onClick={crearPaciente} style={{ width: '100%', marginTop: 22, padding: 15, background: '#2563eb', border: 'none', borderRadius: 10, color: 'white', fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>
+                <button onClick={crearPaciente} style={{ width: '100%', marginTop: 22, padding: 15, background: '#00F6FF', border: 'none', borderRadius: 10, color: '#0f172a', fontWeight: 800, fontSize: 15, cursor: 'pointer', boxShadow: '0 0 20px rgba(0, 246, 255, 0.3)' }}>
                   CONTINUAR <FaArrowRight style={{ marginLeft: 8 }} />
                 </button>
               </>
@@ -405,7 +404,7 @@ const RegistroInteligente = () => {
       {/* ── PASO 2: ESTUDIOS ── */}
       {paso === 2 && (
         <div className="clinical-step" style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 24 }}>
-          <div style={{ background: 'var(--legacy-surface)', padding: 32, borderRadius: 12, border: '1px solid var(--legacy-border)', boxShadow: 'var(--shadow)' }}>
+          <div className="glass-card" style={{ padding: 32 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
               <h3 style={{ margin: 0, color: 'var(--color-dark)', fontSize: 18, fontWeight: 800 }}>Catálogo de Servicios</h3>
               <input className="clinical-input" placeholder="Buscar estudio..." value={filtroCategoria} onChange={e => setFiltroCategoria(e.target.value)} style={{ width: 240 }} />
@@ -426,7 +425,7 @@ const RegistroInteligente = () => {
             </div>
           </div>
 
-          <div style={{ background: 'var(--legacy-surface)', padding: 24, borderRadius: 12, border: '1px solid var(--legacy-border)', boxShadow: 'var(--shadow-lg)', height: 'fit-content', position: 'sticky', top: 20 }}>
+          <div className="glass-card" style={{ padding: 24, height: 'fit-content', position: 'sticky', top: 20 }}>
             <h4 style={{ color: 'var(--legacy-text)', margin: '0 0 20px', fontSize: 15, fontWeight: 700, borderBottom: '1px solid var(--legacy-border-soft)', paddingBottom: 12 }}>Resumen de Orden</h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24, maxHeight: 300, overflowY: 'auto' }}>
               {estudiosSeleccionados.map(e => (
@@ -450,7 +449,7 @@ const RegistroInteligente = () => {
               </div>
               <div style={{ display: 'flex', gap: 10 }}>
                 <button onClick={() => setPaso(1)} style={{ padding: '12px 16px', borderRadius: 8, background: 'var(--legacy-surface-muted)', border: '1px solid var(--legacy-border-soft)', color: 'var(--legacy-text-muted)', cursor: 'pointer' }}><FaArrowLeft /></button>
-                <button onClick={() => setPaso(3)} disabled={estudiosSeleccionados.length === 0} style={{ flex: 1, padding: '12px', borderRadius: 8, background: '#2563eb', border: 'none', color: 'white', fontWeight: 700, cursor: 'pointer' }}>CONTINUAR <FaArrowRight style={{ marginLeft: 6 }} /></button>
+                <button onClick={() => setPaso(3)} disabled={estudiosSeleccionados.length === 0} style={{ flex: 1, padding: '12px', borderRadius: 8, background: '#00F6FF', border: 'none', color: '#0f172a', fontWeight: 800, cursor: 'pointer', boxShadow: '0 0 15px rgba(0, 246, 255, 0.3)' }}>CONTINUAR <FaArrowRight style={{ marginLeft: 6 }} /></button>
               </div>
             </div>
           </div>
@@ -460,7 +459,7 @@ const RegistroInteligente = () => {
       {/* ── PASO 3: PAGO ── */}
       {paso === 3 && (
         <div className="clinical-step" style={{ maxWidth: 700, margin: '0 auto' }}>
-          <div style={{ background: 'var(--legacy-surface)', padding: 48, borderRadius: 16, border: '1px solid var(--legacy-border)', boxShadow: 'var(--shadow-lg)' }}>
+          <div className="glass-card" style={{ padding: 48 }}>
             <h3 style={{ margin: '0 0 32px', color: 'var(--legacy-text-strong)', textAlign: 'center', fontSize: 22, fontWeight: 800 }}>Liquidación de Servicios</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 32 }}>
               <div style={{ background: 'var(--legacy-surface-muted)', padding: 32, borderRadius: 12 }}>
@@ -477,7 +476,7 @@ const RegistroInteligente = () => {
                 <div><label className="clinical-label">Recibido</label><input type="number" className="clinical-input" value={montoPagado} onChange={e => setMontoPagado(parseFloat(e.target.value) || 0)} style={{ fontWeight: 800 }} /></div>
               </div>
 
-              <button onClick={finalizarRegistro} disabled={loading} style={{ width: '100%', padding: 18, background: '#2563eb', border: 'none', borderRadius: 12, color: 'white', fontWeight: 700, fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, boxShadow: '0 10px 15px -3px rgba(37, 99, 235, 0.3)' }}>
+              <button onClick={finalizarRegistro} disabled={loading} style={{ width: '100%', padding: 18, background: '#00F6FF', border: 'none', borderRadius: 12, color: '#0f172a', fontWeight: 800, fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, boxShadow: '0 0 20px rgba(0, 246, 255, 0.4)' }}>
                 {loading ? <FaSpinner className="spin" /> : <><FaPrint /> PROCESAR Y EMITIR TICKET</>}
               </button>
               <button onClick={() => setPaso(2)} style={{ background: 'none', border: 'none', color: 'var(--legacy-text-muted)', fontSize: 13, cursor: 'pointer', fontWeight: 600 }}>VOLVER AL DETALLE</button>

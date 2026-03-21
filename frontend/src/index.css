@@ -35,19 +35,35 @@
     body {
         @apply antialiased text-slate-800 dark:text-slate-200 bg-background-light dark:bg-background-dark font-body;
     }
+    
+    .dark body {
+        /* Subtle starry texture mimicking The Cosmic Gallery deep space aesthetics */
+        background-color: #0B1120;
+        background-image: radial-gradient(circle at center, rgba(255,255,255,0.01) 0%, transparent 10%),
+                          radial-gradient(circle at 10% 20%, rgba(255,255,255,0.02) 1px, transparent 1px),
+                          radial-gradient(circle at 90% 80%, rgba(255,255,255,0.02) 1px, transparent 1px),
+                          radial-gradient(circle at 50% 50%, rgba(255,255,255,0.015) 1px, transparent 1px);
+        background-size: 100% 100%, 200px 200px, 300px 300px, 150px 150px;
+        background-attachment: fixed;
+    }
 
     /* Global Dark Mode Overrides for Legacy Containers */
     .dark .container,
     .dark .main-content,
     .dark .card,
     .dark .panel {
-        @apply bg-surface-dark text-slate-200 border-white/5;
+        @apply bg-surface-dark text-slate-200 border-transparent shadow-glass-glow;
+        backdrop-filter: blur(12px);
+    }
+    
+    .glass-card {
+        @apply bg-white shadow-xl rounded-2xl border border-gray-100 dark:bg-surface-dark/80 dark:border-white/5 dark:shadow-glass-glow dark:backdrop-blur-md;
     }
 
-    .dark input,
+    .dark input:not([type="checkbox"]):not([type="radio"]),
     .dark select,
     .dark textarea {
-        @apply bg-white/5 border-white/10 text-white placeholder-gray-500 focus:ring-primary/50;
+        @apply bg-[#000000] border-transparent text-white placeholder-gray-500 focus:ring-1 focus:ring-primary focus:border-primary shadow-inner-glow transition-all;
     }
 
     .dark table {
@@ -55,7 +71,7 @@
     }
 
     .dark th {
-        @apply bg-white/5 border-white/5 text-gray-400;
+        @apply bg-surface-dark-high border-white/5 text-gray-400 font-display tracking-widest text-[10px] uppercase;
     }
 
     .dark td {

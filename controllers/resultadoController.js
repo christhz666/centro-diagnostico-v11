@@ -47,6 +47,20 @@ exports.getResultados = async (req, res, next) => {
         if (req.query.estudio) filter.estudio = req.query.estudio;
         if (req.query.codigoMuestra) filter.codigoMuestra = req.query.codigoMuestra;
 
+        if (req.query.tipo === 'laboratorio') {
+            const Estudio = require('../models/Estudio');
+            const estudiosLab = await Estudio.find({
+                $or: [
+                    { categoria: /laboratorio|hematolog|quimica|orina|coagulacion|inmunolog|microbiolog/i },
+                    { codigo: /^LAB/i }
+                ]
+            }).select('_id');
+            const idsLab = estudiosLab.map(e => e._id);
+            if (!filter.estudio) {
+                filter.estudio = { $in: idsLab };
+            }
+        }
+
         const [resultados, total] = await Promise.all([
             Resultado.find(filter)
                 .populate('paciente', 'nombre apellido cedula')

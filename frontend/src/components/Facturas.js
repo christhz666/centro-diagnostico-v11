@@ -288,7 +288,7 @@ const Facturas = () => {
 
       {/* ── Stat Tiles ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24, marginBottom: 44 }}>
-        <div style={{ background: theme.surface, padding: 28, borderRadius: 12, border: `1px solid ${theme.border}`, boxShadow: 'var(--shadow)' }}>
+        <div className="glass-card" style={{ padding: 28 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
             <div style={{ fontSize: 11, fontWeight: 800, color: theme.textMuted, textTransform: 'uppercase' }}>Caja de Hoy</div>
             <button onClick={turnoActivo ? cerrarTurnoManual : abrirTurnoManual} style={{ background: 'none', border: 'none', color: '#2563eb', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
@@ -303,7 +303,7 @@ const Facturas = () => {
           </div>
         </div>
 
-        <div style={{ background: theme.surface, padding: 28, borderRadius: 12, border: `1px solid ${theme.border}`, boxShadow: 'var(--shadow)' }}>
+        <div className="glass-card" style={{ padding: 28 }}>
           <div style={{ fontSize: 11, fontWeight: 800, color: theme.textMuted, textTransform: 'uppercase', marginBottom: 16 }}>Operaciones del Mes</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
             <h2 style={{ margin: 0, fontSize: 34, fontWeight: 800, color: theme.textStrong }}>RD$ {facturas.reduce((sum, f) => sum + (f.total || 0), 0).toLocaleString()}</h2>
@@ -313,7 +313,7 @@ const Facturas = () => {
       </div>
 
       {/* ── Tabla de Historial ── */}
-      <div style={{ background: theme.surface, borderRadius: 12, border: `1px solid ${theme.border}`, overflow: 'hidden', boxShadow: 'var(--shadow)' }}>
+      <div className="glass-card overflow-hidden">
         <div style={{ padding: '24px 32px', borderBottom: `1px solid ${theme.borderSoft}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: theme.textStrong }}>Registros Emitidos</h2>
           <select value={filtroEstado} onChange={e => setFiltroEstado(e.target.value)} style={{ padding: '8px 12px', borderRadius: 8, border: `1px solid ${theme.border}`, outline: 'none', fontSize: 13, background: theme.surface, color: theme.text }}>
@@ -378,7 +378,7 @@ const Facturas = () => {
       {/* ── Modales ── */}
       {facturaDetalle && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000 }}>
-          <div style={{ background: theme.surface, borderRadius: 12, width: '100%', maxWidth: 500, padding: 32, boxShadow: 'var(--shadow-lg)', border: `1px solid ${theme.border}` }}>
+          <div className="glass-card" style={{ width: '100%', maxWidth: 500, padding: 32 }}>
             <h3 style={{ margin: '0 0 24px', fontSize: 20, fontWeight: 800, color: theme.textStrong }}>Comprobante #{facturaDetalle.numero || facturaDetalle.numero_factura}</h3>
             <div style={{ background: theme.surfaceMuted, padding: 20, borderRadius: 10, marginBottom: 24 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}><span style={{ color: theme.textMuted }}>Subtotal</span><span style={{ color: theme.text }}>{(facturaDetalle.subtotal || 0).toLocaleString() ? `$${(facturaDetalle.subtotal || 0).toLocaleString()}` : '$0'}</span></div>
@@ -411,7 +411,7 @@ const Facturas = () => {
 
       {showModalNueva && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000 }}>
-          <div style={{ background: theme.surface, borderRadius: 12, width: '100%', maxWidth: 500, padding: 32, boxShadow: 'var(--shadow-lg)', border: `1px solid ${theme.border}` }}>
+          <div className="glass-card" style={{ width: '100%', maxWidth: 500, padding: 32 }}>
             <h3 style={{ margin: '0 0 24px', fontSize: 20, fontWeight: 800, color: theme.textStrong }}>Admisiones Pendientes</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 350, overflowY: 'auto', marginBottom: 24 }}>
               {citasPendientes.map(cita => (
@@ -438,7 +438,7 @@ const Facturas = () => {
 
       {showModalPago && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000 }}>
-          <div style={{ background: theme.surface, borderRadius: 12, width: '100%', maxWidth: 420, padding: 32, boxShadow: 'var(--shadow-lg)', border: `1px solid ${theme.border}` }}>
+          <div className="glass-card" style={{ width: '100%', maxWidth: 420, padding: 32 }}>
             <h3 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 800, color: theme.textStrong }}>Registrar Pago</h3>
             <p style={{ margin: '0 0 20px', color: theme.textMuted, fontSize: 14 }}>Factura #{showModalPago.numero || showModalPago.numero_factura}</p>
 

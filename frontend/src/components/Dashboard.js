@@ -24,7 +24,7 @@ const getPayload = (result) => {
 
 const StatCard = ({ title, value, subtext, icon, colorClass, index }) => {
     return (
-        <div className="bg-white dark:bg-surface-dark rounded-3xl p-6 glow-border shadow-lg dark:shadow-none flex flex-col justify-between h-48 group hover:-translate-y-1 transition-transform duration-300">
+        <div className="glass-card p-6 flex flex-col justify-between h-48 group hover:-translate-y-1 transition-transform duration-300">
             <div className="flex justify-between items-start">
                 <div className={`h-10 w-10 rounded-lg ${colorClass} flex items-center justify-center`}>
                     <span className="material-icons-round">{icon}</span>
@@ -138,7 +138,7 @@ const Dashboard = () => {
                 </div>
                 <button
                     onClick={fetchDashboardData}
-                    className={`flex items-center justify-center h-12 w-12 rounded-full bg-white dark:bg-surface-dark border border-gray-200 dark:border-white/10 shadow-lg text-gray-600 dark:text-primary transition-transform duration-500 hover:scale-110 active:scale-95 ${loading ? 'animate-spin' : ''}`}
+                    className={`flex items-center justify-center h-12 w-12 rounded-full glass-card text-gray-600 dark:text-primary transition-transform duration-500 hover:scale-110 active:scale-95 ${loading ? 'animate-spin' : ''}`}
                 >
                     <span className="material-icons-round">refresh</span>
                 </button>
@@ -156,7 +156,7 @@ const Dashboard = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
 
                 {/* Gráfica de citas por día (Area Chart) — ocupa 2 columnas */}
-                <div className="lg:col-span-2 bg-white dark:bg-surface-dark rounded-3xl p-6 glow-border shadow-lg dark:shadow-none">
+                <div className="lg:col-span-2 glass-card p-6">
                     <div className="flex items-center justify-between mb-6">
                         <div>
                             <h3 className="text-lg font-display font-bold text-gray-900 dark:text-white">Pacientes por Día</h3>
@@ -193,7 +193,7 @@ const Dashboard = () => {
                 </div>
 
                 {/* Top Estudios (Pie Chart) */}
-                <div className="bg-white dark:bg-surface-dark rounded-3xl p-6 glow-border shadow-lg dark:shadow-none">
+                <div className="glass-card p-6">
                     <div className="flex items-center justify-between mb-6">
                         <div>
                             <h3 className="text-lg font-display font-bold text-gray-900 dark:text-white">Estudios Populares</h3>
@@ -232,7 +232,7 @@ const Dashboard = () => {
 
             {/* Ingresos Semanales (Bar Chart) */}
             {citasGrafica.length > 0 && (
-                <div className="bg-white dark:bg-surface-dark rounded-3xl p-6 glow-border shadow-lg dark:shadow-none mb-8">
+                <div className="glass-card p-6 mb-8">
                     <div className="flex items-center justify-between mb-6">
                         <div>
                             <h3 className="text-lg font-display font-bold text-gray-900 dark:text-white">Actividad de Citas</h3>
@@ -254,7 +254,7 @@ const Dashboard = () => {
             )}
 
             {/* Patients Table Section */}
-            <div className="bg-white dark:bg-surface-dark rounded-3xl shadow-lg dark:shadow-none overflow-hidden glow-border">
+            <div className="glass-card overflow-hidden">
                 <div className="glass-header px-6 py-5 flex items-center justify-between sticky top-0 z-20">
                     <h3 className="text-lg font-display font-bold text-gray-900 dark:text-white">Pacientes de Hoy</h3>
                     <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-semibold">{citasHoy.length} activos</span>

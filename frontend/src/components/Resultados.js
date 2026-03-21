@@ -34,7 +34,7 @@ const Resultados = () => {
   const fetchResultados = useCallback(async (isSilent = false, estado = filtroEstado) => {
     try {
       if (!isSilent) setLoading(true);
-      const params = estado ? { estado } : {};
+      const params = estado ? { estado, tipo: 'laboratorio' } : { tipo: 'laboratorio' };
       const response = await api.getResultados(params);
       setResultados(Array.isArray(response) ? response : (response.data || []));
     } catch (err) {
@@ -48,7 +48,19 @@ const Resultados = () => {
   const fetchCitasPendientes = useCallback(async (_isSilent = false) => {
     try {
       const response = await api.getCitas({ estado: 'completada' });
-      setCitas(Array.isArray(response) ? response : (response.data || []));
+      let listaCitas = Array.isArray(response) ? response : (response.data || []);
+      
+      // Filtrar solo las citas que tengan estudios de laboratorio (excluir imagenología)
+      listaCitas = listaCitas.filter(c => 
+        c.estudios?.some(e => {
+          if (!e.estudio) return false;
+          const cat = (e.estudio.categoria || '').toLowerCase();
+          const cod = (e.estudio.codigo || '').toUpperCase();
+          return cat.includes('laboratorio') || cat.includes('otros') || cod.startsWith('LAB');
+        })
+      );
+      
+      setCitas(listaCitas);
     } catch (err) {
       console.error(err);
     }

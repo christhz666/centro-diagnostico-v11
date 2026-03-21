@@ -222,8 +222,8 @@ function App() {
                     </div>
 
                     {/* Theme Toggle */}
-                    <button onClick={() => setDarkMode(!darkMode)} className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-primary transition-all group">
-                      <span className="material-icons-round text-xl group-hover:rotate-12 transition-transform">{darkMode ? 'light_mode' : 'dark_mode'}</span>
+                    <button onClick={() => setDarkMode(!darkMode)} className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-primary transition-all duration-500 group">
+                      <span className="material-icons-round text-xl group-hover:rotate-12 transition-transform duration-500">{darkMode ? 'light_mode' : 'dark_mode'}</span>
                     </button>
 
                     <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-primary to-blue-600 p-[1px] shadow-neon">
@@ -271,9 +271,9 @@ function App() {
                           end={item.path === '/'}
                           onClick={() => isMobile && setSidebarOpen(false)}
                           className={({ isActive }) => `
-                          flex items-center gap-4 p-3 rounded-2xl transition-all group relative
+                          flex items-center gap-4 p-3 rounded-2xl transition-all group relative font-display tracking-wide
                           ${isActive
-                              ? 'bg-primary/10 text-primary shadow-inner-glow'
+                              ? 'bg-primary text-slate-900 font-bold shadow-neon'
                               : 'text-slate-400 dark:text-gray-500 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-primary'}
                         `}>
                           <span className="material-icons-round transition-transform group-hover:scale-110">{item.icon}</span>

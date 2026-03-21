@@ -373,13 +373,14 @@ exports.listaEstudios = async (req, res, next) => {
         const Estudio = require('../models/Estudio');
         const estudiosImg = await Estudio.find({
             $or: [
-                { categoria: /radiolog|imagen|rayos|rx|mamog|tomog|ultrason|ecog/i },
-                { codigo: /^RX|^IMG|^RAD/i }
+                { categoria: /radiolog|imagen|rayos|rx|mamog|tomog|ultrason|ecog|sonograf|resonancia|cr/i },
+                { codigo: /^RX|^IMG|^RAD|^SON|^TOM|^RES|^CR/i }
             ]
         }).select('_id');
 
         const idsEstudios = estudiosImg.map(e => e._id);
-        if (idsEstudios.length > 0) filtro.estudio = { $in: idsEstudios };
+        // Siempre aplicar el filtro para evitar listar todos los resultados si está vacío
+        filtro.estudio = { $in: idsEstudios };
 
         const [resultados, total] = await Promise.all([
             Resultado.find(filtro)
