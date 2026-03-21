@@ -116,7 +116,7 @@ const ConsultaRapida = () => {
 
     try {
       /* ── 1. QR de factura (hex 12-16 chars) ────────────────────── */
-      if (/^[A-F0-9]{12,16}$/.test(codigoLimpio)) {
+      if (/^[A-Z0-9]{10,24}$/.test(codigoLimpio)) {
         // El QR apunta al codigoQR de la factura → buscar por él
         try {
           const d = await api.request(`/resultados/qr/${codigoLimpio}`);
@@ -177,7 +177,7 @@ const ConsultaRapida = () => {
     if (!codigo.trim()) return;
     const c = codigo.trim();
     // Detectar: QR hex, número de factura FAC-xxx, matrícula numérica, o código de muestra
-    const esQR = /^[A-F0-9]{12,16}$/.test(c);
+    const esQR = /^[A-Z0-9]{10,24}$/.test(c);
     const esFac = /^FAC-/i.test(c);
     const esCodigo = /^\d{3,}$/.test(c);  // cualquier número de 3+ dígitos
     const esCodigoMuestra = /^L\d{3,}$/i.test(c) || (/^MUE-/i.test(c) && c.length >= 13);
