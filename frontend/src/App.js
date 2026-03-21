@@ -236,7 +236,7 @@ function App() {
                        {(sidebarOpen || isMobile) && (
                          <div className="flex flex-col overflow-hidden">
                            <span className="text-[#3df5e7] font-bold text-xl tracking-widest leading-none truncate">{empresaConfig.nombre || 'LUMINA'}</span>
-                           <span className="text-[#bacac7] text-[10px] uppercase tracking-[0.2em] mt-1 opacity-70 truncate">Clinical Intelligence</span>
+                           <span className="text-gray-600 dark:text-[#bacac7] text-[10px] uppercase tracking-[0.2em] mt-1 opacity-70 truncate">Clinical Intelligence</span>
                          </div>
                        )}
                      </div>
@@ -304,8 +304,8 @@ function App() {
                      </nav>
 
                      {/* Bottom Navigation CTA */}
-                     <div className="mt-auto px-2 border-t border-white/5 pt-4">
-                       <button onClick={handleLogout} className="w-full bg-[#32353c]/30 hover:bg-[#d7383b]/20 text-[#d7383b] font-bold py-3.5 rounded-md flex items-center justify-center gap-x-2 transition-all duration-300 active:scale-95 group">
+                     <div className="mt-auto px-2 border-t border-gray-200 dark:border-white/5 pt-4">
+                       <button onClick={handleLogout} className="w-full bg-gray-100 dark:bg-[#32353c]/30 hover:bg-[#d7383b]/20 text-[#d7383b] font-bold py-3.5 rounded-md flex items-center justify-center gap-x-2 transition-all duration-300 active:scale-95 group">
                          <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24" }}>logout</span>
                          {(sidebarOpen || isMobile) && <span className="text-sm">Log Out</span>}
                        </button>
@@ -318,11 +318,11 @@ function App() {
                   `}>
                     <div className="flex items-center gap-4">
                       {isMobile ? (
-                        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-[#bacac7] hover:text-[#3df5e7] p-2 transition-colors">
+                        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-gray-600 dark:text-[#bacac7] hover:text-[#3df5e7] p-2 transition-colors">
                           <span className="material-icons-round">{sidebarOpen ? 'menu_open' : 'menu'}</span>
                         </button>
                       ) : (
-                        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-[#bacac7] hover:text-[#3df5e7] p-2 transition-colors">
+                        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-gray-600 dark:text-[#bacac7] hover:text-[#3df5e7] p-2 transition-colors">
                           <span className="material-icons-round">{sidebarOpen ? 'chevron_left' : 'chevron_right'}</span>
                         </button>
                       )}

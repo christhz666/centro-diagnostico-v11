@@ -357,17 +357,17 @@ const Imagenologia = () => {
     return (
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 w-full h-full pb-8">
         <div className="flex justify-between items-center mb-6">
-            <h2 className="text-3xl font-headline font-bold text-[#e0e2ec] tracking-tighter flex items-center gap-3">
+            <h2 className="text-3xl font-headline font-bold text-gray-900 dark:text-[#e0e2ec] tracking-tighter flex items-center gap-3">
                 <span className="material-symbols-outlined text-[#4afdef] text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>medical_information</span>
                 Imagenología
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#32353c] text-[#bacac7] font-label uppercase tracking-widest ml-2 border border-white/5">
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-[#32353c] text-gray-600 dark:text-[#bacac7] font-label uppercase tracking-widest ml-2 border border-gray-200 dark:border-white/5">
                     {rol.charAt(0).toUpperCase() + rol.slice(1)}
                 </span>
             </h2>
-            <div className="flex gap-2 bg-[#1d2027] p-1.5 rounded-xl border border-white/5">
+            <div className="flex gap-2 bg-white dark:bg-[#1d2027] p-1.5 rounded-xl border border-gray-200 dark:border-white/5">
               {['', 'pendiente', 'en_proceso', 'completado'].map(e => (
                 <button key={e} onClick={() => setFiltroEstado(e)} 
-                        className={`px-4 py-2 rounded-lg font-label text-[11px] font-bold uppercase tracking-wider transition-all ${filtroEstado === e ? 'bg-[#32353c] text-white shadow-md' : 'bg-transparent text-[#849491] hover:text-[#bacac7] hover:bg-white/5'}`}>
+                        className={`px-4 py-2 rounded-lg font-label text-[11px] font-bold uppercase tracking-wider transition-all ${filtroEstado === e ? 'bg-gray-100 dark:bg-[#32353c] text-gray-900 dark:text-white shadow-md' : 'bg-transparent text-gray-500 dark:text-[#849491] hover:text-gray-600 dark:text-[#bacac7] hover:bg-white/5'}`}>
                     {e === '' ? 'Todos' : e.replace('_', ' ')}
                 </button>
               ))}
@@ -377,15 +377,15 @@ const Imagenologia = () => {
         {loading ? (
             <div className="text-center p-16"><span className="material-symbols-outlined animate-spin text-[#4afdef] text-4xl">autorenew</span></div>
         ) : estudios.length === 0 ? (
-            <div className="bg-[#191b23] border border-white/5 rounded-2xl p-16 text-center shadow-xl">
+            <div className="bg-white dark:bg-[#191b23] border border-gray-200 dark:border-white/5 rounded-2xl p-16 text-center shadow-xl">
                 <span className="material-symbols-outlined text-[#32353c] text-6xl mb-6" style={{ fontVariationSettings: "'FILL' 1" }}>biotech</span>
                 <p className="text-slate-400 font-body text-lg">No hay estudios {filtroEstado ? `"${filtroEstado.replace('_', ' ')}"` : 'registrados'}</p>
             </div>
         ) : (
-            <div className="bg-[#191b23] border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
+            <div className="bg-white dark:bg-[#191b23] border border-gray-200 dark:border-white/5 rounded-2xl overflow-hidden shadow-2xl">
               <table className="w-full text-left font-label">
                 <thead>
-                  <tr className="bg-[#1d2027] text-[10px] text-[#849491] uppercase tracking-widest border-b border-[#3b4a48]/50">
+                  <tr className="bg-white dark:bg-[#1d2027] text-[10px] text-gray-500 dark:text-[#849491] uppercase tracking-widest border-b border-[#3b4a48]/50">
                     <th className="px-6 py-4 font-bold">Código</th>
                     <th className="px-6 py-4 font-bold">Paciente</th>
                     <th className="px-6 py-4 font-bold">Estudio</th>
@@ -399,18 +399,18 @@ const Imagenologia = () => {
                   {estudios.map(e => {
                     const est = ESTADO_COLORES[e.estado] || ESTADO_COLORES.pendiente;
                     return (
-                      <tr key={e._id || e.id} className="hover:bg-[#1d2027]/50 transition-colors">
+                      <tr key={e._id || e.id} className="hover:bg-white dark:bg-[#1d2027]/50 transition-colors">
                         <td className="px-6 py-4 font-bold text-[#4afdef] text-[12px] uppercase">
                             {e.codigo || e._id?.slice(-6).toUpperCase()}
                         </td>
-                        <td className="px-6 py-4 font-bold text-white">
+                        <td className="px-6 py-4 font-bold text-gray-900 dark:text-white">
                             {e.paciente?.nombre} {e.paciente?.apellido}
                         </td>
                         <td className="px-6 py-4 text-[#cfd3db]">
                             {e.estudio?.nombre || 'Estudio de imagen'}
                         </td>
                         <td className="px-6 py-4 text-center">
-                            <span className="bg-[#32353c] text-[#cfd3db] px-3 py-1 rounded-md text-[11px] font-bold border border-white/5">
+                            <span className="bg-gray-100 dark:bg-[#32353c] text-[#cfd3db] px-3 py-1 rounded-md text-[11px] font-bold border border-gray-200 dark:border-white/5">
                                 {(e.imagenes || []).length}
                             </span>
                         </td>
@@ -419,11 +419,11 @@ const Imagenologia = () => {
                                 {est.name}
                             </span>
                         </td>
-                        <td className="px-6 py-4 text-[#849491] text-[12px]">
+                        <td className="px-6 py-4 text-gray-500 dark:text-[#849491] text-[12px]">
                             {new Date(e.createdAt || e.fecha).toLocaleDateString('es-DO')}
                         </td>
                         <td className="px-6 py-4 text-center">
-                            <button onClick={() => abrirVisor(e)} className="px-4 py-2 bg-[#2d3038] text-white rounded-lg text-xs font-bold hover:bg-[#32353c] border border-white/5 transition-all flex items-center justify-center gap-2 w-full max-w-[130px] mx-auto group">
+                            <button onClick={() => abrirVisor(e)} className="px-4 py-2 bg-[#2d3038] text-gray-900 dark:text-white rounded-lg text-xs font-bold hover:bg-gray-100 dark:bg-[#32353c] border border-gray-200 dark:border-white/5 transition-all flex items-center justify-center gap-2 w-full max-w-[130px] mx-auto group">
                                 <span className="material-symbols-outlined text-[16px] text-[#4afdef] group-hover:animate-pulse">visibility</span>
                                 {canEdit ? 'Visor' : 'Imágenes'}
                             </button>
@@ -441,19 +441,19 @@ const Imagenologia = () => {
 
   // --- VISOR MODE ---
   return (
-    <div className="fixed inset-0 z-50 bg-[#10131a] flex flex-col text-[#e0e2ec] font-body selection:bg-[#4afdef]/30 overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+    <div className="fixed inset-0 z-50 bg-gray-50 dark:bg-[#10131a] flex flex-col text-gray-900 dark:text-[#e0e2ec] font-body selection:bg-[#4afdef]/30 overflow-hidden animate-in fade-in zoom-in-95 duration-300">
       
       {/* Top Navbar */}
-      <nav className="flex items-center justify-between px-6 py-3 bg-[rgba(29,32,38,0.7)] backdrop-blur-2xl border-b border-white/5 h-16 shrink-0 shadow-lg">
+      <nav className="flex items-center justify-between px-6 py-3 bg-[rgba(29,32,38,0.7)] backdrop-blur-2xl border-b border-gray-200 dark:border-white/5 h-16 shrink-0 shadow-lg">
         <div className="flex items-center gap-6">
-            <button onClick={() => setVista('lista')} className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-white/5 transition-all active:scale-95 text-[#e0e2ec] border border-transparent hover:border-white/10">
+            <button onClick={() => setVista('lista')} className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-white/5 transition-all active:scale-95 text-gray-900 dark:text-[#e0e2ec] border border-transparent hover:border-gray-200 dark:border-white/10">
                 <span className="material-symbols-outlined">arrow_back</span>
             </button>
             <div className="flex flex-col">
-                <h1 className="font-headline font-bold text-lg tracking-tight flex items-center gap-2 text-white">
+                <h1 className="font-headline font-bold text-lg tracking-tight flex items-center gap-2 text-gray-900 dark:text-white">
                     {estudioActual?.paciente?.nombre} {estudioActual?.paciente?.apellido}
                 </h1>
-                <p className="font-label text-xs text-[#849491] uppercase tracking-tighter">
+                <p className="font-label text-xs text-gray-500 dark:text-[#849491] uppercase tracking-tighter">
                     {estudioActual?.estudio?.nombre || 'ESTUDIO CLÍNICO'} 
                     <span className="mx-2">|</span> 
                     <span className="text-[#cfd3db]">ID: {estudioActual?.codigo || estudioActual?._id?.slice(-8).toUpperCase()}</span>
@@ -462,13 +462,13 @@ const Imagenologia = () => {
         </div>
 
         <div className="flex items-center gap-3">
-             <button onClick={() => setMostrarSoloVisor(!mostrarSoloVisor)} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-transparent border border-transparent hover:border-white/10 hover:bg-white/5 transition-all font-label text-sm text-[#bacac7] mr-4">
+             <button onClick={() => setMostrarSoloVisor(!mostrarSoloVisor)} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-transparent border border-transparent hover:border-gray-200 dark:border-white/10 hover:bg-white/5 transition-all font-label text-sm text-gray-600 dark:text-[#bacac7] mr-4">
                 <span className="material-symbols-outlined text-sm">{mostrarSoloVisor ? 'layers' : 'layers_clear'}</span>
                 {mostrarSoloVisor ? 'Mostrar Dashboard' : 'Modo Teatro'}
             </button>
 
             {canEdit && (
-                <label className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-all font-label text-sm cursor-pointer hover:text-white group">
+                <label className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-gray-200 dark:border-white/5 hover:bg-white/10 transition-all font-label text-sm cursor-pointer hover:text-gray-900 dark:text-white group">
                     {subiendo ? <span className="material-symbols-outlined animate-spin text-[#4afdef] text-sm">autorenew</span> : <span className="material-symbols-outlined text-[#4afdef] text-sm group-hover:animate-pulse">upload_file</span>}
                     {subiendo ? 'Subiendo...' : 'Subir DICOM'}
                     <input ref={fileInputRef} type="file" accept=".dcm,.DCM,image/*" multiple style={{ display: 'none' }} onChange={handleSubirImagenes} />
@@ -477,8 +477,8 @@ const Imagenologia = () => {
 
             <div className="h-6 w-px bg-white/10 mx-1"></div>
             
-            <button onClick={agregarImagenAImprimir} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-all font-label text-sm group">
-                <span className="material-symbols-outlined text-[#cfd3db] text-sm group-hover:text-white">photo_camera</span>
+            <button onClick={agregarImagenAImprimir} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-gray-200 dark:border-white/5 hover:bg-white/10 transition-all font-label text-sm group">
+                <span className="material-symbols-outlined text-[#cfd3db] text-sm group-hover:text-gray-900 dark:text-white">photo_camera</span>
                 Capturar <span className="text-[10px] bg-white/10 px-1.5 rounded">{imagenesParaImprimir.length}/2</span>
             </button>
 
@@ -487,7 +487,7 @@ const Imagenologia = () => {
                     <button onClick={limpiarImpresion} className="flex items-center justify-center p-2 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition-all" title="Limpiar imágenes capturadas">
                         <span className="material-symbols-outlined text-sm">delete</span>
                     </button>
-                    <button onClick={imprimirImagenesSola} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#32353c] border border-white/10 hover:bg-[#464950] transition-all font-label text-sm text-white font-bold ml-2">
+                    <button onClick={imprimirImagenesSola} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-[#32353c] border border-gray-200 dark:border-white/10 hover:bg-[#464950] transition-all font-label text-sm text-gray-900 dark:text-white font-bold ml-2">
                         Imprimir Imagen
                     </button>
                 </>
@@ -495,7 +495,7 @@ const Imagenologia = () => {
 
             <div className="h-6 w-px bg-white/10 mx-1"></div>
 
-            <button onClick={imprimirReporte} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#32353c] border border-white/10 hover:bg-white/20 transition-all font-label text-sm font-bold text-white shadow-md">
+            <button onClick={imprimirReporte} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-[#32353c] border border-gray-200 dark:border-white/10 hover:bg-white/20 transition-all font-label text-sm font-bold text-gray-900 dark:text-white shadow-md">
                 <span className="material-symbols-outlined text-sm">print</span>
                 Dossier
             </button>
@@ -504,9 +504,9 @@ const Imagenologia = () => {
             <div className="flex items-center gap-3 pl-2">
                 <div className="text-right hidden sm:block">
                     <p className="text-xs font-bold font-headline text-[#00ded1] uppercase">{sesion?.nombre || 'Médico'}</p>
-                    <p className="text-[10px] text-[#849491] font-label uppercase">Staff Radiología</p>
+                    <p className="text-[10px] text-gray-500 dark:text-[#849491] font-label uppercase">Staff Radiología</p>
                 </div>
-                <div className="w-10 h-10 rounded-full bg-[#32353c] border border-[#00ded1]/30 overflow-hidden flex items-center justify-center text-[#bacac7]">
+                <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-[#32353c] border border-[#00ded1]/30 overflow-hidden flex items-center justify-center text-gray-600 dark:text-[#bacac7]">
                     <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>person</span>
                 </div>
             </div>
@@ -530,34 +530,34 @@ const Imagenologia = () => {
 
           {/* Right Sidebar (Report Editor) */}
           {!mostrarSoloVisor && (
-              <aside className="w-[380px] bg-[#1d2027]/70 backdrop-blur-2xl border-l border-white/5 flex flex-col shadow-[-10px_0_30px_rgba(0,0,0,0.5)] z-40 transition-all shrink-0">
-                  <header className="p-6 pb-4 flex items-center justify-between border-b border-white/5">
+              <aside className="w-[380px] bg-white dark:bg-[#1d2027]/70 backdrop-blur-2xl border-l border-gray-200 dark:border-white/5 flex flex-col shadow-[-10px_0_30px_rgba(0,0,0,0.5)] z-40 transition-all shrink-0">
+                  <header className="p-6 pb-4 flex items-center justify-between border-b border-gray-200 dark:border-white/5">
                       <div>
-                          <h2 className="font-headline font-bold text-lg text-white flex items-center gap-2">
+                          <h2 className="font-headline font-bold text-lg text-gray-900 dark:text-white flex items-center gap-2">
                               <span className="material-symbols-outlined text-[#00ded1]">edit_note</span>
                               Reporte Médico
                           </h2>
-                          <p className="text-[10px] font-label text-[#849491] uppercase tracking-widest mt-1">Editor de Diagnóstico</p>
+                          <p className="text-[10px] font-label text-gray-500 dark:text-[#849491] uppercase tracking-widest mt-1">Editor de Diagnóstico</p>
                       </div>
                       
                       {canEdit && (
                           <div className="relative">
-                            <button onClick={() => setMostrarGestorPlantillas(!mostrarGestorPlantillas)} className={`p-2 rounded-lg text-[#bacac7] transition-all ${mostrarGestorPlantillas ? 'bg-[#32353c] text-white' : 'hover:bg-white/5'}`} title="Plantillas">
+                            <button onClick={() => setMostrarGestorPlantillas(!mostrarGestorPlantillas)} className={`p-2 rounded-lg text-gray-600 dark:text-[#bacac7] transition-all ${mostrarGestorPlantillas ? 'bg-gray-100 dark:bg-[#32353c] text-gray-900 dark:text-white' : 'hover:bg-white/5'}`} title="Plantillas">
                                 <span className="material-symbols-outlined">folder_special</span>
                             </button>
                             
                             {/* Templates Dropdown Overlay */}
                             {mostrarGestorPlantillas && (
-                                <div className="absolute right-0 top-12 w-72 bg-[#1d2027] border border-white/10 rounded-xl shadow-2xl p-4 z-50 animate-in slide-in-from-top-2">
-                                    <div className="font-bold text-[#e0e2ec] text-xs mb-3 uppercase tracking-widest flex items-center gap-2"><span className="material-symbols-outlined text-[16px]">bookmark_added</span> Mis Plantillas</div>
+                                <div className="absolute right-0 top-12 w-72 bg-white dark:bg-[#1d2027] border border-gray-200 dark:border-white/10 rounded-xl shadow-2xl p-4 z-50 animate-in slide-in-from-top-2">
+                                    <div className="font-bold text-gray-900 dark:text-[#e0e2ec] text-xs mb-3 uppercase tracking-widest flex items-center gap-2"><span className="material-symbols-outlined text-[16px]">bookmark_added</span> Mis Plantillas</div>
                                     <div className="max-h-48 overflow-y-auto custom-scrollbar space-y-2 mb-3 pr-2">
                                         {plantillasDoctora.length === 0 ? (
-                                            <p className="text-[#849491] text-[11px]">No hay plantillas guardadas.</p>
+                                            <p className="text-gray-500 dark:text-[#849491] text-[11px]">No hay plantillas guardadas.</p>
                                         ) : plantillasDoctora.map(pt => (
-                                            <div key={pt.id} className="bg-[#272a31] p-2 rounded-lg border border-white/5 flex flex-col gap-2">
+                                            <div key={pt.id} className="bg-gray-50 dark:bg-[#272a31] p-2 rounded-lg border border-gray-200 dark:border-white/5 flex flex-col gap-2">
                                                 {plantillaEditando?.id === pt.id ? (
                                                     <div className="flex gap-2">
-                                                        <input value={plantillaEditando.nombre} onChange={e => setPlantillaEditando(p => ({...p, nombre: e.target.value}))} className="flex-1 bg-[#10131a] border border-white/10 rounded px-2 py-1 text-xs text-white outline-none focus:border-[#4afdef]"/>
+                                                        <input value={plantillaEditando.nombre} onChange={e => setPlantillaEditando(p => ({...p, nombre: e.target.value}))} className="flex-1 bg-gray-50 dark:bg-[#10131a] border border-gray-200 dark:border-white/10 rounded px-2 py-1 text-xs text-gray-900 dark:text-white outline-none focus:border-[#4afdef]"/>
                                                         <button onClick={actualizarPlantillaGuardada} className="bg-emerald-500/20 text-emerald-400 p-1 rounded"><span className="material-symbols-outlined text-xs">check</span></button>
                                                         <button onClick={() => setPlantillaEditando(null)} className="bg-white/5 text-slate-400 p-1 rounded"><span className="material-symbols-outlined text-xs">close</span></button>
                                                     </div>
@@ -565,11 +565,11 @@ const Imagenologia = () => {
                                                     <div className="flex items-center justify-between">
                                                         <div>
                                                             <div className="text-xs font-bold text-[#cfd3db]">{pt.nombre}</div>
-                                                            <div className="text-[9px] text-[#849491] uppercase">{TIPO_PLANTILLAS.find(t=>t.id===pt.tipoPlantilla)?.label || ''}</div>
+                                                            <div className="text-[9px] text-gray-500 dark:text-[#849491] uppercase">{TIPO_PLANTILLAS.find(t=>t.id===pt.tipoPlantilla)?.label || ''}</div>
                                                         </div>
-                                                        <div className="flex gap-1 border-l border-white/10 pl-2">
+                                                        <div className="flex gap-1 border-l border-gray-200 dark:border-white/10 pl-2">
                                                             <button onClick={() => aplicarPlantillaGuardada(pt)} className="p-1 text-[#4afdef] hover:bg-[#4afdef]/10 rounded" title="Aplicar"><span className="material-symbols-outlined text-[14px]">done_all</span></button>
-                                                            <button onClick={() => setPlantillaEditando({...pt})} className="p-1 text-[#bacac7] hover:bg-white/10 rounded"><span className="material-symbols-outlined text-[14px]">edit</span></button>
+                                                            <button onClick={() => setPlantillaEditando({...pt})} className="p-1 text-gray-600 dark:text-[#bacac7] hover:bg-white/10 rounded"><span className="material-symbols-outlined text-[14px]">edit</span></button>
                                                             <button onClick={() => eliminarPlantillaGuardada(pt.id)} className="p-1 text-rose-400 hover:bg-rose-500/10 rounded"><span className="material-symbols-outlined text-[14px]">delete</span></button>
                                                         </div>
                                                     </div>
@@ -577,8 +577,8 @@ const Imagenologia = () => {
                                             </div>
                                         ))}
                                     </div>
-                                    <div className="flex gap-2 pt-3 border-t border-white/5">
-                                        <input value={nombreNuevaPlantilla} onChange={e=>setNombreNuevaPlantilla(e.target.value)} placeholder="Nueva plantilla..." className="flex-1 bg-[#10131a] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-[#4afdef] placeholder:text-[#849491]"/>
+                                    <div className="flex gap-2 pt-3 border-t border-gray-200 dark:border-white/5">
+                                        <input value={nombreNuevaPlantilla} onChange={e=>setNombreNuevaPlantilla(e.target.value)} placeholder="Nueva plantilla..." className="flex-1 bg-gray-50 dark:bg-[#10131a] border border-gray-200 dark:border-white/10 rounded-lg px-3 py-1.5 text-xs text-gray-900 dark:text-white outline-none focus:border-[#4afdef] placeholder:text-gray-500 dark:text-[#849491]"/>
                                         <button onClick={guardarComoPlantilla} className="bg-[#4afdef]/20 text-[#4afdef] hover:bg-[#4afdef]/30 border border-[#4afdef]/30 rounded-lg px-2.5 flex items-center justify-center transition-colors"><span className="material-symbols-outlined text-sm">add</span></button>
                                     </div>
                                 </div>
@@ -597,34 +597,34 @@ const Imagenologia = () => {
 
                        {/* Status / Signature Box */}
                        {canEdit && (
-                           <div className={`flex items-center justify-between p-4 rounded-xl border transition-all ${estudioActual?.firmaDigital ? 'bg-[#4afdef]/5 border-[#4afdef]/30 shadow-[0_0_15px_rgba(74,253,239,0.05)]' : 'bg-[#191b23] border-white/5'}`}>
+                           <div className={`flex items-center justify-between p-4 rounded-xl border transition-all ${estudioActual?.firmaDigital ? 'bg-[#4afdef]/5 border-[#4afdef]/30 shadow-[0_0_15px_rgba(74,253,239,0.05)]' : 'bg-white dark:bg-[#191b23] border-gray-200 dark:border-white/5'}`}>
                                <div>
                                    <span className={`text-xs font-bold ${estudioActual?.firmaDigital ? 'text-[#4afdef]' : 'text-slate-300'}`}>Firma Digital</span>
-                                   <p className="text-[9px] font-label text-[#849491] uppercase mt-0.5 max-w-[180px] leading-tight truncate">
+                                   <p className="text-[9px] font-label text-gray-500 dark:text-[#849491] uppercase mt-0.5 max-w-[180px] leading-tight truncate">
                                        {estudioActual?.firmaDigital ? `Verificada por Dr(a). ${estudioActual?.firmadoPor?.nombre || sesion?.nombre}` : 'Requiere validación final'}
                                    </p>
                                </div>
                                <label className={`relative inline-flex items-center ${estudioActual?.firmaDigital ? 'cursor-default' : 'cursor-pointer'}`}>
                                     <input type="checkbox" className="sr-only peer" checked={Boolean(estudioActual?.firmaDigital)} disabled={firmandoResultado || estudioActual?.firmaDigital} onChange={e=>marcarFirmaResultado(e.target.checked)}/>
-                                    <div className="w-9 h-5 bg-[#32353c] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-[#10131a] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#bacac7] after:border-white/10 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#00ded1] peer-checked:after:bg-[#10131a]"></div>
+                                    <div className="w-9 h-5 bg-gray-100 dark:bg-[#32353c] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-[#10131a] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#bacac7] after:border-gray-200 dark:border-white/10 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#00ded1] peer-checked:after:bg-gray-50 dark:bg-[#10131a]"></div>
                                 </label>
                            </div>
                        )}
 
                        <div className="space-y-4">
                            <div className="space-y-1.5">
-                               <label className="text-[9px] font-label text-[#849491] uppercase tracking-widest ml-1 font-bold">Tipo de Estudio</label>
+                               <label className="text-[9px] font-label text-gray-500 dark:text-[#849491] uppercase tracking-widest ml-1 font-bold">Tipo de Estudio</label>
                                <select value={tipoPlantilla} onChange={e => setTipoPlantilla(e.target.value)} disabled={!canEdit}
-                                       className="w-full bg-[#32353c] border border-transparent rounded-lg text-[13px] font-label py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-[#4afdef]/50 text-white appearance-none disabled:opacity-70 disabled:bg-[#191b23]">
+                                       className="w-full bg-gray-100 dark:bg-[#32353c] border border-transparent rounded-lg text-[13px] font-label py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-[#4afdef]/50 text-gray-900 dark:text-white appearance-none disabled:opacity-70 disabled:bg-white dark:bg-[#191b23]">
                                    {TIPO_PLANTILLAS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
                                </select>
                            </div>
                            
                            {tipoActual.campos.includes('birads') && (
                                <div className="space-y-1.5">
-                                   <label className="text-[9px] font-label text-[#849491] uppercase tracking-widest ml-1 font-bold">Categoría BIRADS</label>
+                                   <label className="text-[9px] font-label text-gray-500 dark:text-[#849491] uppercase tracking-widest ml-1 font-bold">Categoría BIRADS</label>
                                    <select value={reporte['birads'] || ''} onChange={e => canEdit && setReporte(p => ({...p, birads: e.target.value}))} disabled={!canEdit}
-                                           className="w-full bg-[#32353c] border border-transparent rounded-lg text-[13px] font-label py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-[#4afdef]/50 text-white appearance-none disabled:opacity-70 disabled:bg-[#191b23]">
+                                           className="w-full bg-gray-100 dark:bg-[#32353c] border border-transparent rounded-lg text-[13px] font-label py-2.5 px-3 focus:outline-none focus:ring-1 focus:ring-[#4afdef]/50 text-gray-900 dark:text-white appearance-none disabled:opacity-70 disabled:bg-white dark:bg-[#191b23]">
                                        <option value="">Seleccionar BIRADS</option>
                                        {['0', '1', '2', '3', '4A', '4B', '4C', '5', '6'].map(b => <option key={b} value={b}>BIRADS {b}</option>)}
                                    </select>
@@ -636,13 +636,13 @@ const Imagenologia = () => {
                        <div className="space-y-5">
                             {tipoActual.campos.filter(c => c !== 'birads').map(campo => (
                                 <div key={campo} className="group flex flex-col">
-                                    <label className="text-[9px] font-label text-[#849491] uppercase tracking-widest ml-1 mb-1.5 font-bold transition-colors group-focus-within:text-[#4afdef]">{CAMPO_LABELS[campo]}</label>
+                                    <label className="text-[9px] font-label text-gray-500 dark:text-[#849491] uppercase tracking-widest ml-1 mb-1.5 font-bold transition-colors group-focus-within:text-[#4afdef]">{CAMPO_LABELS[campo]}</label>
                                     <textarea 
                                         value={reporte[campo] || ''}
                                         onChange={e => canEdit && setReporte(p => ({...p, [campo]: e.target.value}))}
                                         readOnly={!canEdit}
                                         placeholder={canEdit ? 'Esperando entrada...' : 'Sin información.'}
-                                        className={`w-full bg-[#191b23] border border-[#32353c] border-b-2 group-focus-within:border-b-[#4afdef] rounded-lg text-[13px] font-body text-[#e0e2ec] p-3 focus:outline-none transition-all resize-none custom-scrollbar placeholder:text-[#849491]/40 ${!canEdit ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                        className={`w-full bg-white dark:bg-[#191b23] border border-gray-300 dark:border-[#32353c] border-b-2 group-focus-within:border-b-[#4afdef] rounded-lg text-[13px] font-body text-gray-900 dark:text-[#e0e2ec] p-3 focus:outline-none transition-all resize-none custom-scrollbar placeholder:text-gray-500 dark:text-[#849491]/40 ${!canEdit ? 'opacity-70 cursor-not-allowed' : ''}`}
                                         style={{ minHeight: campo === 'hallazgos' ? '140px' : '80px' }}
                                     />
                                 </div>
@@ -651,9 +651,9 @@ const Imagenologia = () => {
                   </div>
 
                   {canEdit && (
-                      <footer className="p-6 pt-5 border-t border-white/5 bg-[#1a1d24]/90 space-y-3 shrink-0">
+                      <footer className="p-6 pt-5 border-t border-gray-200 dark:border-white/5 bg-[#1a1d24]/90 space-y-3 shrink-0">
                           <button onClick={() => guardarReporte()} disabled={guardando} 
-                                  className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl font-headline text-[13px] font-bold text-[#bacac7] hover:text-white transition-all flex justify-center items-center gap-2">
+                                  className="w-full py-3 bg-white/5 hover:bg-white/10 border border-gray-200 dark:border-white/5 rounded-xl font-headline text-[13px] font-bold text-gray-600 dark:text-[#bacac7] hover:text-gray-900 dark:text-white transition-all flex justify-center items-center gap-2">
                                {guardando ? <span className="material-symbols-outlined animate-spin text-[16px]">autorenew</span> : null}
                                {guardando ? 'Guardando...' : 'Guardar Borrador'}
                           </button>

@@ -292,7 +292,7 @@ const Facturas = () => {
         <div className="bg-[#1a2235] rounded-2xl p-8 border border-slate-800/50 shadow-xl flex justify-between" data-purpose="stat-card">
           <div>
             <span className="text-slate-400 text-xs font-bold uppercase tracking-widest block mb-2">Caja de Hoy</span>
-            <div className="text-4xl font-bold text-white mb-4">RD$ {calcularTotalHoy().toLocaleString()}</div>
+            <div className="text-4xl font-bold text-gray-900 dark:text-white mb-4">RD$ {calcularTotalHoy().toLocaleString()}</div>
             <span style={{ cursor: 'pointer' }} onClick={turnoActivo ? cerrarTurnoManual : abrirTurnoManual} className={`${turnoActivo ? 'bg-emerald-500/20 text-emerald-500' : 'bg-red-500/20 text-red-500'} text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest`}>
               {turnoActivo ? 'ACTIVA (Cerrar)' : 'CERRADA (Abrir)'}
             </span>
@@ -306,7 +306,7 @@ const Facturas = () => {
         <div className="bg-[#1a2235] rounded-2xl p-8 border border-slate-800/50 shadow-xl flex justify-between" data-purpose="stat-card">
           <div>
             <span className="text-slate-400 text-xs font-bold uppercase tracking-widest block mb-2">Operaciones del Mes</span>
-            <div className="text-4xl font-bold text-white mb-4">RD$ {facturas.reduce((sum, f) => sum + (f.total || 0), 0).toLocaleString()}</div>
+            <div className="text-4xl font-bold text-gray-900 dark:text-white mb-4">RD$ {facturas.reduce((sum, f) => sum + (f.total || 0), 0).toLocaleString()}</div>
           </div>
           <div className="w-12 h-12 rounded-xl bg-slate-800/60 flex items-center justify-center border border-slate-700">
             <FaChartLine className="text-emerald-500 w-6 h-6" />
@@ -317,10 +317,10 @@ const Facturas = () => {
       {/* ── Tabla de Historial ── */}
       <section className="bg-[#1a2235] rounded-2xl border border-slate-800/50 shadow-2xl overflow-hidden">
         <div className="px-8 py-6 border-b border-slate-800/50 flex items-center justify-between">
-          <h4 className="text-lg font-bold text-white">Registros Emitidos</h4>
+          <h4 className="text-lg font-bold text-gray-900 dark:text-white">Registros Emitidos</h4>
           <div className="flex items-center">
             <label className="text-xs text-slate-400 mr-2">Estados:</label>
-            <select value={filtroEstado} onChange={e => setFiltroEstado(e.target.value)} className="bg-slate-900 border border-slate-700 rounded-md text-sm text-white focus:ring-[#00e1ff] px-2 py-1 outline-none">
+            <select value={filtroEstado} onChange={e => setFiltroEstado(e.target.value)} className="bg-slate-900 border border-slate-700 rounded-md text-sm text-gray-900 dark:text-white focus:ring-[#00e1ff] px-2 py-1 outline-none">
               <option value="">Todos</option>
               <option value="pagada">Pagadas</option>
               <option value="emitida">Pendientes</option>
@@ -352,10 +352,10 @@ const Facturas = () => {
                   const tienePendiente = pendiente > 0 && f.estado !== 'anulada';
                   return (
                     <tr key={f._id} className="hover:bg-white/5 transition-colors">
-                      <td className="px-8 py-4 font-mono text-xs text-white">#{f.numero || f.numero_factura}</td>
+                      <td className="px-8 py-4 font-mono text-xs text-gray-900 dark:text-white">#{f.numero || f.numero_factura}</td>
                       <td className="px-4 py-4 text-xs text-slate-300">{new Date(f.fecha_factura || f.createdAt).toLocaleDateString('es-DO')}</td>
                       <td className="px-4 py-4 text-xs font-medium text-slate-200">{f.datosCliente?.nombre || f.paciente?.nombre || 'Paciente'}</td>
-                      <td className="px-4 py-4 text-xs font-bold text-white text-right">${(f.total || 0).toLocaleString()}</td>
+                      <td className="px-4 py-4 text-xs font-bold text-gray-900 dark:text-white text-right">${(f.total || 0).toLocaleString()}</td>
                       <td className="px-4 py-4 text-xs text-emerald-400 font-semibold text-right">${(f.montoPagado || 0).toLocaleString()}</td>
                       <td className={`px-4 py-4 text-xs ${tienePendiente ? 'text-red-400 font-bold' : 'text-slate-500'} text-right`}>
                         {tienePendiente ? `$${pendiente.toLocaleString()}` : '$0'}

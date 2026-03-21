@@ -58,7 +58,7 @@ function LogoUploader({ label, descripcion, fieldKey, value, onChange }) {
   return (
     <div className="mb-6">
       <label className="block text-[#e1e2eb] font-semibold mb-1 text-sm">{label}</label>
-      <p className="text-[#bacac7] text-xs mb-3">{descripcion}</p>
+      <p className="text-gray-600 dark:text-[#bacac7] text-xs mb-3">{descripcion}</p>
 
       {/* Área de drop */}
       <div
@@ -66,7 +66,7 @@ function LogoUploader({ label, descripcion, fieldKey, value, onChange }) {
         onDragLeave={() => setDrag(false)}
         onDrop={handleDrop}
         onClick={() => inputRef.current?.click()}
-        className={`border-2 border-dashed ${drag ? 'border-[#4afdef] bg-[#4afdef]/5' : 'border-white/10 bg-[#1d2026]/50'} rounded-xl p-5 text-center cursor-pointer hover:bg-white/5 transition-all flex flex-col items-center justify-center min-h-[120px] gap-4`}
+        className={`border-2 border-dashed ${drag ? 'border-[#4afdef] bg-[#4afdef]/5' : 'border-gray-200 dark:border-white/10 bg-[#1d2026]/50'} rounded-xl p-5 text-center cursor-pointer hover:bg-white/5 transition-all flex flex-col items-center justify-center min-h-[120px] gap-4`}
       >
         {preview ? (
           <div className="flex flex-col items-center gap-3">
@@ -79,7 +79,7 @@ function LogoUploader({ label, descripcion, fieldKey, value, onChange }) {
             </div>
           </div>
         ) : (
-          <div className="text-[#bacac7]">
+          <div className="text-gray-600 dark:text-[#bacac7]">
             <FaUpload className="text-3xl mb-2 mx-auto opacity-50" />
             <div className="text-sm font-semibold text-[#e1e2eb]">Click or drag an image here</div>
             <div className="text-xs opacity-70 mt-1">PNG, JPG, SVG, WebP — Max 5MB</div>
@@ -94,7 +94,7 @@ function LogoUploader({ label, descripcion, fieldKey, value, onChange }) {
         placeholder="Or paste image URL: https://..."
         value={preview.startsWith('data:') ? '' : preview}
         onChange={e => { setPreview(e.target.value); onChange(fieldKey, e.target.value); }}
-        className="w-full mt-3 px-4 py-2.5 rounded-lg border-none bg-[#32353c] text-sm text-[#e1e2eb] focus:ring-2 focus:ring-[#4afdef] transition-all placeholder:text-[#bacac7]/50"
+        className="w-full mt-3 px-4 py-2.5 rounded-lg border-none bg-gray-100 dark:bg-[#32353c] text-sm text-[#e1e2eb] focus:ring-2 focus:ring-[#4afdef] transition-all placeholder:text-gray-600 dark:text-[#bacac7]/50"
       />
     </div>
   );
@@ -103,8 +103,8 @@ function LogoUploader({ label, descripcion, fieldKey, value, onChange }) {
 /* ── Sección contenedor ─────────────────────────────────────── */
 function Seccion({ titulo, icono, children }) {
   return (
-    <div className="bg-[rgba(29,32,38,0.7)] backdrop-blur-[24px] rounded-xl p-8 mb-6 border border-white/5 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)]">
-      <h3 className="mb-6 text-[#e1e2eb] text-lg font-bold flex items-center gap-3 font-headline border-b border-white/5 pb-4">
+    <div className="bg-[rgba(29,32,38,0.7)] backdrop-blur-[24px] rounded-xl p-8 mb-6 border border-gray-200 dark:border-white/5 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)]">
+      <h3 className="mb-6 text-[#e1e2eb] text-lg font-bold flex items-center gap-3 font-headline border-b border-gray-200 dark:border-white/5 pb-4">
         <span className="text-[#00e0d3] text-xl">{icono}</span> {titulo}
       </h3>
       {children}
@@ -116,11 +116,11 @@ function Seccion({ titulo, icono, children }) {
 function Campo({ label, fieldKey, value, onChange, type = 'text', placeholder = '' }) {
   return (
     <div className="mb-4">
-      <label className="block text-[#bacac7] font-semibold mb-2 text-xs uppercase tracking-wider">{label}</label>
+      <label className="block text-gray-600 dark:text-[#bacac7] font-semibold mb-2 text-xs uppercase tracking-wider">{label}</label>
       <input
         type={type} value={value || ''} placeholder={placeholder}
         onChange={e => onChange(fieldKey, e.target.value)}
-        className="w-full px-4 py-3 rounded-lg border-none bg-[#32353c] text-sm text-[#e1e2eb] focus:ring-2 focus:ring-[#4afdef]/50 outline-none transition-colors placeholder:text-[#bacac7]/30"
+        className="w-full px-4 py-3 rounded-lg border-none bg-gray-100 dark:bg-[#32353c] text-sm text-[#e1e2eb] focus:ring-2 focus:ring-[#4afdef]/50 outline-none transition-colors placeholder:text-gray-600 dark:text-[#bacac7]/30"
       />
     </div>
   );
@@ -188,7 +188,7 @@ const AdminPanel = () => {
   if (loading) return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
       <FaSpinner className="animate-spin text-4xl text-[#00e0d3]" />
-      <p className="text-[#bacac7] font-medium tracking-wide">Initializing Core Engine...</p>
+      <p className="text-gray-600 dark:text-[#bacac7] font-medium tracking-wide">Initializing Core Engine...</p>
     </div>
   );
 
@@ -208,18 +208,18 @@ const AdminPanel = () => {
       {/* Header Section */}
       <div className="mb-10 flex items-end justify-between">
         <div>
-          <span className="text-[#bacac7] font-label text-[10px] tracking-[0.3em] uppercase block mb-1">System Environment</span>
+          <span className="text-gray-600 dark:text-[#bacac7] font-label text-[10px] tracking-[0.3em] uppercase block mb-1">System Environment</span>
           <h1 className="font-headline font-bold text-4xl text-[#e1e2eb] glow-text">System Administration</h1>
         </div>
       </div>
 
       {/* Tabs Menu */}
-      <div className="flex gap-3 mb-8 border-b border-white/5">
+      <div className="flex gap-3 mb-8 border-b border-gray-200 dark:border-white/5">
         <button
           onClick={() => setActiveTab('general')}
           className={`px-6 py-3 font-bold flex items-center gap-2 transition-all border-b-2 ${activeTab === 'general'
               ? 'border-[#00e0d3] text-[#00e0d3] bg-[#00e0d3]/5'
-              : 'border-transparent text-[#bacac7] hover:text-[#e1e2eb] hover:bg-white/5'
+              : 'border-transparent text-gray-600 dark:text-[#bacac7] hover:text-[#e1e2eb] hover:bg-white/5'
             }`}>
           <FaCogs /> Core Configuration
         </button>
@@ -227,7 +227,7 @@ const AdminPanel = () => {
           onClick={() => setActiveTab('sucursales')}
           className={`px-6 py-3 font-bold flex items-center gap-2 transition-all border-b-2 ${activeTab === 'sucursales'
                ? 'border-[#00e0d3] text-[#00e0d3] bg-[#00e0d3]/5'
-               : 'border-transparent text-[#bacac7] hover:text-[#e1e2eb] hover:bg-white/5'
+               : 'border-transparent text-gray-600 dark:text-[#bacac7] hover:text-[#e1e2eb] hover:bg-white/5'
             }`}>
           <FaBuilding /> Branches & Nodes
         </button>
@@ -294,18 +294,18 @@ const AdminPanel = () => {
                 { label: 'Secondary Tone', key: 'color_secundario', defecto: '#104f4a', desc: 'Background tints, borders' },
                 { label: 'Luminous Highlight', key: 'color_acento', defecto: '#00e0d3', desc: 'Avatars, glows, charts' },
               ].map(({ label, key, defecto, desc }) => (
-                <div key={key} className="bg-[#191c22] border border-white/5 rounded-xl p-5">
+                <div key={key} className="bg-[#191c22] border border-gray-200 dark:border-white/5 rounded-xl p-5">
                   <label className="block font-bold text-[#e1e2eb] text-sm mb-1">{label}</label>
-                  <p className="text-[#bacac7] text-xs mb-3">{desc}</p>
+                  <p className="text-gray-600 dark:text-[#bacac7] text-xs mb-3">{desc}</p>
                   <div className="flex gap-3 items-center">
-                    <div className="relative w-10 h-10 rounded-lg overflow-hidden border border-white/10 shadow-lg">
+                    <div className="relative w-10 h-10 rounded-lg overflow-hidden border border-gray-200 dark:border-white/10 shadow-lg">
                       <input type="color" value={config[key] || defecto}
                         onChange={e => set(key, e.target.value)}
                         className="absolute inset-[-10px] w-16 h-16 cursor-pointer" />
                     </div>
                     <input type="text" value={config[key] || defecto}
                       onChange={e => set(key, e.target.value)}
-                      className="flex-1 px-3 py-2 rounded-lg border-none bg-[#32353c] text-sm font-mono text-[#00e0d3] focus:ring-1 focus:ring-[#4afdef] outline-none" />
+                      className="flex-1 px-3 py-2 rounded-lg border-none bg-gray-100 dark:bg-[#32353c] text-sm font-mono text-[#00e0d3] focus:ring-1 focus:ring-[#4afdef] outline-none" />
                   </div>
                 </div>
               ))}
@@ -314,15 +314,15 @@ const AdminPanel = () => {
 
           {/* ── Sucursal de Rayos X ── */}
           <Seccion titulo="Imaging Processing Node (X-Ray)" icono={<FaSpinner className="rotate-45" />}>
-            <p className="text-[#bacac7] text-xs mb-4">
+            <p className="text-gray-600 dark:text-[#bacac7] text-xs mb-4">
               Patients registering for Imaging/X-Ray are automatically routed to this processing node. All distributed branches can fetch the final rendering.
             </p>
             <div className="mb-2">
-              <label className="block text-[#bacac7] font-semibold mb-2 text-xs uppercase tracking-wider">Designated X-Ray Node</label>
+              <label className="block text-gray-600 dark:text-[#bacac7] font-semibold mb-2 text-xs uppercase tracking-wider">Designated X-Ray Node</label>
               <select
                 value={config.sucursal_rayos_x_id || ''}
                 onChange={e => set('sucursal_rayos_x_id', e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border-none bg-[#32353c] text-sm text-[#e1e2eb] focus:ring-2 focus:ring-[#4afdef] outline-none transition-colors"
+                className="w-full px-4 py-3 rounded-lg border-none bg-gray-100 dark:bg-[#32353c] text-sm text-[#e1e2eb] focus:ring-2 focus:ring-[#4afdef] outline-none transition-colors"
               >
                 <option value="">-- Dynamic Routing (Current Branch) --</option>
                 {sucursales.map(s => (
@@ -351,8 +351,8 @@ const AdminPanel = () => {
 
           {/* Preview de logos guardados */}
           {(config.logo_login || config.logo_factura || config.logo_resultados) && (
-            <div className="mt-8 bg-[#191c22] rounded-xl p-6 border border-white/5">
-              <h4 className="text-[#bacac7] text-xs font-bold uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+            <div className="mt-8 bg-[#191c22] rounded-xl p-6 border border-gray-200 dark:border-white/5">
+              <h4 className="text-gray-600 dark:text-[#bacac7] text-xs font-bold uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
                 <FaEye className="text-[#00e0d3]" /> Encoded Assets Preview
               </h4>
               <div className="flex gap-6 flex-wrap items-end">
@@ -363,10 +363,10 @@ const AdminPanel = () => {
                   { src: config.logo_sidebar, label: 'Nav Rail' },
                 ].filter(l => l.src).map(({ src, label }) => (
                   <div key={label} className="text-center group">
-                    <div className="bg-[#1d2026] border border-white/5 rounded-lg p-3 mb-2 shadow-lg group-hover:border-[#4afdef]/30 transition-colors">
+                    <div className="bg-[#1d2026] border border-gray-200 dark:border-white/5 rounded-lg p-3 mb-2 shadow-lg group-hover:border-[#4afdef]/30 transition-colors">
                       <img src={src} alt={label} className="max-h-12 max-w-[120px] object-contain" />
                     </div>
-                    <div className="text-[10px] text-[#bacac7] uppercase font-bold tracking-wider">{label}</div>
+                    <div className="text-[10px] text-gray-600 dark:text-[#bacac7] uppercase font-bold tracking-wider">{label}</div>
                   </div>
                 ))}
               </div>
@@ -378,17 +378,17 @@ const AdminPanel = () => {
       )}
       
       {/* Footer Area */}
-      <footer className="mt-16 flex items-center justify-between border-t border-white/5 pt-6">
+      <footer className="mt-16 flex items-center justify-between border-t border-gray-200 dark:border-white/5 pt-6">
           <div className="flex items-center gap-3">
               <div className="relative flex items-center justify-center">
                   <div className="w-2 h-2 rounded-full bg-[#00e0d3] status-pulse"></div>
               </div>
               <div className="flex items-baseline gap-2">
                   <span className="text-[#00e0d3] font-headline text-xs font-bold tracking-widest uppercase">Core Engine Online</span>
-                  <span className="text-[#bacac7]/40 text-[10px] font-medium">V4.8.2-STABLE</span>
+                  <span className="text-gray-600 dark:text-[#bacac7]/40 text-[10px] font-medium">V4.8.2-STABLE</span>
               </div>
           </div>
-          <div className="text-[10px] text-[#bacac7]/40 uppercase tracking-[0.2em] font-medium">
+          <div className="text-[10px] text-gray-600 dark:text-[#bacac7]/40 uppercase tracking-[0.2em] font-medium">
               © 2026 Clinical Curator Systems
           </div>
       </footer>

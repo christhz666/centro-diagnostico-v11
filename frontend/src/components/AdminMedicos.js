@@ -186,7 +186,7 @@ function HorarioEditor({ medico, onSave }) {
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white">Horario de {medico.nombre} {medico.apellido}</h2>
                     <p className="text-sm text-gray-500 dark:text-slate-400">Configura los días, horas y áreas de atención.</p>
                 </div>
-                <button onClick={() => onSave(horarios)} className="bg-primary hover:bg-primary-dark dark:bg-[#3df5e7] dark:hover:bg-[#3df5e7]/80 dark:text-[#0b0e15] text-white px-4 py-2 rounded-lg font-bold flex items-center transition-colors">
+                <button onClick={() => onSave(horarios)} className="bg-primary hover:bg-primary-dark dark:bg-[#3df5e7] dark:hover:bg-[#3df5e7]/80 dark:text-[#0b0e15] text-gray-900 dark:text-white px-4 py-2 rounded-lg font-bold flex items-center transition-colors">
                     <FaSave className="mr-2" /> Guardar Cambios
                 </button>
             </div>

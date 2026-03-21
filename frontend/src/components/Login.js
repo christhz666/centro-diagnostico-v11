@@ -119,7 +119,7 @@ const Login = ({ onLogin, empresaConfig = {}, authNotice = '' }) => {
                         )}
                     </div>
                     <h1 className="font-headline text-3xl font-extrabold tracking-tight text-[#e1e2eb] mb-2">{empresaNombre}</h1>
-                    <p className="text-[#bacac7] font-label text-sm tracking-wide uppercase">Diagnostic Intelligence Portal</p>
+                    <p className="text-gray-600 dark:text-[#bacac7] font-label text-sm tracking-wide uppercase">Diagnostic Intelligence Portal</p>
                 </div>
 
                 {/* Login Card */}
@@ -129,7 +129,7 @@ const Login = ({ onLogin, empresaConfig = {}, authNotice = '' }) => {
                 >
                     <div className="mb-2">
                         <h2 className="font-headline text-xl font-bold text-[#e1e2eb]">Acceso Seguro</h2>
-                        <p className="text-[#bacac7] text-sm mt-1">Solo personal médico autorizado.</p>
+                        <p className="text-gray-600 dark:text-[#bacac7] text-sm mt-1">Solo personal médico autorizado.</p>
                     </div>
 
                     {authNotice && !error && (
@@ -149,13 +149,13 @@ const Login = ({ onLogin, empresaConfig = {}, authNotice = '' }) => {
                     <form className="space-y-6" onSubmit={handleSubmit}>
                         {/* Input Group: Email */}
                         <div className="space-y-2">
-                            <label className="font-label text-xs font-semibold text-[#bacac7] uppercase tracking-wider" htmlFor="email">Identificador Clínico</label>
+                            <label className="font-label text-xs font-semibold text-gray-600 dark:text-[#bacac7] uppercase tracking-wider" htmlFor="email">Identificador Clínico</label>
                             <div className="relative group">
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#bacac7] group-focus-within:text-[#4afdef] transition-colors">
+                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-600 dark:text-[#bacac7] group-focus-within:text-[#4afdef] transition-colors">
                                     <span className="material-icons-round text-lg">alternate_email</span>
                                 </div>
                                 <input 
-                                    className="w-full h-12 bg-[#32353c] border-none rounded-lg pl-12 pr-4 text-[#e1e2eb] placeholder-[#3b4a48] focus:ring-2 focus:ring-[#4afdef]/50 focus:bg-[#272a31] transition-all" 
+                                    className="w-full h-12 bg-gray-100 dark:bg-[#32353c] border-none rounded-lg pl-12 pr-4 text-[#e1e2eb] placeholder-[#3b4a48] focus:ring-2 focus:ring-[#4afdef]/50 focus:bg-gray-50 dark:bg-[#272a31] transition-all" 
                                     id="email" 
                                     name="email" 
                                     type="text"
@@ -170,14 +170,14 @@ const Login = ({ onLogin, empresaConfig = {}, authNotice = '' }) => {
                         {/* Input Group: Password */}
                         <div className="space-y-2">
                             <div className="flex justify-between items-center">
-                                <label className="font-label text-xs font-semibold text-[#bacac7] uppercase tracking-wider" htmlFor="password">Token de Acceso</label>
+                                <label className="font-label text-xs font-semibold text-gray-600 dark:text-[#bacac7] uppercase tracking-wider" htmlFor="password">Token de Acceso</label>
                             </div>
                             <div className="relative group">
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#bacac7] group-focus-within:text-[#4afdef] transition-colors">
+                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-600 dark:text-[#bacac7] group-focus-within:text-[#4afdef] transition-colors">
                                     <span className="material-icons-round text-lg">lock</span>
                                 </div>
                                 <input 
-                                    className="w-full h-12 bg-[#32353c] border-none rounded-lg pl-12 pr-4 text-[#e1e2eb] placeholder-[#3b4a48] focus:ring-2 focus:ring-[#4afdef]/50 focus:bg-[#272a31] transition-all" 
+                                    className="w-full h-12 bg-gray-100 dark:bg-[#32353c] border-none rounded-lg pl-12 pr-4 text-[#e1e2eb] placeholder-[#3b4a48] focus:ring-2 focus:ring-[#4afdef]/50 focus:bg-gray-50 dark:bg-[#272a31] transition-all" 
                                     id="password" 
                                     name="password" 
                                     type={showPassword ? "text" : "password"}
@@ -189,7 +189,7 @@ const Login = ({ onLogin, empresaConfig = {}, authNotice = '' }) => {
                                 <button 
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-[#bacac7] hover:text-[#e1e2eb] transition-colors"
+                                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-600 dark:text-[#bacac7] hover:text-[#e1e2eb] transition-colors"
                                     tabIndex="-1"
                                 >
                                     <span className="material-icons-round text-lg">{showPassword ? 'visibility_off' : 'visibility'}</span>
@@ -210,7 +210,7 @@ const Login = ({ onLogin, empresaConfig = {}, authNotice = '' }) => {
                                 />
                             </div>
                             <div className="ml-3 text-sm">
-                                <label className="text-[#bacac7] cursor-pointer select-none" htmlFor="remember">Mantener sesión cifrada prolongada</label>
+                                <label className="text-gray-600 dark:text-[#bacac7] cursor-pointer select-none" htmlFor="remember">Mantener sesión cifrada prolongada</label>
                             </div>
                         </div>
 
@@ -246,12 +246,12 @@ const Login = ({ onLogin, empresaConfig = {}, authNotice = '' }) => {
                 <div className="mt-8 flex items-center justify-center gap-6">
                     <div className="flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-[#4afdef] animate-pulse shadow-[0_0_8px_#00e0d3]"></span>
-                        <span className="text-[10px] font-label font-bold uppercase tracking-widest text-[#bacac7]">Core Engine Online</span>
+                        <span className="text-[10px] font-label font-bold uppercase tracking-widest text-gray-600 dark:text-[#bacac7]">Core Engine Online</span>
                     </div>
                     <div className="w-[1px] h-3 bg-[#3b4a48]/30"></div>
                     <div className="flex items-center gap-2">
-                        <span className="material-icons-round text-sm text-[#bacac7]">lock</span>
-                        <span className="text-[10px] font-label font-bold uppercase tracking-widest text-[#bacac7]">256-bit AES</span>
+                        <span className="material-icons-round text-sm text-gray-600 dark:text-[#bacac7]">lock</span>
+                        <span className="text-[10px] font-label font-bold uppercase tracking-widest text-gray-600 dark:text-[#bacac7]">256-bit AES</span>
                     </div>
                 </div>
             </main>

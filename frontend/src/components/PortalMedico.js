@@ -321,7 +321,7 @@ const PortalMedico = () => {
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 w-full h-full pb-8">
       {/* Header moved inside component layout */}
       <div className="flex justify-between items-center mb-6">
-          <h2 className="text-3xl font-headline font-bold text-[#e0e2ec] tracking-tighter flex items-center gap-3">
+          <h2 className="text-3xl font-headline font-bold text-gray-900 dark:text-[#e0e2ec] tracking-tighter flex items-center gap-3">
               <span className="material-symbols-outlined text-[#4afdef] text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>medical_information</span>
               Portal Médico
           </h2>
@@ -329,12 +329,12 @@ const PortalMedico = () => {
 
       <div className="flex flex-col md:flex-row gap-6 h-[calc(100vh-12rem)] min-h-[600px]">
         {/* Left Column: Patient Search & List */}
-        <section className={`transition-all duration-300 flex-shrink-0 flex flex-col border border-white/5 bg-[#191b23] rounded-2xl overflow-hidden shadow-2xl ${pacienteSeleccionado ? 'w-[350px] hidden md:flex' : 'w-full flex'}`}>
-          <div className="p-6 border-b border-white/5 bg-[#1d2027]">
+        <section className={`transition-all duration-300 flex-shrink-0 flex flex-col border border-gray-200 dark:border-white/5 bg-white dark:bg-[#191b23] rounded-2xl overflow-hidden shadow-2xl ${pacienteSeleccionado ? 'w-[350px] hidden md:flex' : 'w-full flex'}`}>
+          <div className="p-6 border-b border-gray-200 dark:border-white/5 bg-white dark:bg-[#1d2027]">
             <div className="relative group">
               <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-[#4afdef] transition-colors">search</span>
               <input 
-                className="w-full bg-[#10131a] border border-white/5 rounded-xl pl-12 pr-4 py-3 text-sm font-label focus:ring-1 focus:ring-[#4afdef]/50 focus:border-[#4afdef]/50 text-[#e0e2ec] transition-all placeholder:text-slate-600 outline-none" 
+                className="w-full bg-gray-50 dark:bg-[#10131a] border border-gray-200 dark:border-white/5 rounded-xl pl-12 pr-4 py-3 text-sm font-label focus:ring-1 focus:ring-[#4afdef]/50 focus:border-[#4afdef]/50 text-gray-900 dark:text-[#e0e2ec] transition-all placeholder:text-slate-600 outline-none" 
                 placeholder="Buscar paciente por nombre o ID..." 
                 type="text"
                 value={busqueda}
@@ -357,10 +357,10 @@ const PortalMedico = () => {
                         <div 
                            key={p._id || p.id} 
                            onClick={() => cargarHistorial(p)}
-                           className={`p-4 rounded-xl cursor-pointer transition-all border ${idSelected ? 'bg-[#32353c] border-[#4afdef]/30 shadow-[0_0_15px_rgba(74,253,239,0.05)]' : 'bg-transparent border-transparent hover:bg-white/5 hover:border-white/10'}`}
+                           className={`p-4 rounded-xl cursor-pointer transition-all border ${idSelected ? 'bg-gray-100 dark:bg-[#32353c] border-[#4afdef]/30 shadow-[0_0_15px_rgba(74,253,239,0.05)]' : 'bg-transparent border-transparent hover:bg-white/5 hover:border-gray-200 dark:border-white/10'}`}
                         >
                             <div className="flex justify-between items-start mb-1">
-                                <h4 className={`font-headline font-bold truncate pr-3 ${idSelected ? 'text-white' : 'text-slate-300'}`}>{p.nombre} {p.apellido}</h4>
+                                <h4 className={`font-headline font-bold truncate pr-3 ${idSelected ? 'text-gray-900 dark:text-white' : 'text-slate-300'}`}>{p.nombre} {p.apellido}</h4>
                                 {idSelected && <span className="text-[9px] font-label px-2 py-0.5 rounded bg-[#4afdef]/10 text-[#4afdef] uppercase tracking-wider flex-shrink-0 border border-[#4afdef]/20">ACTIVO</span>}
                             </div>
                             <p className="text-xs text-slate-500 font-label">ID: {p.cedula || '--'}</p>
@@ -379,18 +379,18 @@ const PortalMedico = () => {
           <section className="flex-1 flex flex-col overflow-y-auto custom-scrollbar space-y-6">
             
             {/* Patient Demographic Bento Box */}
-            <div className="bg-[#1d2026]/70 backdrop-blur-xl rounded-2xl p-8 border border-white/5 grid grid-cols-2 lg:grid-cols-4 gap-6 shadow-xl relative overflow-hidden">
+            <div className="bg-[#1d2026]/70 backdrop-blur-xl rounded-2xl p-8 border border-gray-200 dark:border-white/5 grid grid-cols-2 lg:grid-cols-4 gap-6 shadow-xl relative overflow-hidden">
                 <div className="space-y-1 relative z-10">
                     <span className="text-[10px] uppercase font-label tracking-widest text-slate-500">Paciente</span>
-                    <p className="text-xl font-headline font-bold text-[#e0e2ec] truncate">{pacienteSeleccionado.nombre} {pacienteSeleccionado.apellido}</p>
+                    <p className="text-xl font-headline font-bold text-gray-900 dark:text-[#e0e2ec] truncate">{pacienteSeleccionado.nombre} {pacienteSeleccionado.apellido}</p>
                 </div>
                 <div className="space-y-1 relative z-10">
                     <span className="text-[10px] uppercase font-label tracking-widest text-slate-500">Información</span>
-                    <p className="text-[#e0e2ec] font-label text-sm">{calcularEdad(pacienteSeleccionado.fechaNacimiento)} / {pacienteSeleccionado.sexo === 'M' ? 'Masculino' : 'Femenino'}</p>
+                    <p className="text-gray-900 dark:text-[#e0e2ec] font-label text-sm">{calcularEdad(pacienteSeleccionado.fechaNacimiento)} / {pacienteSeleccionado.sexo === 'M' ? 'Masculino' : 'Femenino'}</p>
                 </div>
                 <div className="space-y-1 relative z-10">
                     <span className="text-[10px] uppercase font-label tracking-widest text-slate-500">Contacto</span>
-                    <p className="text-[#e0e2ec] font-label text-sm">{pacienteSeleccionado.telefono || 'Sin registrar'}</p>
+                    <p className="text-gray-900 dark:text-[#e0e2ec] font-label text-sm">{pacienteSeleccionado.telefono || 'Sin registrar'}</p>
                 </div>
                 <div className="space-y-1 relative z-10">
                     <span className="text-[10px] uppercase font-label tracking-widest text-slate-500">Seguro Médico</span>
@@ -404,7 +404,7 @@ const PortalMedico = () => {
             {/* History List or Result View */}
             {!resultadoDetalle ? (
                  <div className="space-y-4">
-                     <h3 className="font-headline font-bold text-lg flex items-center gap-2 text-white">
+                     <h3 className="font-headline font-bold text-lg flex items-center gap-2 text-gray-900 dark:text-white">
                          <span className="material-symbols-outlined text-[#4afdef]">history</span>
                          Historial de Estudios
                      </h3>
@@ -412,7 +412,7 @@ const PortalMedico = () => {
                      {loadingHistorial ? (
                          <div className="p-8 text-center"><span className="material-symbols-outlined animate-spin text-[#4afdef] text-3xl">autorenew</span></div>
                      ) : historial.length === 0 ? (
-                         <div className="bg-[#191b23] border border-white/5 rounded-2xl p-12 text-center">
+                         <div className="bg-white dark:bg-[#191b23] border border-gray-200 dark:border-white/5 rounded-2xl p-12 text-center">
                              <span className="material-symbols-outlined text-[#32353c] text-6xl mb-4" style={{ fontVariationSettings: "'FILL' 1" }}>biotech</span>
                              <p className="text-slate-400 font-body">No hay resultados registrados en el historial para este paciente.</p>
                          </div>
@@ -422,14 +422,14 @@ const PortalMedico = () => {
                                  const completado = (r.estado || 'pendiente').toLowerCase() === 'completado';
                                  return (
                                      <div key={r._id || r.id} onClick={() => verResultado(r)}
-                                          className="bg-[#1d2026]/70 backdrop-blur-xl p-5 rounded-xl border border-white/5 hover:border-[#4afdef]/30 transition-all cursor-pointer shadow-lg group">
+                                          className="bg-[#1d2026]/70 backdrop-blur-xl p-5 rounded-xl border border-gray-200 dark:border-white/5 hover:border-[#4afdef]/30 transition-all cursor-pointer shadow-lg group">
                                          <div className="flex justify-between items-start mb-4">
                                              <span className="text-[11px] font-label text-slate-500">{new Date(r.createdAt || r.fecha).toLocaleDateString('es-DO')}</span>
                                              <span className={`text-[9px] px-2 py-0.5 rounded uppercase tracking-wider font-bold border ${completado ? 'bg-[#4afdef]/10 text-[#4afdef] border-[#4afdef]/20 shadow-[0_0_8px_rgba(74,253,239,0.15)]' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'}`}>
                                                  {r.estado || 'PENDIENTE'}
                                              </span>
                                          </div>
-                                         <h5 className="font-headline font-bold text-slate-200 mb-4 truncate group-hover:text-white transition-colors">{r.estudio?.nombre || r.nombreEstudio || 'Estudio Clínico'}</h5>
+                                         <h5 className="font-headline font-bold text-slate-200 mb-4 truncate group-hover:text-gray-900 dark:text-white transition-colors">{r.estudio?.nombre || r.nombreEstudio || 'Estudio Clínico'}</h5>
                                          <button className={`${completado ? 'text-[#00e0d3]/70 hover:text-[#00e0d3]' : 'text-slate-500 hover:text-slate-300'} flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest transition-colors`}>
                                              <span className="material-symbols-outlined text-sm">{completado ? 'visibility' : 'edit_document'}</span> 
                                              {completado ? 'Ver detalles' : 'Examinar'}
@@ -442,25 +442,25 @@ const PortalMedico = () => {
                  </div>
             ) : (
                 /* Detail Modal / Panel */
-                <div className="bg-[#1d2026]/90 backdrop-blur-2xl rounded-2xl border border-white/5 overflow-hidden flex flex-col shadow-2xl animate-in zoom-in-95 duration-300 relative">
-                    <div className="bg-[#272a31] px-6 py-4 flex justify-between items-center border-b border-white/5">
+                <div className="bg-[#1d2026]/90 backdrop-blur-2xl rounded-2xl border border-gray-200 dark:border-white/5 overflow-hidden flex flex-col shadow-2xl animate-in zoom-in-95 duration-300 relative">
+                    <div className="bg-gray-50 dark:bg-[#272a31] px-6 py-4 flex justify-between items-center border-b border-gray-200 dark:border-white/5">
                         <div className="flex items-center gap-3">
-                            <button onClick={() => setResultadoDetalle(null)} className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
+                            <button onClick={() => setResultadoDetalle(null)} className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 text-slate-400 hover:text-gray-900 dark:text-white hover:bg-white/10 transition-colors">
                                 <span className="material-symbols-outlined">arrow_back</span>
                             </button>
                             <div>
-                                <h4 className="font-headline font-bold text-[#e0e2ec]">{resultadoDetalle.estudio?.nombre || resultadoDetalle.nombreEstudio || 'Resultado Clínico'}</h4>
-                                <span className="text-[10px] font-label uppercase tracking-widest text-[#bacac7]">Identificador: #{resultadoDetalle._id?.substring(0,8) || resultadoDetalle.id?.substring(0,8) || 'N/A'}</span>
+                                <h4 className="font-headline font-bold text-gray-900 dark:text-[#e0e2ec]">{resultadoDetalle.estudio?.nombre || resultadoDetalle.nombreEstudio || 'Resultado Clínico'}</h4>
+                                <span className="text-[10px] font-label uppercase tracking-widest text-gray-600 dark:text-[#bacac7]">Identificador: #{resultadoDetalle._id?.substring(0,8) || resultadoDetalle.id?.substring(0,8) || 'N/A'}</span>
                             </div>
                         </div>
 
                         <div className="flex gap-2">
                              {!editando ? (
-                                <button onClick={() => setEditando(true)} className="px-4 py-2 bg-[#32353c] text-white text-xs font-bold rounded-lg hover:bg-white/10 transition-all flex items-center gap-2 border border-white/5">
+                                <button onClick={() => setEditando(true)} className="px-4 py-2 bg-gray-100 dark:bg-[#32353c] text-gray-900 dark:text-white text-xs font-bold rounded-lg hover:bg-white/10 transition-all flex items-center gap-2 border border-gray-200 dark:border-white/5">
                                     <span className="material-symbols-outlined text-sm">edit</span> Editar
                                 </button>
                              ) : (
-                                <button onClick={() => setEditando(false)} className="px-4 py-2 bg-transparent text-slate-400 text-xs font-bold rounded-lg hover:text-white transition-all flex items-center gap-2">
+                                <button onClick={() => setEditando(false)} className="px-4 py-2 bg-transparent text-slate-400 text-xs font-bold rounded-lg hover:text-gray-900 dark:text-white transition-all flex items-center gap-2">
                                     Cancelar
                                 </button>
                              )}
@@ -469,10 +469,10 @@ const PortalMedico = () => {
 
                     <div className="p-6 md:p-8 space-y-8 no-scrollbar overflow-y-auto">
                         {/* Table of values */}
-                        <div className="rounded-xl border border-[#32353c] overflow-hidden bg-[#10131a]/50">
+                        <div className="rounded-xl border border-gray-300 dark:border-[#32353c] overflow-hidden bg-gray-50 dark:bg-[#10131a]/50">
                             <table className="w-full text-left font-label">
                                 <thead>
-                                    <tr className="text-[10px] text-slate-500 uppercase tracking-widest border-b border-[#3b4a48]/50 bg-[#191b23]">
+                                    <tr className="text-[10px] text-slate-500 uppercase tracking-widest border-b border-[#3b4a48]/50 bg-white dark:bg-[#191b23]">
                                         <th className="px-6 py-3 font-medium">Parámetro</th>
                                         <th className="px-6 py-3 font-medium text-center">Valor</th>
                                         <th className="px-6 py-3 font-medium text-center">Unidad</th>
@@ -488,21 +488,21 @@ const PortalMedico = () => {
                                         resultadoDetalle.valores.map((v, i) => (
                                             <tr key={i} className="hover:bg-white/5 transition-colors">
                                                 <td className="px-6 py-4 font-medium text-slate-300">
-                                                    {editando ? <input className="w-full bg-[#1d2027] border border-[#3b4a48] rounded p-2 text-xs text-white focus:border-[#4afdef] outline-none" value={v.parametro} onChange={e => actualizarValor(i, 'parametro', e.target.value)} placeholder="Parámetro" /> : v.parametro}
+                                                    {editando ? <input className="w-full bg-white dark:bg-[#1d2027] border border-[#3b4a48] rounded p-2 text-xs text-gray-900 dark:text-white focus:border-[#4afdef] outline-none" value={v.parametro} onChange={e => actualizarValor(i, 'parametro', e.target.value)} placeholder="Parámetro" /> : v.parametro}
                                                 </td>
                                                 <td className="px-6 py-4 text-center">
-                                                    {editando ? <input className="w-20 bg-[#1d2027] border border-[#3b4a48] rounded p-2 text-xs text-white text-center focus:border-[#4afdef] outline-none" value={v.valor} onChange={e => actualizarValor(i, 'valor', e.target.value)} placeholder="Valor" /> : <span className="font-bold text-[#4afdef]" style={{textShadow: '0 0 6px rgba(74,253,239,0.3)'}}>{v.valor}</span>}
+                                                    {editando ? <input className="w-20 bg-white dark:bg-[#1d2027] border border-[#3b4a48] rounded p-2 text-xs text-gray-900 dark:text-white text-center focus:border-[#4afdef] outline-none" value={v.valor} onChange={e => actualizarValor(i, 'valor', e.target.value)} placeholder="Valor" /> : <span className="font-bold text-[#4afdef]" style={{textShadow: '0 0 6px rgba(74,253,239,0.3)'}}>{v.valor}</span>}
                                                 </td>
                                                 <td className="px-6 py-4 text-slate-400 text-center text-xs">
-                                                    {editando ? <input className="w-16 bg-[#1d2027] border border-[#3b4a48] rounded p-2 text-xs text-white text-center focus:border-[#4afdef] outline-none" value={v.unidad} onChange={e => actualizarValor(i, 'unidad', e.target.value)} placeholder="Unidad" /> : v.unidad}
+                                                    {editando ? <input className="w-16 bg-white dark:bg-[#1d2027] border border-[#3b4a48] rounded p-2 text-xs text-gray-900 dark:text-white text-center focus:border-[#4afdef] outline-none" value={v.unidad} onChange={e => actualizarValor(i, 'unidad', e.target.value)} placeholder="Unidad" /> : v.unidad}
                                                 </td>
                                                 <td className="px-6 py-4 text-slate-500 text-center text-xs">
-                                                    {editando ? <input className="w-24 bg-[#1d2027] border border-[#3b4a48] rounded p-2 text-xs text-white text-center focus:border-[#4afdef] outline-none" value={v.valorReferencia} onChange={e => actualizarValor(i, 'valorReferencia', e.target.value)} placeholder="Ref." /> : (v.valorReferencia || '-')}
+                                                    {editando ? <input className="w-24 bg-white dark:bg-[#1d2027] border border-[#3b4a48] rounded p-2 text-xs text-gray-900 dark:text-white text-center focus:border-[#4afdef] outline-none" value={v.valorReferencia} onChange={e => actualizarValor(i, 'valorReferencia', e.target.value)} placeholder="Ref." /> : (v.valorReferencia || '-')}
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex justify-center items-center">
                                                         {editando ? (
-                                                            <select className="bg-[#1d2027] border border-[#3b4a48] rounded p-2 text-[10px] text-white uppercase focus:border-[#4afdef] outline-none appearance-none font-bold" value={v.estado} onChange={e => actualizarValor(i, 'estado', e.target.value)}>
+                                                            <select className="bg-white dark:bg-[#1d2027] border border-[#3b4a48] rounded p-2 text-[10px] text-gray-900 dark:text-white uppercase focus:border-[#4afdef] outline-none appearance-none font-bold" value={v.estado} onChange={e => actualizarValor(i, 'estado', e.target.value)}>
                                                                 <option value="normal">Normal</option>
                                                                 <option value="alto">Alto</option>
                                                                 <option value="bajo">Bajo</option>
@@ -526,7 +526,7 @@ const PortalMedico = () => {
                                 </tbody>
                             </table>
                             {editando && (
-                                <div className="p-4 bg-[#191b23] border-t border-[#3b4a48]/50 flex justify-center">
+                                <div className="p-4 bg-white dark:bg-[#191b23] border-t border-[#3b4a48]/50 flex justify-center">
                                     <button onClick={agregarParametro} className="text-xs font-bold text-[#4afdef] hover:text-[#00e0d3] flex items-center gap-2"><span className="material-symbols-outlined text-sm">add_circle</span> Añadir Parámetro</button>
                                 </div>
                             )}
@@ -537,9 +537,9 @@ const PortalMedico = () => {
                             <div>
                                 <label className="text-[10px] font-label uppercase tracking-widest text-slate-500 mb-2 block">Interpretación Clínica</label>
                                 {editando ? (
-                                    <textarea className="w-full bg-[#191b23] border border-[#3b4a48] rounded-xl p-4 text-sm font-body text-slate-200 focus:border-[#4afdef] outline-none min-h-[100px] resize-none transition-all placeholder:text-slate-600" value={resultadoDetalle.interpretacion || ''} onChange={e => setResultadoDetalle({...resultadoDetalle, interpretacion: e.target.value})} placeholder="Elaborar interpretación..." />
+                                    <textarea className="w-full bg-white dark:bg-[#191b23] border border-[#3b4a48] rounded-xl p-4 text-sm font-body text-slate-200 focus:border-[#4afdef] outline-none min-h-[100px] resize-none transition-all placeholder:text-slate-600" value={resultadoDetalle.interpretacion || ''} onChange={e => setResultadoDetalle({...resultadoDetalle, interpretacion: e.target.value})} placeholder="Elaborar interpretación..." />
                                 ) : (
-                                    <div className="bg-[#191b23] border border-white/5 rounded-xl p-4 min-h-[80px]">
+                                    <div className="bg-white dark:bg-[#191b23] border border-gray-200 dark:border-white/5 rounded-xl p-4 min-h-[80px]">
                                         <p className="text-sm text-slate-300 font-body leading-relaxed">{resultadoDetalle.interpretacion || 'Ninguna interpretación adjunta.'}</p>
                                     </div>
                                 )}
@@ -548,7 +548,7 @@ const PortalMedico = () => {
                             {editando && (
                                 <div>
                                     <label className="text-[10px] font-label uppercase tracking-widest text-slate-500 mb-2 block">Conclusión</label>
-                                    <textarea className="w-full bg-[#191b23] border border-[#3b4a48] rounded-xl p-4 text-sm font-body text-slate-200 focus:border-[#4afdef] outline-none min-h-[80px] resize-none transition-all placeholder:text-slate-600" value={resultadoDetalle.conclusion || ''} onChange={e => setResultadoDetalle({...resultadoDetalle, conclusion: e.target.value})} placeholder="Conclusión final..." />
+                                    <textarea className="w-full bg-white dark:bg-[#191b23] border border-[#3b4a48] rounded-xl p-4 text-sm font-body text-slate-200 focus:border-[#4afdef] outline-none min-h-[80px] resize-none transition-all placeholder:text-slate-600" value={resultadoDetalle.conclusion || ''} onChange={e => setResultadoDetalle({...resultadoDetalle, conclusion: e.target.value})} placeholder="Conclusión final..." />
                                 </div>
                             )}
                             
@@ -564,13 +564,13 @@ const PortalMedico = () => {
                         </div>
 
                         {/* Signature Section */}
-                        <div className={`p-6 bg-surface-container-lowest rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4 border ${resultadoDetalle.firmaDigital ? 'border-[#00e0d3]/30 shadow-[0_0_15px_rgba(0,224,211,0.05)]' : 'border-white/5'}`}>
+                        <div className={`p-6 bg-surface-container-lowest rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4 border ${resultadoDetalle.firmaDigital ? 'border-[#00e0d3]/30 shadow-[0_0_15px_rgba(0,224,211,0.05)]' : 'border-gray-200 dark:border-white/5'}`}>
                             <div className="flex items-center gap-4">
-                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center border ${resultadoDetalle.firmaDigital ? 'bg-[#00e0d3]/10 border-[#00e0d3]/20' : 'bg-[#191b23] border-white/10'}`}>
+                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center border ${resultadoDetalle.firmaDigital ? 'bg-[#00e0d3]/10 border-[#00e0d3]/20' : 'bg-white dark:bg-[#191b23] border-gray-200 dark:border-white/10'}`}>
                                     <span className={`material-symbols-outlined ${resultadoDetalle.firmaDigital ? 'text-[#00e0d3]' : 'text-slate-500'}`} style={{ fontVariationSettings: "'FILL' 1" }}>{resultadoDetalle.firmaDigital ? 'verified' : 'draw'}</span>
                                 </div>
                                 <div>
-                                    <p className="font-headline font-bold text-white">Validación de Especialista</p>
+                                    <p className="font-headline font-bold text-gray-900 dark:text-white">Validación de Especialista</p>
                                     <p className="text-[11px] text-slate-500 font-label tracking-wide">
                                         {resultadoDetalle.firmaDigital
                                           ? `Firmado por Dr(a). ${resultadoDetalle.firmadoPor?.nombre || resultadoDetalle.validadoPor?.nombre || medicoSesion?.nombre || 'Médico'}`
@@ -581,10 +581,10 @@ const PortalMedico = () => {
                             
                             {/* Checkbox logic styled beautifully */}
                             <label className={`flex items-center gap-3 ${resultadoDetalle.firmaDigital ? 'cursor-default' : 'cursor-pointer group'}`}>
-                                <span className={`text-sm font-label font-bold tracking-wide transition-colors ${resultadoDetalle.firmaDigital ? 'text-[#00e0d3]' : 'text-slate-400 group-hover:text-white'}`}>
+                                <span className={`text-sm font-label font-bold tracking-wide transition-colors ${resultadoDetalle.firmaDigital ? 'text-[#00e0d3]' : 'text-slate-400 group-hover:text-gray-900 dark:text-white'}`}>
                                     {firmandoResultado ? 'Validando...' : resultadoDetalle.firmaDigital ? 'Validado y Firmado' : 'Integrar Firma'}
                                 </span>
-                                <div className={`w-6 h-6 rounded flex items-center justify-center border transition-all ${resultadoDetalle.firmaDigital ? 'bg-[#00e0d3] border-[#00e0d3]' : 'bg-[#191b23] border-[#3b4a48] group-hover:border-[#4afdef]'}`}>
+                                <div className={`w-6 h-6 rounded flex items-center justify-center border transition-all ${resultadoDetalle.firmaDigital ? 'bg-[#00e0d3] border-[#00e0d3]' : 'bg-white dark:bg-[#191b23] border-[#3b4a48] group-hover:border-[#4afdef]'}`}>
                                     <span className={`material-symbols-outlined text-[16px] text-zinc-900 ${resultadoDetalle.firmaDigital ? 'block' : 'hidden'}`} style={{ fontVariationSettings: "'FILL' 1, 'wght' 700" }}>check</span>
                                 </div>
                                 <input className="hidden" type="checkbox" checked={Boolean(resultadoDetalle.firmaDigital)} disabled={firmandoResultado || resultadoDetalle.firmaDigital} onChange={(e) => marcarFirmaResultado(e.target.checked)}/>
@@ -594,7 +594,7 @@ const PortalMedico = () => {
                     </div>
                     
                     {/* Action Bar Base */}
-                    <div className="p-6 bg-[#1d2027]/70 backdrop-blur-3xl border-t border-white/5 flex gap-4 mt-auto">
+                    <div className="p-6 bg-white dark:bg-[#1d2027]/70 backdrop-blur-3xl border-t border-gray-200 dark:border-white/5 flex gap-4 mt-auto">
                         {editando ? (
                             <button onClick={guardarResultado} disabled={guardando} className="flex-1 py-3 px-6 rounded-xl font-headline text-sm font-bold flex items-center justify-center gap-2 bg-[#4afdef] text-slate-900 shadow-[0_0_20px_rgba(74,253,239,0.3)] hover:shadow-[0_0_30px_rgba(74,253,239,0.5)] transition-all">
                                 {guardando ? <span className="material-symbols-outlined animate-spin text-sm">autorenew</span> : <span className="material-symbols-outlined text-sm">save</span>}
@@ -608,7 +608,7 @@ const PortalMedico = () => {
                                         Aprobar y Finalizar
                                     </button>
                                 )}
-                                <button onClick={imprimirResultado} className="px-6 py-3 rounded-xl border border-[#3b4a48] bg-[#191b23] font-headline text-[13px] text-slate-300 font-bold flex items-center gap-2 hover:bg-white/5 hover:text-white transition-all">
+                                <button onClick={imprimirResultado} className="px-6 py-3 rounded-xl border border-[#3b4a48] bg-white dark:bg-[#191b23] font-headline text-[13px] text-slate-300 font-bold flex items-center gap-2 hover:bg-white/5 hover:text-gray-900 dark:text-white transition-all">
                                     <span className="material-symbols-outlined text-sm">print</span>
                                     Dossier / Impresión
                                 </button>
