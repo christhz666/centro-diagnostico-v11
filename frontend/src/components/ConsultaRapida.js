@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   FaBarcode, FaSearch, FaUser, FaFlask, FaPrint,
   FaCheckCircle, FaClock, FaTimes, FaSpinner, FaExclamationTriangle
@@ -7,6 +8,7 @@ import api from '../services/api';
 import useDebounce from '../hooks/useDebounce';
 
 const ConsultaRapida = () => {
+  const navigate = useNavigate();
   /* ── Pestañas ── */
   const [tab, setTab] = useState('scanner'); // 'scanner' | 'busqueda'
 
@@ -29,6 +31,7 @@ const ConsultaRapida = () => {
 
   /* ── Configuración empresa ── */
   const [empresaConfig, setEmpresaConfig] = useState({});
+  const [rolUsuario, setRolUsuario] = useState('recepcion');
 
   const colores = { azulOscuro: '#1a3a5c', azulCielo: '#87CEEB' };
   const theme = {
@@ -51,6 +54,26 @@ const ConsultaRapida = () => {
       .then(d => setEmpresaConfig(d?.configuracion || d || {}))
       .catch(() => { });
   }, []);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('user') || sessionStorage.getItem('user');
+      const user = raw ? JSON.parse(raw) : null;
+      setRolUsuario(user?.role || user?.rol || 'recepcion');
+    } catch {
+      setRolUsuario('recepcion');
+    }
+  }, []);
+
+  const normalizarRol = (rol = '') =>
+    String(rol || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+
+  const rolActual = normalizarRol(rolUsuario);
+  const puedeEditarResultados = ['admin', 'bioanalista', 'recepcionista', 'recepcion', 'laboratorio'].includes(rolActual);
 
   /* ─── Auto-focus en pestaña de escáner ─────────────────── */
   useEffect(() => {
@@ -532,19 +555,33 @@ const ConsultaRapida = () => {
                               : <span style={{ color: '#f39c12' }}><FaClock /> {r.estado}</span>}
                           </div>
                         </div>
-                        {r.estado === 'completado' && (
-                          <button
-                            onClick={() => verificarPagoEImprimir(r)}
-                            style={{
-                              padding: '11px 22px', background: colores.azulOscuro,
-                              color: 'white', border: 'none', borderRadius: 10,
-                              cursor: 'pointer', fontWeight: 'bold', fontSize: 14,
-                              display: 'flex', alignItems: 'center', gap: 7,
-                            }}
-                          >
-                            <FaPrint /> IMPRIMIR
-                          </button>
-                        )}
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                          {puedeEditarResultados && (
+                            <button
+                              onClick={() => navigate('/resultados', { state: { editResultId: r._id } })}
+                              style={{
+                                padding: '10px 14px', background: theme.surfaceHover,
+                                color: theme.textStrong, border: `1px solid ${theme.border}`, borderRadius: 10,
+                                cursor: 'pointer', fontWeight: 'bold', fontSize: 13,
+                              }}
+                            >
+                              Editar
+                            </button>
+                          )}
+                          {r.estado === 'completado' && (
+                            <button
+                              onClick={() => verificarPagoEImprimir(r)}
+                              style={{
+                                padding: '11px 22px', background: colores.azulOscuro,
+                                color: 'white', border: 'none', borderRadius: 10,
+                                cursor: 'pointer', fontWeight: 'bold', fontSize: 14,
+                                display: 'flex', alignItems: 'center', gap: 7,
+                              }}
+                            >
+                              <FaPrint /> IMPRIMIR
+                            </button>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -698,11 +735,21 @@ const ConsultaRapida = () => {
                               : <span style={{ color: '#f39c12' }}>⏳ {r.estado}</span>}
                           </div>
                         </div>
-                        {r.estado === 'completado' && (
-                          <button onClick={() => verificarPagoEImprimir(r)} style={{ padding: '9px 18px', background: colores.azulOscuro, color: 'white', border: 'none', borderRadius: 9, cursor: 'pointer', fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <FaPrint /> Imprimir
-                          </button>
-                        )}
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                          {puedeEditarResultados && (
+                            <button
+                              onClick={() => navigate('/resultados', { state: { editResultId: r._id } })}
+                              style={{ padding: '8px 12px', background: theme.surfaceHover, color: theme.textStrong, border: `1px solid ${theme.border}`, borderRadius: 9, cursor: 'pointer', fontWeight: 600, fontSize: 12 }}
+                            >
+                              Editar
+                            </button>
+                          )}
+                          {r.estado === 'completado' && (
+                            <button onClick={() => verificarPagoEImprimir(r)} style={{ padding: '9px 18px', background: colores.azulOscuro, color: 'white', border: 'none', borderRadius: 9, cursor: 'pointer', fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <FaPrint /> Imprimir
+                            </button>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>

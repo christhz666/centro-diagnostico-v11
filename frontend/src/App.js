@@ -69,7 +69,7 @@ function App() {
       const mobile = window.innerWidth <= 768;
       setIsMobile(mobile);
       if (mobile) setSidebarOpen(false);
-      else setSidebarOpen(true);
+      else setSidebarOpen(false);
     };
     handleResize();
     window.addEventListener('resize', handleResize);
@@ -257,7 +257,10 @@ function App() {
                   )}
 
                   {/* Sidebar Navigation */}
-                  <aside className={`fixed top-0 bottom-0 left-0 z-50 flex flex-col py-8 px-4 gap-y-6 transition-all duration-300 ease-in-out font-display tracking-tight
+                  <aside
+                    onMouseEnter={() => { if (!isMobile) setSidebarOpen(true); }}
+                    onMouseLeave={() => { if (!isMobile) setSidebarOpen(false); }}
+                    className={`fixed top-0 bottom-0 left-0 z-50 flex flex-col py-8 px-4 gap-y-6 transition-all duration-300 ease-in-out font-display tracking-tight
                       bg-white/80 dark:bg-[rgba(22,26,34,0.8)] backdrop-blur-[24px] border-r border-gray-200 dark:border-white/5 shadow-[20px_0px_40px_rgba(0,0,0,0.05)] dark:shadow-[20px_0px_40px_rgba(0,0,0,0.2)]
                       ${isMobile
                           ? (sidebarOpen ? 'w-72 translate-x-0' : '-translate-x-full w-72')

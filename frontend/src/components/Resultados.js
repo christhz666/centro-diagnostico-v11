@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import api from '../services/api';
 
 const Resultados = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [resultados, setResultados] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filtroEstado, setFiltroEstado] = useState('');
@@ -12,6 +14,7 @@ const Resultados = () => {
   const [resultadoEditar, setResultadoEditar] = useState(null);
   const [citas, setCitas] = useState([]);
   const [citaSeleccionada, setCitaSeleccionada] = useState(null);
+  const [rolUsuario, setRolUsuario] = useState('recepcion');
 
   // Para crear resultado manual
   const [nuevoResultado, setNuevoResultado] = useState({
@@ -21,12 +24,28 @@ const Resultados = () => {
     conclusion: ''
   });
 
+  const normalizarRol = (rol = '') =>
+    String(rol || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+
+  const esEstudioLaboratorio = (estudio = {}) => {
+    const texto = `${estudio?.tipo || ''} ${estudio?.categoria || ''} ${estudio?.nombre || ''}`
+      .toString()
+      .toLowerCase();
+    return /labor|bioquim|hemat|uroanal|parasit|copro|microbio|inmuno/.test(texto);
+  };
+
   const fetchResultados = useCallback(async (isSilent = false, estado = filtroEstado) => {
     try {
       if (!isSilent) setLoading(true);
       const params = estado && estado !== 'Todos' ? { estado: estado.toLowerCase() } : {};
       const response = await api.getResultados(params);
-      setResultados(Array.isArray(response) ? response : (response.data || []));
+      const lista = Array.isArray(response) ? response : (response.data || []);
+      const soloLaboratorio = lista.filter(r => esEstudioLaboratorio(r?.estudio));
+      setResultados(soloLaboratorio);
     } catch (err) {
       console.error(err);
       if (!isSilent) setResultados([]);
@@ -39,11 +58,29 @@ const Resultados = () => {
     try {
       const response = await api.getCitas({ estado: 'completada' });
       let listaCitas = Array.isArray(response) ? response : (response.data || []);
-      setCitas(listaCitas);
+      const soloLaboratorio = listaCitas.filter(c => {
+        const estudio = c?.estudios?.[0]?.estudio;
+        return esEstudioLaboratorio(estudio);
+      });
+      setCitas(soloLaboratorio);
     } catch (err) {
       console.error(err);
     }
   }, []);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('user') || sessionStorage.getItem('user');
+      const user = raw ? JSON.parse(raw) : null;
+      setRolUsuario(user?.role || user?.rol || 'recepcion');
+    } catch {
+      setRolUsuario('recepcion');
+    }
+  }, []);
+
+  const rolActual = normalizarRol(rolUsuario);
+  const canEditResultados = ['admin', 'bioanalista', 'recepcionista', 'recepcion', 'laboratorio'].includes(rolActual);
+  const canValidarResultados = rolActual === 'bioanalista';
 
   useEffect(() => {
     fetchResultados();
@@ -57,6 +94,16 @@ const Resultados = () => {
 
     return () => clearInterval(interval);
   }, [fetchResultados, fetchCitasPendientes]);
+
+  useEffect(() => {
+    const editResultId = location?.state?.editResultId;
+    if (!editResultId || resultados.length === 0 || !canEditResultados) return;
+    const objetivo = resultados.find(r => r?._id === editResultId);
+    if (objetivo) {
+      abrirModalEditar(objetivo);
+      navigate('/resultados', { replace: true, state: {} });
+    }
+  }, [location?.state, resultados, canEditResultados, navigate]);
 
   const abrirModalNuevo = (cita) => {
     setCitaSeleccionada(cita);
@@ -114,14 +161,20 @@ const Resultados = () => {
 
   const guardarResultado = async () => {
     try {
-      if (!asegurarFirmaDeSesion()) return;
+      if (!canEditResultados) {
+        alert('No tiene permisos para editar resultados.');
+        return;
+      }
+
+      const estadoDestino = canValidarResultados ? 'completado' : 'en_proceso';
+      if (canValidarResultados && !asegurarFirmaDeSesion()) return;
 
       if (resultadoEditar) {
         await api.updateResultado(resultadoEditar._id, {
           ...nuevoResultado,
-          estado: 'completado'
+          estado: estadoDestino
         });
-        alert('Resultado actualizado');
+        alert(canValidarResultados ? 'Resultado actualizado y validado' : 'Resultado actualizado (pendiente de validación por Bioanalista)');
       } else if (citaSeleccionada) {
         const estudio = citaSeleccionada.estudios?.[0]?.estudio;
         await api.createResultado({
@@ -129,9 +182,9 @@ const Resultados = () => {
           paciente: citaSeleccionada.paciente?._id || citaSeleccionada.paciente,
           estudio: estudio?._id || estudio,
           ...nuevoResultado,
-          estado: 'completado'
+          estado: estadoDestino
         });
-        alert('Resultado creado');
+        alert(canValidarResultados ? 'Resultado creado y validado' : 'Resultado creado (pendiente de validación por Bioanalista)');
       }
       setShowModal(false);
       setResultadoEditar(null);
@@ -160,7 +213,11 @@ const Resultados = () => {
       setLoading(true);
       const res = await api.getResultadoPorCodigoMuestra(codigo);
       if (res && res.data) {
-        abrirModalEditar(res.data);
+        if (canEditResultados) {
+          abrirModalEditar(res.data);
+        } else {
+          alert('Su rol no tiene permisos para editar resultados.');
+        }
       } else {
         alert('Código de muestra no encontrado o no tiene un resultado asociado.');
       }
@@ -216,6 +273,12 @@ const Resultados = () => {
           </button>
         </div>
       </header>
+
+      {!canValidarResultados && (
+        <div className="mb-6 rounded-lg border border-amber-400/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
+          Puede editar resultados, pero solo Bioanalista puede validarlos como completados.
+        </div>
+      )}
 
       {/* Citas Pendientes Blocks (Substitutes Header Card) */}
       {countPendientes > 0 && (
@@ -355,9 +418,11 @@ const Resultados = () => {
                                 </span>
                             </td>
                             <td className="px-8 py-5 text-right flex justify-end gap-3">
+                              {canEditResultados && (
                                 <button onClick={() => abrirModalEditar(r)} className="material-symbols-outlined text-gray-600 dark:text-[#bacac7] hover:text-[#47fbed] transition-all p-2 bg-gray-100 dark:bg-[#32353c]/0 hover:bg-gray-100 dark:bg-[#32353c] rounded" style={{ fontVariationSettings: "'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24" }}>
-                                    {estado === 'completado' ? 'visibility' : 'edit_note'}
+                                  {estado === 'completado' ? 'visibility' : 'edit_note'}
                                 </button>
+                              )}
                             </td>
                         </tr>
                        )
@@ -483,9 +548,9 @@ const Resultados = () => {
               <button onClick={() => { setShowModal(false); setResultadoEditar(null); setCitaSeleccionada(null); }} className="px-6 py-2.5 rounded-lg font-headline text-sm font-bold text-gray-600 dark:text-[#bacac7] hover:bg-white/10 transition-all">
                   Cancelar
               </button>
-              <button onClick={guardarResultado} className="px-8 py-2.5 rounded-lg bg-gradient-to-r from-[#00ded1] to-[#00716a] text-[#003733] font-headline text-sm font-bold shadow-[0_0_20px_rgba(71,251,237,0.3)] hover:shadow-[0_0_30px_rgba(71,251,237,0.5)] transition-all flex items-center gap-2">
+                <button onClick={guardarResultado} disabled={!canEditResultados} className="px-8 py-2.5 rounded-lg bg-gradient-to-r from-[#00ded1] to-[#00716a] text-[#003733] font-headline text-sm font-bold shadow-[0_0_20px_rgba(71,251,237,0.3)] hover:shadow-[0_0_30px_rgba(71,251,237,0.5)] transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                   <span className="material-symbols-outlined text-[20px]">check_circle</span>
-                  Guardar Resultado
+                  {canValidarResultados ? 'Guardar y Validar' : 'Guardar (Pendiente de Validación)'}
               </button>
             </div>
           </div>
