@@ -10,11 +10,11 @@ module.exports = {
             colors: {
                 primary: "#00F6FF", // Astra Nova Neon Cyan
                 "primary-dark": "#00B8D4",
-                "background-light": "#F0F2F5",
+                "background-light": "#F2F6F9",
                 "background-dark": "#0B1120", // The Cosmic Gallery deep space
                 "surface-dark": "#1E293B", // Glassmorphism cards
                 "surface-dark-high": "#171F33", // Elevated floating panels
-                "surface-light": "#FFFFFF",
+                "surface-light": "#E9EFF4",
                 "accent-teal": "#14B8A6",
             },
             fontFamily: {
