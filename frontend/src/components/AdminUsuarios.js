@@ -12,10 +12,89 @@ const ROLES_DEFAULT = [
 
 const ROL_COLORS = {
   admin: '#e74c3c',
+  'super-admin': '#8e44ad',
   medico: '#3498db',
+  bioanalista: '#8e44ad',
+  recepcionista: '#27ae60',
   recepcion: '#27ae60',
   laboratorio: '#9b59b6',
   paciente: '#f39c12'
+};
+
+const PERMISSION_OPTIONS = [
+  { key: 'dashboard', label: 'Dashboard' },
+  { key: 'registro', label: 'Registro' },
+  { key: 'consulta', label: 'Consulta Rápida' },
+  { key: 'facturas', label: 'Facturas' },
+  { key: 'medico', label: 'Portal Médico' },
+  { key: 'resultados', label: 'Resultados' },
+  { key: 'imagenologia', label: 'Imagenología' },
+  { key: 'perfil', label: 'Perfil' },
+  { key: 'adminPanel', label: 'Admin: Configuración' },
+  { key: 'adminUsuarios', label: 'Admin: Usuarios' },
+  { key: 'adminMedicos', label: 'Admin: Médicos' },
+  { key: 'adminEquipos', label: 'Admin: Equipos' },
+  { key: 'adminEstudios', label: 'Admin: Catálogo' },
+  { key: 'contabilidad', label: 'Contabilidad' },
+  { key: 'campanaWhatsapp', label: 'Campaña WhatsApp' },
+  { key: 'descargarApp', label: 'Descargar App' },
+  { key: 'deploy', label: 'Deploy Agentes' }
+];
+
+const BASE_PERMISSIONS = PERMISSION_OPTIONS.reduce((acc, p) => ({ ...acc, [p.key]: false }), {});
+
+const ROLE_PERMISSION_TEMPLATES = {
+  'super-admin': Object.keys(BASE_PERMISSIONS).reduce((acc, k) => ({ ...acc, [k]: true }), {}),
+  admin: Object.keys(BASE_PERMISSIONS).reduce((acc, k) => ({ ...acc, [k]: true }), {}),
+  bioanalista: {
+    ...BASE_PERMISSIONS,
+    dashboard: true,
+    consulta: true,
+    resultados: true,
+    perfil: true,
+    imagenologia: true
+  },
+  laboratorio: {
+    ...BASE_PERMISSIONS,
+    dashboard: true,
+    consulta: true,
+    resultados: true,
+    perfil: true
+  },
+  medico: {
+    ...BASE_PERMISSIONS,
+    dashboard: true,
+    medico: true,
+    resultados: true,
+    imagenologia: true,
+    perfil: true
+  },
+  recepcionista: {
+    ...BASE_PERMISSIONS,
+    dashboard: true,
+    registro: true,
+    consulta: true,
+    facturas: true,
+    perfil: true,
+    imagenologia: true
+  },
+  recepcion: {
+    ...BASE_PERMISSIONS,
+    dashboard: true,
+    registro: true,
+    consulta: true,
+    facturas: true,
+    perfil: true,
+    imagenologia: true
+  },
+  paciente: {
+    ...BASE_PERMISSIONS,
+    perfil: true
+  }
+};
+
+const getPermissionsForRole = (role = 'recepcion') => {
+  return { ...BASE_PERMISSIONS, ...(ROLE_PERMISSION_TEMPLATES[role] || {}) };
 };
 
 const theme = {
@@ -38,7 +117,7 @@ const AdminUsuarios = () => {
   const [roles, setRoles] = useState(ROLES_DEFAULT);
   const [formData, setFormData] = useState({
     nombre: '', apellido: '', email: '', username: '', password: '',
-    role: 'recepcion', telefono: '', especialidad: '', sucursal: ''
+    role: 'recepcion', telefono: '', especialidad: '', sucursal: '', permissions: getPermissionsForRole('recepcion')
   });
 
   useEffect(() => {
@@ -82,7 +161,7 @@ const AdminUsuarios = () => {
 
   const abrirCrear = () => {
     setEditando(null);
-    setFormData({ nombre: '', apellido: '', email: '', username: '', password: '', role: 'recepcion', telefono: '', especialidad: '', sucursal: '' });
+    setFormData({ nombre: '', apellido: '', email: '', username: '', password: '', role: 'recepcion', telefono: '', especialidad: '', sucursal: '', permissions: getPermissionsForRole('recepcion') });
     setShowModal(true);
   };
 
@@ -98,7 +177,8 @@ const AdminUsuarios = () => {
       role: usuario.role || usuario.rol || 'recepcion',
       telefono: usuario.telefono || '',
       especialidad: usuario.especialidad || '',
-      sucursal: sucId ? String(sucId) : ''
+      sucursal: sucId ? String(sucId) : '',
+      permissions: { ...getPermissionsForRole(usuario.role || usuario.rol || 'recepcion'), ...(usuario.permissions || {}) }
     });
     setShowModal(true);
   };
@@ -251,7 +331,12 @@ const AdminUsuarios = () => {
                 {/* Selector de rol siempre visible primero */}
                 <div>
                   <label style={{ fontSize: 13, color: theme.textMuted, marginBottom: 5, display: 'block' }}>Rol del usuario *</label>
-                  <select value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value })} required style={inputStyle}>
+                  <select
+                    value={formData.role}
+                    onChange={e => setFormData({ ...formData, role: e.target.value, permissions: getPermissionsForRole(e.target.value) })}
+                    required
+                    style={inputStyle}
+                  >
                     {roles.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                   </select>
                 </div>
@@ -309,6 +394,28 @@ const AdminUsuarios = () => {
                         {sucursales.map(s => <option key={s._id} value={s._id}>{s.nombre} ({s.codigo || s._id})</option>)}
                       </select>
                       <small style={{ color: theme.textMuted, fontSize: 11 }}>Recomendado para Recepcionista y Laboratorista</small>
+                    </div>
+
+                    <div style={{ border: `1px solid ${theme.border}`, borderRadius: 10, padding: 12, background: theme.surfaceMuted }}>
+                      <label style={{ fontSize: 13, color: theme.textMuted, marginBottom: 8, display: 'block' }}>Permisos por módulo</label>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                        {PERMISSION_OPTIONS.map(p => (
+                          <label key={p.key} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: theme.text }}>
+                            <input
+                              type="checkbox"
+                              checked={!!formData.permissions?.[p.key]}
+                              onChange={(e) => setFormData({
+                                ...formData,
+                                permissions: {
+                                  ...(formData.permissions || {}),
+                                  [p.key]: e.target.checked
+                                }
+                              })}
+                            />
+                            {p.label}
+                          </label>
+                        ))}
+                      </div>
                     </div>
                   </>
                 )}

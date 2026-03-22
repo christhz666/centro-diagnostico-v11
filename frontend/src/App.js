@@ -28,6 +28,8 @@ const CampanaWhatsApp = lazy(() => import('./components/CampanaWhatsApp'));
 const Imagenologia = lazy(() => import('./components/Imagenologia'));
 const Perfil = lazy(() => import('./components/Perfil'));
 
+const normalizeRole = (r = '') => String(r || '').toLowerCase().trim();
+
 function App() {
   const [user, setUser] = useState(null);
   const [, setToken] = useState(null);
@@ -170,23 +172,30 @@ function App() {
     </div>
   );
 
-  const rol = user?.role || user?.rol || 'recepcion';
+  const rol = normalizeRole(user?.role || user?.rol || 'recepcion');
+  const permissions = (user?.permissions && typeof user.permissions === 'object') ? user.permissions : {};
+  const hasCustomPermissions = Object.keys(permissions).length > 0;
+  const canAccess = (permissionKey, rolesFallback = []) => {
+    if (hasCustomPermissions && permissionKey) return Boolean(permissions[permissionKey]);
+    return rolesFallback.map(normalizeRole).includes(rol);
+  };
+
   const menuItems = [
-    { path: '/', icon: 'dashboard', label: 'Dashboard', roles: ['admin', 'medico', 'recepcion', 'laboratorio'] },
-    { path: '/registro', icon: 'person_add', label: 'Registro', roles: ['admin', 'recepcion'] },
-    { path: '/consulta', icon: 'search', label: 'Consulta', roles: ['admin', 'recepcion', 'laboratorio'] },
-    { path: '/facturas', icon: 'receipt_long', label: 'Facturas', roles: ['admin', 'recepcion'] },
-    { path: '/medico', icon: 'medical_services', label: 'Médico', roles: ['admin', 'medico'] },
-    { path: '/resultados', icon: 'science', label: 'Resultados', roles: ['admin', 'medico', 'laboratorio'] },
-    { path: '/imagenologia', icon: 'settings_overscan', label: 'Imágenes', roles: ['admin', 'medico', 'laboratorio', 'recepcion'] },
-    { path: '/perfil', icon: 'badge', label: 'Mi Perfil', roles: ['admin', 'medico', 'recepcion', 'laboratorio'] },
-    { path: '/admin', icon: 'settings', label: 'Panel Admin', roles: ['admin'] },
+    { path: '/', icon: 'dashboard', label: 'Dashboard', permission: 'dashboard', roles: ['admin', 'super-admin', 'medico', 'recepcion', 'recepcionista', 'laboratorio', 'bioanalista'] },
+    { path: '/registro', icon: 'person_add', label: 'Registro', permission: 'registro', roles: ['admin', 'super-admin', 'recepcion', 'recepcionista'] },
+    { path: '/consulta', icon: 'search', label: 'Consulta', permission: 'consulta', roles: ['admin', 'super-admin', 'recepcion', 'recepcionista', 'laboratorio', 'bioanalista'] },
+    { path: '/facturas', icon: 'receipt_long', label: 'Facturas', permission: 'facturas', roles: ['admin', 'super-admin', 'recepcion', 'recepcionista'] },
+    { path: '/medico', icon: 'medical_services', label: 'Médico', permission: 'medico', roles: ['admin', 'super-admin', 'medico'] },
+    { path: '/resultados', icon: 'science', label: 'Resultados', permission: 'resultados', roles: ['admin', 'super-admin', 'medico', 'laboratorio', 'bioanalista'] },
+    { path: '/imagenologia', icon: 'settings_overscan', label: 'Imágenes', permission: 'imagenologia', roles: ['admin', 'super-admin', 'medico', 'laboratorio', 'bioanalista', 'recepcion', 'recepcionista'] },
+    { path: '/perfil', icon: 'badge', label: 'Mi Perfil', permission: 'perfil', roles: ['admin', 'super-admin', 'medico', 'recepcion', 'recepcionista', 'laboratorio', 'bioanalista'] },
+    { path: '/admin', icon: 'settings', label: 'Panel Admin', permission: 'adminPanel', roles: ['admin', 'super-admin'] },
   ];
 
 
 
-  const filteredMenu = menuItems.filter(i => i.roles.includes(rol) && i.path !== '/admin');
-  const isAdmin = rol === 'admin';
+  const filteredMenu = menuItems.filter(i => canAccess(i.permission, i.roles) && i.path !== '/admin');
+  const isAdmin = canAccess('adminPanel', ['admin', 'super-admin']);
 
   const tourSteps = [
     { target: 'nav', content: '📋 Menú de navegación: Accede a todas las secciones del sistema desde aquí.', placement: 'right', disableBeacon: true },
@@ -449,24 +458,24 @@ function App() {
                   `}>
                     <Suspense fallback={<RouteLoader />}>
                       <Routes>
-                        <Route path="/" element={<Dashboard />} />
+                        <Route path="/" element={canAccess('dashboard', ['admin', 'super-admin', 'medico', 'recepcion', 'recepcionista', 'laboratorio', 'bioanalista']) ? <Dashboard /> : <Navigate to="/perfil" />} />
                         <Route path="/dashboard" element={<Navigate to="/" />} />
-                        <Route path="/registro" element={<RegistroInteligente />} />
-                        <Route path="/consulta" element={<ConsultaRapida />} />
-                        <Route path="/facturas" element={<Facturas />} />
-                        <Route path="/medico" element={<PortalMedico />} />
-                        <Route path="/perfil" element={<Perfil user={user} onUserUpdate={handleUserUpdate} />} />
-                        <Route path="/admin" element={<AdminPanel />} />
-                        <Route path="/admin/usuarios" element={<AdminUsuarios />} />
-                        <Route path="/admin/medicos" element={<AdminMedicos />} />
-                        <Route path="/admin/equipos" element={<AdminEquipos />} />
-                        <Route path="/admin/estudios" element={<GestionEstudios />} />
-                        <Route path="/contabilidad" element={<Contabilidad />} />
-                        <Route path="/resultados" element={<Resultados />} />
-                        <Route path="/imagenologia" element={<Imagenologia />} />
-                        <Route path="/deploy" element={<DeployAgentes />} />
-                        <Route path="/descargar-app" element={<DescargarApp />} />
-                        <Route path="/campana-whatsapp" element={<CampanaWhatsApp />} />
+                        <Route path="/registro" element={canAccess('registro', ['admin', 'super-admin', 'recepcion', 'recepcionista']) ? <RegistroInteligente /> : <Navigate to="/" />} />
+                        <Route path="/consulta" element={canAccess('consulta', ['admin', 'super-admin', 'recepcion', 'recepcionista', 'laboratorio', 'bioanalista']) ? <ConsultaRapida /> : <Navigate to="/" />} />
+                        <Route path="/facturas" element={canAccess('facturas', ['admin', 'super-admin', 'recepcion', 'recepcionista']) ? <Facturas /> : <Navigate to="/" />} />
+                        <Route path="/medico" element={canAccess('medico', ['admin', 'super-admin', 'medico']) ? <PortalMedico /> : <Navigate to="/" />} />
+                        <Route path="/perfil" element={canAccess('perfil', ['admin', 'super-admin', 'medico', 'recepcion', 'recepcionista', 'laboratorio', 'bioanalista']) ? <Perfil user={user} onUserUpdate={handleUserUpdate} /> : <Navigate to="/" />} />
+                        <Route path="/admin" element={canAccess('adminPanel', ['admin', 'super-admin']) ? <AdminPanel /> : <Navigate to="/" />} />
+                        <Route path="/admin/usuarios" element={canAccess('adminUsuarios', ['admin', 'super-admin']) ? <AdminUsuarios /> : <Navigate to="/" />} />
+                        <Route path="/admin/medicos" element={canAccess('adminMedicos', ['admin', 'super-admin']) ? <AdminMedicos /> : <Navigate to="/" />} />
+                        <Route path="/admin/equipos" element={canAccess('adminEquipos', ['admin', 'super-admin']) ? <AdminEquipos /> : <Navigate to="/" />} />
+                        <Route path="/admin/estudios" element={canAccess('adminEstudios', ['admin', 'super-admin']) ? <GestionEstudios /> : <Navigate to="/" />} />
+                        <Route path="/contabilidad" element={canAccess('contabilidad', ['admin', 'super-admin']) ? <Contabilidad /> : <Navigate to="/" />} />
+                        <Route path="/resultados" element={canAccess('resultados', ['admin', 'super-admin', 'medico', 'laboratorio', 'bioanalista']) ? <Resultados /> : <Navigate to="/" />} />
+                        <Route path="/imagenologia" element={canAccess('imagenologia', ['admin', 'super-admin', 'medico', 'laboratorio', 'bioanalista', 'recepcion', 'recepcionista']) ? <Imagenologia /> : <Navigate to="/" />} />
+                        <Route path="/deploy" element={canAccess('deploy', ['admin', 'super-admin']) ? <DeployAgentes /> : <Navigate to="/" />} />
+                        <Route path="/descargar-app" element={canAccess('descargarApp', ['admin', 'super-admin']) ? <DescargarApp /> : <Navigate to="/" />} />
+                        <Route path="/campana-whatsapp" element={canAccess('campanaWhatsapp', ['admin', 'super-admin']) ? <CampanaWhatsApp /> : <Navigate to="/" />} />
                         <Route path="/login" element={<Navigate to="/" />} />
                         <Route path="*" element={<Navigate to="/" />} />
                       </Routes>

@@ -1,12 +1,29 @@
 const mongoose = require('mongoose');
 const User = require('../models/User');
 
+const ALLOWED_PERMISSION_KEYS = [
+    'dashboard', 'registro', 'consulta', 'facturas', 'medico', 'resultados', 'imagenologia',
+    'perfil', 'adminPanel', 'adminUsuarios', 'adminMedicos', 'adminEquipos', 'adminEstudios',
+    'contabilidad', 'campanaWhatsapp', 'descargarApp', 'deploy'
+];
+
+const normalizePermissions = (input) => {
+    const src = (input && typeof input === 'object') ? input : {};
+    return ALLOWED_PERMISSION_KEYS.reduce((acc, key) => {
+        if (src[key] !== undefined) acc[key] = Boolean(src[key]);
+        return acc;
+    }, {});
+};
+
 // @desc    Obtener roles disponibles
 // @route   GET /api/admin/roles
 exports.getRoles = async (req, res, next) => {
     res.json([
+        { value: 'super-admin', label: 'Super Administrador' },
         { value: 'admin', label: 'Administrador' },
         { value: 'medico', label: 'Médico' },
+        { value: 'bioanalista', label: 'Bioanalista' },
+        { value: 'recepcionista', label: 'Recepcionista' },
         { value: 'recepcion', label: 'Recepcionista' },
         { value: 'laboratorio', label: 'Laboratorista' },
         { value: 'paciente', label: 'Paciente' }
@@ -95,6 +112,9 @@ exports.createUsuario = async (req, res, next) => {
             telefono: body.telefono || undefined,
             especialidad: body.especialidad || undefined
         };
+        if (body.permissions !== undefined) {
+            data.permissions = normalizePermissions(body.permissions);
+        }
         // Email: solo incluir si es válido (no vacío, no "null")
         const emailVal = body.email;
         if (emailVal && emailVal !== 'null' && typeof emailVal === 'string' && emailVal.trim()) {
@@ -170,6 +190,9 @@ exports.updateUsuario = async (req, res, next) => {
         }
         if (req.body.sucursal === '' || req.body.sucursal === 'null') {
             req.body.sucursal = null;
+        }
+        if (req.body.permissions !== undefined) {
+            req.body.permissions = normalizePermissions(req.body.permissions);
         }
 
         const usuario = await User.findByIdAndUpdate(

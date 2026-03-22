@@ -50,8 +50,27 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['admin', 'medico', 'recepcion', 'laboratorio', 'paciente'],
+        enum: ['admin', 'super-admin', 'medico', 'recepcion', 'recepcionista', 'laboratorio', 'bioanalista', 'paciente'],
         default: 'recepcion'
+    },
+    permissions: {
+        dashboard: { type: Boolean, default: undefined },
+        registro: { type: Boolean, default: undefined },
+        consulta: { type: Boolean, default: undefined },
+        facturas: { type: Boolean, default: undefined },
+        medico: { type: Boolean, default: undefined },
+        resultados: { type: Boolean, default: undefined },
+        imagenologia: { type: Boolean, default: undefined },
+        perfil: { type: Boolean, default: undefined },
+        adminPanel: { type: Boolean, default: undefined },
+        adminUsuarios: { type: Boolean, default: undefined },
+        adminMedicos: { type: Boolean, default: undefined },
+        adminEquipos: { type: Boolean, default: undefined },
+        adminEstudios: { type: Boolean, default: undefined },
+        contabilidad: { type: Boolean, default: undefined },
+        campanaWhatsapp: { type: Boolean, default: undefined },
+        descargarApp: { type: Boolean, default: undefined },
+        deploy: { type: Boolean, default: undefined }
     },
     telefono: {
         type: String,
