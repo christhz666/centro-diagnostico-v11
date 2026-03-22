@@ -129,6 +129,25 @@ const ConsultaRapida = () => {
     try {
       /* ── 1. Factura/código de barras interno ───────────────────── */
       if (/^FAC-/i.test(codigoLimpio) || /^\d{3,}$/.test(codigoLimpio) || /^[A-Z0-9-]{6,}$/.test(codigoLimpio)) {
+        // En versiones anteriores, este código (alfanumérico) se guarda en la base de datos como "codigoQR" aunque se imprima como código de barras.
+        if (/^[A-Z0-9]{8,24}$/.test(codigoLimpio)) {
+          try {
+            const d = await api.request(`/resultados/qr/${codigoLimpio}`);
+            if (d.success && !d.blocked) {
+              setPaciente(d.paciente);
+              setFacturaSeleccionada(d.factura || null);
+              setResultados(d.data || []);
+              return;
+            }
+            if (d.blocked) {
+              setPagoBloqueo({ montoPendiente: d.montoPendiente, mensaje: d.message });
+              return;
+            }
+          } catch {
+            // Falla silenciosa si no existe como QR, seguimos intentando
+          }
+        }
+
         if (await buscarFactura(codigoLimpio)) return;
         if (!/^FAC-/i.test(codigoLimpio)) {
           const conPrefix = `FAC-${codigoLimpio}`;
