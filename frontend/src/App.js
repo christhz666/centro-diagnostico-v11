@@ -287,8 +287,10 @@ function App() {
                               className={({ isActive }) => `
                               flex items-center gap-x-3 px-4 py-3 rounded-md transition-all duration-300 group relative
                               ${isActive
-                                  ? 'bg-[#3df5e7]/10 text-[#3df5e7] font-semibold active:scale-95'
-                                  : 'text-[#d6e6e3]/60 hover:text-[#d6e6e3] hover:bg-[#272c37]/50 active:scale-95'}
+                                  ? 'bg-[#3df5e7]/10 text-[#008f98] dark:text-[#3df5e7] font-semibold active:scale-95'
+                                  : (darkMode
+                                  ? 'text-[#d6e6e3]/60 hover:text-[#d6e6e3] hover:bg-[#272c37]/50 active:scale-95'
+                                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70 active:scale-95')}
                               `}
                           >
                             <span className="material-symbols-outlined text-[20px] transition-transform group-hover:scale-110 flex-shrink-0" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24" }}>{item.icon}</span>
@@ -297,7 +299,7 @@ function App() {
                             </span>
                             
                             {!sidebarOpen && !isMobile && (
-                              <div className="absolute left-full ml-4 px-2 py-1 bg-[#272c37] border border-[#454850] text-[#f2f3fd] text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none z-50 transition-opacity whitespace-nowrap shadow-xl">
+                              <div className={`absolute left-full ml-4 px-2 py-1 text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none z-50 transition-opacity whitespace-nowrap shadow-xl ${darkMode ? 'bg-[#272c37] border border-[#454850] text-[#f2f3fd]' : 'bg-slate-100 border border-slate-300 text-slate-800'}`}>
                                 {item.label}
                               </div>
                             )}
@@ -310,7 +312,7 @@ function App() {
                             <button
                               onClick={() => setAdminOpen(!adminOpen)}
                               className={`w-full flex items-center justify-between px-4 py-3 rounded-md transition-all duration-300 group relative
-                              ${adminOpen ? 'text-[#3df5e7]' : 'text-[#d6e6e3]/60 hover:text-[#d6e6e3] hover:bg-[#272c37]/50'}
+                              ${adminOpen ? 'text-[#008f98] dark:text-[#3df5e7]' : (darkMode ? 'text-[#d6e6e3]/60 hover:text-[#d6e6e3] hover:bg-[#272c37]/50' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70')}
                             `}
                             >
                               <div className="flex items-center gap-x-3">
@@ -324,14 +326,14 @@ function App() {
 
                             <div className={`overflow-hidden transition-all duration-300 ${adminOpen && (sidebarOpen || isMobile) ? 'max-h-96 mt-1 opacity-100' : 'max-h-0 opacity-0'}`}>
                               <div className="ml-9 space-y-1 border-l border-[#3df5e7]/20 pl-3">
-                                <NavLink to="/admin/usuarios" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#3df5e7] font-bold bg-[#3df5e7]/5' : 'text-[#d6e6e3]/60 hover:text-[#3df5e7]'}`}>Usuarios</NavLink>
-                                <NavLink to="/admin/medicos" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#3df5e7] font-bold bg-[#3df5e7]/5' : 'text-[#d6e6e3]/60 hover:text-[#3df5e7]'}`}>Médicos (Horarios)</NavLink>
-                                <NavLink to="/admin/equipos" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#3df5e7] font-bold bg-[#3df5e7]/5' : 'text-[#d6e6e3]/60 hover:text-[#3df5e7]'}`}>Equipos</NavLink>
-                                <NavLink to="/admin/estudios" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#3df5e7] font-bold bg-[#3df5e7]/5' : 'text-[#d6e6e3]/60 hover:text-[#3df5e7]'}`}>Catálogo</NavLink>
-                                <NavLink to="/admin" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#3df5e7] font-bold bg-[#3df5e7]/5' : 'text-[#d6e6e3]/60 hover:text-[#3df5e7]'}`}>Configuración</NavLink>
-                                <NavLink to="/contabilidad" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#3df5e7] font-bold bg-[#3df5e7]/5' : 'text-[#d6e6e3]/60 hover:text-[#3df5e7]'}`}>Contabilidad</NavLink>
-                                <NavLink to="/campana-whatsapp" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#3df5e7] font-bold bg-[#3df5e7]/5' : 'text-[#d6e6e3]/60 hover:text-[#3df5e7]'}`}>WhatsApp</NavLink>
-                                <NavLink to="/descargar-app" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#3df5e7] font-bold bg-[#3df5e7]/5' : 'text-[#d6e6e3]/60 hover:text-[#3df5e7]'}`}>Descargas</NavLink>
+                                <NavLink to="/admin/usuarios" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#008f98] dark:text-[#3df5e7] font-bold bg-[#3df5e7]/10' : (darkMode ? 'text-[#d6e6e3]/60 hover:text-[#3df5e7]' : 'text-slate-600 hover:text-[#008f98]')}`}>Usuarios</NavLink>
+                                <NavLink to="/admin/medicos" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#008f98] dark:text-[#3df5e7] font-bold bg-[#3df5e7]/10' : (darkMode ? 'text-[#d6e6e3]/60 hover:text-[#3df5e7]' : 'text-slate-600 hover:text-[#008f98]')}`}>Médicos (Horarios)</NavLink>
+                                <NavLink to="/admin/equipos" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#008f98] dark:text-[#3df5e7] font-bold bg-[#3df5e7]/10' : (darkMode ? 'text-[#d6e6e3]/60 hover:text-[#3df5e7]' : 'text-slate-600 hover:text-[#008f98]')}`}>Equipos</NavLink>
+                                <NavLink to="/admin/estudios" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#008f98] dark:text-[#3df5e7] font-bold bg-[#3df5e7]/10' : (darkMode ? 'text-[#d6e6e3]/60 hover:text-[#3df5e7]' : 'text-slate-600 hover:text-[#008f98]')}`}>Catálogo</NavLink>
+                                <NavLink to="/admin" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#008f98] dark:text-[#3df5e7] font-bold bg-[#3df5e7]/10' : (darkMode ? 'text-[#d6e6e3]/60 hover:text-[#3df5e7]' : 'text-slate-600 hover:text-[#008f98]')}`}>Configuración</NavLink>
+                                <NavLink to="/contabilidad" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#008f98] dark:text-[#3df5e7] font-bold bg-[#3df5e7]/10' : (darkMode ? 'text-[#d6e6e3]/60 hover:text-[#3df5e7]' : 'text-slate-600 hover:text-[#008f98]')}`}>Contabilidad</NavLink>
+                                <NavLink to="/campana-whatsapp" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#008f98] dark:text-[#3df5e7] font-bold bg-[#3df5e7]/10' : (darkMode ? 'text-[#d6e6e3]/60 hover:text-[#3df5e7]' : 'text-slate-600 hover:text-[#008f98]')}`}>WhatsApp</NavLink>
+                                <NavLink to="/descargar-app" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#008f98] dark:text-[#3df5e7] font-bold bg-[#3df5e7]/10' : (darkMode ? 'text-[#d6e6e3]/60 hover:text-[#3df5e7]' : 'text-slate-600 hover:text-[#008f98]')}`}>Descargas</NavLink>
                               </div>
                             </div>
                           </div>
@@ -361,7 +363,7 @@ function App() {
                           <span className="material-icons-round">{sidebarOpen ? 'chevron_left' : 'chevron_right'}</span>
                         </button>
                       )}
-                      <h1 className="text-lg font-headline font-semibold text-[#e1e2eb] tracking-tight flex items-center gap-2">
+                      <h1 className="text-lg font-headline font-semibold text-slate-800 dark:text-[#e1e2eb] tracking-tight flex items-center gap-2">
                         <PageTitle />
                       </h1>
                     </div>
@@ -429,10 +431,10 @@ function App() {
                           <span className="text-gray-500 dark:text-[#bacac7] text-[10px] uppercase tracking-wider opacity-60">{rol}</span>
                         </div>
                         <div className="relative">
-                          <div className="w-9 h-9 rounded-lg bg-[#272c37] border border-[#454850]/50 group-hover:border-[#3df5e7]/50 transition-all flex items-center justify-center font-bold text-sm text-[#00e0d3]">
+                          <div className={`w-9 h-9 rounded-lg transition-all flex items-center justify-center font-bold text-sm text-[#00b8c2] dark:text-[#00e0d3] ${darkMode ? 'bg-[#272c37] border border-[#454850]/50 group-hover:border-[#3df5e7]/50' : 'bg-slate-200 border border-slate-300 group-hover:border-[#00c6cf]/50'}`}>
                             {(user.nombre || 'U')[0].toUpperCase()}
                           </div>
-                          <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-[#3df5e7] rounded-full border-2 border-[#10131b]"></div>
+                          <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-[#3df5e7] rounded-full border-2 ${darkMode ? 'border-[#10131b]' : 'border-slate-100'}`}></div>
                         </div>
                       </div>
                     </div>
