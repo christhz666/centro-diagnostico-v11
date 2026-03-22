@@ -47,10 +47,8 @@ const ConsultaRapida = () => {
 
   /* ─── Cargar config empresa ──────────────────────────────── */
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    fetch('/api/configuracion/', { headers: { 'Authorization': `Bearer ${token}` } })
-      .then(r => r.json())
-      .then(d => setEmpresaConfig(d.configuracion || d || {}))
+    api.getConfiguracion()
+      .then(d => setEmpresaConfig(d?.configuracion || d || {}))
       .catch(() => { });
   }, []);
 
@@ -95,7 +93,7 @@ const ConsultaRapida = () => {
     setResultados([]);
     setPagoBloqueo(null);
 
-    const headers = { Authorization: 'Bearer ' + localStorage.getItem('token') };
+    const headers = api.getHeaders();
 
     /* Helper: buscar factura por cualquier identificador y devolver
        SOLO los resultados de esa factura */
@@ -241,9 +239,7 @@ const ConsultaRapida = () => {
   /* ─── Verificar pago e imprimir ───────────────────────── */
   const verificarPagoEImprimir = async (resultado) => {
     try {
-      const r = await fetch(`/api/resultados/${resultado._id}/verificar-pago`, {
-        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
-      });
+      const r = await fetch(`/api/resultados/${resultado._id}/verificar-pago`, { headers: api.getHeaders() });
       const data = await r.json();
       if (data.puede_imprimir === false && data.monto_pendiente > 0) {
         setPagoBloqueo({
