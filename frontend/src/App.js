@@ -213,8 +213,22 @@ function App() {
           
           {/* Ambient Glow Backgrounds */}
           <div className="fixed inset-0 pointer-events-none z-0">
-            <div className={`absolute inset-0 transition-opacity duration-300 ${darkMode ? 'opacity-100' : 'opacity-0'}`} style={{ background: 'radial-gradient(circle at 0% 0%, rgba(61, 245, 231, 0.05) 0%, transparent 50%)' }}></div>
-            <div className={`absolute inset-0 transition-opacity duration-300 ${darkMode ? 'opacity-100' : 'opacity-0'}`} style={{ background: 'radial-gradient(circle at 100% 100%, rgba(16, 79, 74, 0.2) 0%, transparent 50%)' }}></div>
+            <div
+              className={`absolute inset-0 transition-opacity duration-300 ${darkMode ? 'opacity-100' : 'opacity-60'}`}
+              style={{
+                background: darkMode
+                  ? 'radial-gradient(circle at 0% 0%, rgba(61, 245, 231, 0.05) 0%, transparent 50%)'
+                  : 'radial-gradient(circle at 8% 0%, rgba(0, 198, 207, 0.12) 0%, transparent 52%)'
+              }}
+            ></div>
+            <div
+              className={`absolute inset-0 transition-opacity duration-300 ${darkMode ? 'opacity-100' : 'opacity-55'}`}
+              style={{
+                background: darkMode
+                  ? 'radial-gradient(circle at 100% 100%, rgba(16, 79, 74, 0.2) 0%, transparent 50%)'
+                  : 'radial-gradient(circle at 100% 92%, rgba(88, 119, 143, 0.18) 0%, transparent 54%)'
+              }}
+            ></div>
           </div>
 
           <PortalPacienteRoute>
