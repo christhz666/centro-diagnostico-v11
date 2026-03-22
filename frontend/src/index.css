@@ -3,6 +3,14 @@
 @tailwind utilities;
 
 @layer base {
+    html {
+        color-scheme: light;
+    }
+
+    html.dark {
+        color-scheme: dark;
+    }
+
     :root {
         --legacy-surface: #e9eff4;
         --legacy-surface-muted: #f2f6f9;
@@ -130,6 +138,21 @@
     .dark select,
     .dark textarea {
         @apply bg-[#000000] border-transparent text-white placeholder-gray-500 focus:ring-1 focus:ring-primary focus:border-primary shadow-inner-glow transition-all;
+    }
+
+    /* Native dropdown fallback for Windows/Chromium where option popup ignores dark backgrounds */
+    .dark select,
+    .dark option,
+    .dark optgroup {
+        background-color: #111827 !important;
+        color: #e5e7eb !important;
+    }
+
+    html:not(.dark) select,
+    html:not(.dark) option,
+    html:not(.dark) optgroup {
+        background-color: #f8fafc !important;
+        color: #1f2937 !important;
     }
 
     .dark table {
