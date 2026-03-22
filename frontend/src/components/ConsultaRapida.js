@@ -30,6 +30,19 @@ const ConsultaRapida = () => {
   /* ── Configuración empresa ── */
   const [empresaConfig, setEmpresaConfig] = useState({});
 
+  const normalizarCodigo = (valor = '') => (
+    String(valor)
+      .split('')
+      .filter(ch => {
+        const code = ch.charCodeAt(0);
+        return code >= 32 && code !== 127;
+      })
+      .join('')
+      .replace(/\s+/g, '')
+      .trim()
+      .toUpperCase()
+  );
+
   const colores = { azulOscuro: '#1a3a5c', azulCielo: '#87CEEB' };
   const theme = {
     surface: 'var(--legacy-surface)',
@@ -76,14 +89,13 @@ const ConsultaRapida = () => {
   /* ─── Funciones de búsqueda ────────────────────────────── */
   /* ─────────────────────────────────────────────────────────────────
      BÚSQUEDA POR CÓDIGO ÚNICO
-     ─  QR (hex 12-16)          → resultados de ESA FACTURA únicamente
      ─  Número FAC-xxx          → resultados de ESA FACTURA únicamente
      ─  Número puro (escaneo)   → resultados de ESA FACTURA únicamente
      ─  Nombre o cédula          →  TODO el historial del paciente
   ──────────────────────────────────────────────────────────────── */
   const buscarPorCodigo = useCallback(async (codigoIn) => {
-    const raw = (codigoIn || codigo).trim();
-    const codigoLimpio = raw.toUpperCase();
+    const codigoLimpio = normalizarCodigo(codigoIn || codigo);
+    const raw = codigoLimpio;
     if (!codigoLimpio) return;
 
     setLoading(true);
@@ -115,41 +127,32 @@ const ConsultaRapida = () => {
     };
 
     try {
-      /* ── 1. QR de factura (hex 12-16 chars) ────────────────────── */
-      if (/^[A-Z0-9]{10,24}$/.test(codigoLimpio)) {
-        // El QR apunta al codigoQR de la factura → buscar por él
+      /* ── 1. Factura/código de barras interno ───────────────────── */
+      if (/^FAC-/i.test(codigoLimpio) || /^\d{3,}$/.test(codigoLimpio) || /^[A-Z0-9-]{6,}$/.test(codigoLimpio)) {
+        if (await buscarFactura(codigoLimpio)) return;
+        if (!/^FAC-/i.test(codigoLimpio)) {
+          const conPrefix = `FAC-${codigoLimpio}`;
+          if (await buscarFactura(conPrefix)) return;
+        }
+
+        // Fallback para datos legacy: algunos códigos solo existen en Cita (ORD/registro)
         try {
-          const d = await api.request(`/resultados/qr/${codigoLimpio}`);
-          if (d.success && !d.blocked) {
-            setPaciente(d.paciente);
-            setFacturaSeleccionada(d.factura || null);
-            setResultados(d.data || []);
+          const registro = await api.buscarRegistroPorIdOCodigo(codigoLimpio);
+          const payload = registro?.data || registro || {};
+          const cita = payload?.cita || null;
+          const resultadosCita = Array.isArray(payload?.resultados) ? payload.resultados : [];
+          if (cita?.paciente) {
+            setPaciente(cita.paciente);
+            setFacturaSeleccionada(null);
+            setResultados(resultadosCita);
             return;
           }
-          if (d.blocked) { setPagoBloqueo({ montoPendiente: d.montoPendiente, mensaje: d.message }); return; }
         } catch (err) {
-           console.error(err);
+          console.error(err);
         }
-        // Fallback: intentar como número de factura directamente (codigoBarras)
-        if (await buscarFactura(codigoLimpio)) return;
       }
 
-      /* ── 2. Número de factura completo: FAC-YYYYMM-NNNNN ──────── */
-      if (/^FAC-/i.test(codigoLimpio)) {
-        if (await buscarFactura(codigoLimpio)) return;
-      }
-
-      /* ── 3. Número escaneado del código de barras de la factura ── */
-      //  El código de barras de la factura imprime el número "FAC-202602-00001"
-      //  Si el escáner lo lee sin guiones u otros chars, lo normalizamos
-      if (/^\d{3,}$/.test(codigoLimpio) || /^[A-Z0-9-]{6,}$/.test(codigoLimpio)) {
-        if (await buscarFactura(codigoLimpio)) return;
-        // Probar como FAC- con padding
-        const conPrefix = `FAC-${codigoLimpio}`;
-        if (await buscarFactura(conPrefix)) return;
-      }
-
-      /* ── 4. Código de muestra individual (L1234 o lab-code) ───── */
+      /* ── 2. Código de muestra individual (L1234 o lab-code) ───── */
       if (/^L\d+$/i.test(codigoLimpio)) {
         try {
           const resultado = await api.getResultadoPorCodigoMuestra(raw);
@@ -163,7 +166,7 @@ const ConsultaRapida = () => {
         } catch { /* no encontrado */ }
       }
 
-      setError(`No se encontró ninguna factura con el código: "${raw}". Use nombre o cédula para buscar el historial completo.`);
+      setError(`No se encontró ninguna factura/orden con el código: "${raw}". Use nombre o cédula para buscar el historial completo.`);
       setTimeout(() => { setCodigo(''); setError(''); }, 6000);
     } catch (err) {
       setError('Error de búsqueda: ' + err.message);
@@ -175,13 +178,12 @@ const ConsultaRapida = () => {
   /* ─── Auto-envío cuando el escanner completa la lectura ──────── */
   useEffect(() => {
     if (!codigo.trim()) return;
-    const c = codigo.trim();
-    // Detectar: QR hex, número de factura FAC-xxx, matrícula numérica, o código de muestra
-    const esQR = /^[A-Z0-9]{10,24}$/.test(c);
+    const c = normalizarCodigo(codigo);
+    // Detectar: número de factura FAC-xxx, identificadores internos y código de muestra
     const esFac = /^FAC-/i.test(c);
-    const esCodigo = /^\d{3,}$/.test(c);  // cualquier número de 3+ dígitos
+    const esCodigo = /^\d{3,}$/.test(c) || /^[A-Z0-9-]{8,}$/.test(c);
     const esCodigoMuestra = /^L\d{3,}$/i.test(c) || (/^MUE-/i.test(c) && c.length >= 13);
-    if (esQR || esFac || esCodigo || esCodigoMuestra) buscarPorCodigo(c);
+    if (esFac || esCodigo || esCodigoMuestra) buscarPorCodigo(c);
   }, [codigo, buscarPorCodigo]);
 
 
@@ -408,7 +410,7 @@ const ConsultaRapida = () => {
                   error ? error :
                     pagoBloqueo ? pagoBloqueo.mensaje :
                       paciente ? `${paciente.nombre} ${paciente.apellido}` :
-                        'Admite: código QR, FAC-XXXXXX, ORD00001, L1234 o número de muestra'}
+                        'Admite: código de barras/factura (FAC/ORD/número) y código de muestra'}
               </p>
             </div>
             <div style={{ maxWidth: 560, margin: '0 auto' }}>
