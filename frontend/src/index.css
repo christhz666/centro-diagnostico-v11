@@ -35,9 +35,9 @@
     body {
         @apply antialiased text-slate-800 dark:text-slate-200 bg-background-light dark:bg-background-dark font-body;
         background-image:
-            radial-gradient(1px 1px at 24px 18px, rgba(116, 138, 155, 0.12), rgba(0, 0, 0, 0)),
-            radial-gradient(1.5px 1.5px at 92px 62px, rgba(116, 138, 155, 0.1), rgba(0, 0, 0, 0)),
-            linear-gradient(180deg, #f4f8fb 0%, #eef4f8 100%);
+            radial-gradient(1px 1px at 24px 18px, rgba(94, 124, 146, 0.14), rgba(0, 0, 0, 0)),
+            radial-gradient(1.5px 1.5px at 92px 62px, rgba(94, 124, 146, 0.11), rgba(0, 0, 0, 0)),
+            linear-gradient(180deg, #e6eef4 0%, #dde7ef 100%);
         background-size: 220px 220px, 220px 220px, 100% 100%;
         background-attachment: fixed;
     }
@@ -56,7 +56,7 @@
 
     html:not(.dark) .bg-white,
     html:not(.dark) [class*="bg-white/"] {
-        background-color: rgba(230, 237, 242, 0.84) !important;
+        background-color: rgba(220, 230, 238, 0.82) !important;
         border-color: rgba(147, 168, 184, 0.26) !important;
     }
 
@@ -74,8 +74,27 @@
     html:not(.dark) [style*="background: 'white'"],
     html:not(.dark) [style*="background-color: rgb(255"],
     html:not(.dark) [style*="background: rgb(255"] {
-        background: rgba(230, 237, 242, 0.84) !important;
+        background: rgba(220, 230, 238, 0.82) !important;
         border-color: rgba(147, 168, 184, 0.3) !important;
+    }
+
+    html:not(.dark) .glass-card,
+    html:not(.dark) .card,
+    html:not(.dark) .panel {
+        box-shadow:
+            0 12px 24px rgba(38, 57, 74, 0.09),
+            0 1px 0 rgba(255, 255, 255, 0.45) inset;
+        animation: daylight-float 9s ease-in-out infinite;
+    }
+
+    html:not(.dark) .glass-card:hover,
+    html:not(.dark) .card:hover,
+    html:not(.dark) .panel:hover {
+        transform: translateY(-2px);
+        box-shadow:
+            0 18px 34px rgba(38, 57, 74, 0.16),
+            0 1px 0 rgba(255, 255, 255, 0.5) inset;
+        transition: transform 180ms ease, box-shadow 180ms ease;
     }
     
     .material-symbols-outlined {
@@ -260,4 +279,30 @@
 
 .pulse-circle {
     animation: pulse-ring 3s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+@keyframes daylight-float {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-1.5px);
+    }
+}
+
+@keyframes daylight-reveal {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+html:not(.dark) main,
+html:not(.dark) aside,
+html:not(.dark) header {
+    animation: daylight-reveal 320ms ease-out;
 }

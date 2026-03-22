@@ -209,7 +209,7 @@ function App() {
   return (
     <OfflineScreen>
       <Router>
-        <div className={`min-h-screen flex flex-col transition-colors duration-300 bg-slate-50 text-slate-900 dark:bg-[#0b0e15] dark:text-[#f2f3fd] selection:bg-[#3df5e7]/30 selection:text-[#3df5e7] overflow-x-hidden relative font-body`}>
+        <div className={`min-h-screen flex flex-col transition-colors duration-300 bg-[#dfe8f0] text-slate-800 dark:bg-[#0b0e15] dark:text-[#f2f3fd] selection:bg-[#3df5e7]/30 selection:text-[#3df5e7] overflow-x-hidden relative font-body`}>
           
           {/* Ambient Glow Backgrounds */}
           <div className="fixed inset-0 pointer-events-none z-0">
