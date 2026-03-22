@@ -120,8 +120,8 @@ const ConsultaRapida = () => {
           setPagoBloqueo({ montoPendiente: d.montoPendiente, mensaje: d.message });
           return true;
         }
-      } catch (err) {
-         console.error(err);
+      } catch {
+        // 404 esperado cuando el identificador no corresponde a factura
       }
       return false;
     };
@@ -135,20 +135,23 @@ const ConsultaRapida = () => {
           if (await buscarFactura(conPrefix)) return;
         }
 
-        // Fallback para datos legacy: algunos códigos solo existen en Cita (ORD/registro)
-        try {
-          const registro = await api.buscarRegistroPorIdOCodigo(codigoLimpio);
-          const payload = registro?.data || registro || {};
-          const cita = payload?.cita || null;
-          const resultadosCita = Array.isArray(payload?.resultados) ? payload.resultados : [];
-          if (cita?.paciente) {
-            setPaciente(cita.paciente);
-            setFacturaSeleccionada(null);
-            setResultados(resultadosCita);
-            return;
+        // Fallback legacy solo para códigos con forma de orden/registro.
+        const intentarRegistro = /^ORD/i.test(codigoLimpio) || /^\d{4,}$/.test(codigoLimpio);
+        if (intentarRegistro) {
+          try {
+            const registro = await api.buscarRegistroPorIdOCodigo(codigoLimpio);
+            const payload = registro?.data || registro || {};
+            const cita = payload?.cita || null;
+            const resultadosCita = Array.isArray(payload?.resultados) ? payload.resultados : [];
+            if (cita?.paciente) {
+              setPaciente(cita.paciente);
+              setFacturaSeleccionada(null);
+              setResultados(resultadosCita);
+              return;
+            }
+          } catch {
+            // 404 esperado cuando no existe registro/cita
           }
-        } catch (err) {
-          console.error(err);
         }
       }
 
