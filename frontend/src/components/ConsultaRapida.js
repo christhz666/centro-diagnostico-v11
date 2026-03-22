@@ -30,19 +30,6 @@ const ConsultaRapida = () => {
   /* ── Configuración empresa ── */
   const [empresaConfig, setEmpresaConfig] = useState({});
 
-  const normalizarCodigo = (valor = '') => (
-    String(valor)
-      .split('')
-      .filter(ch => {
-        const code = ch.charCodeAt(0);
-        return code >= 32 && code !== 127;
-      })
-      .join('')
-      .replace(/\s+/g, '')
-      .trim()
-      .toUpperCase()
-  );
-
   const colores = { azulOscuro: '#1a3a5c', azulCielo: '#87CEEB' };
   const theme = {
     surface: 'var(--legacy-surface)',
@@ -60,7 +47,9 @@ const ConsultaRapida = () => {
 
   /* ─── Cargar config empresa ──────────────────────────────── */
   useEffect(() => {
-    api.request('/configuracion/')
+    const token = localStorage.getItem('token');
+    fetch('/api/configuracion/', { headers: { 'Authorization': `Bearer ${token}` } })
+      .then(r => r.json())
       .then(d => setEmpresaConfig(d.configuracion || d || {}))
       .catch(() => { });
   }, []);
@@ -89,13 +78,14 @@ const ConsultaRapida = () => {
   /* ─── Funciones de búsqueda ────────────────────────────── */
   /* ─────────────────────────────────────────────────────────────────
      BÚSQUEDA POR CÓDIGO ÚNICO
+     ─  QR (hex 12-16)          → resultados de ESA FACTURA únicamente
      ─  Número FAC-xxx          → resultados de ESA FACTURA únicamente
      ─  Número puro (escaneo)   → resultados de ESA FACTURA únicamente
      ─  Nombre o cédula          →  TODO el historial del paciente
   ──────────────────────────────────────────────────────────────── */
   const buscarPorCodigo = useCallback(async (codigoIn) => {
-    const codigoLimpio = normalizarCodigo(codigoIn || codigo);
-    const raw = codigoLimpio;
+    const raw = (codigoIn || codigo).trim();
+    const codigoLimpio = raw.toUpperCase();
     if (!codigoLimpio) return;
 
     setLoading(true);
@@ -105,76 +95,62 @@ const ConsultaRapida = () => {
     setResultados([]);
     setPagoBloqueo(null);
 
+    const headers = { Authorization: 'Bearer ' + localStorage.getItem('token') };
+
     /* Helper: buscar factura por cualquier identificador y devolver
        SOLO los resultados de esa factura */
     const buscarFactura = async (identificador) => {
-      try {
-        const d = await api.request(`/resultados/factura/${encodeURIComponent(identificador)}`);
-        if (d.success) {
-          setPaciente(d.paciente);
-          setFacturaSeleccionada(d.factura || null);
-          setResultados(d.data || []);
-          return true;
-        }
-        if (d.blocked) {
-          setPagoBloqueo({ montoPendiente: d.montoPendiente, mensaje: d.message });
-          return true;
-        }
-      } catch {
-        // 404 esperado cuando el identificador no corresponde a factura
+      const r = await fetch(`/api/resultados/factura/${encodeURIComponent(identificador)}`, { headers });
+      if (!r.ok) return false;
+      const d = await r.json();
+      if (d.success) {
+        setPaciente(d.paciente);
+        setFacturaSeleccionada(d.factura || null);
+        setResultados(d.data || []);
+        return true;
+      }
+      if (d.blocked) {
+        setPagoBloqueo({ montoPendiente: d.montoPendiente, mensaje: d.message });
+        return true;
       }
       return false;
     };
 
     try {
-      /* ── 1. Factura/código de barras interno ───────────────────── */
-      if (/^FAC-/i.test(codigoLimpio) || /^\d{3,}$/.test(codigoLimpio) || /^[A-Z0-9-]{6,}$/.test(codigoLimpio)) {
-        // En versiones anteriores, este código (alfanumérico) se guarda en la base de datos como "codigoQR" aunque se imprima como código de barras.
-        if (/^[A-Z0-9]{8,24}$/.test(codigoLimpio)) {
-          try {
-            const d = await api.request(`/resultados/qr/${codigoLimpio}`);
-            if (d.success && !d.blocked) {
-              setPaciente(d.paciente);
-              setFacturaSeleccionada(d.factura || null);
-              setResultados(d.data || []);
-              return;
-            }
-            if (d.blocked) {
-              setPagoBloqueo({ montoPendiente: d.montoPendiente, mensaje: d.message });
-              return;
-            }
-          } catch {
-            // Falla silenciosa si no existe como QR, seguimos intentando
+      /* ── 1. QR de factura (hex 12-16 chars) ────────────────────── */
+      if (/^[A-F0-9]{12,16}$/.test(codigoLimpio)) {
+        // El QR apunta al codigoQR de la factura → buscar por él
+        const r = await fetch(`/api/resultados/qr/${codigoLimpio}`, { headers });
+        if (r.ok) {
+          const d = await r.json();
+          if (d.success && !d.blocked) {
+            setPaciente(d.paciente);
+            setFacturaSeleccionada(d.factura || null);
+            setResultados(d.data || []);
+            return;
           }
+          if (d.blocked) { setPagoBloqueo({ montoPendiente: d.montoPendiente, mensaje: d.message }); return; }
         }
-
+        // Fallback: intentar como número de factura directamente (codigoBarras)
         if (await buscarFactura(codigoLimpio)) return;
-        if (!/^FAC-/i.test(codigoLimpio)) {
-          const conPrefix = `FAC-${codigoLimpio}`;
-          if (await buscarFactura(conPrefix)) return;
-        }
-
-        // Fallback legacy solo para códigos con forma de orden/registro.
-        const intentarRegistro = /^ORD/i.test(codigoLimpio) || /^\d{4,}$/.test(codigoLimpio);
-        if (intentarRegistro) {
-          try {
-            const registro = await api.buscarRegistroPorIdOCodigo(codigoLimpio);
-            const payload = registro?.data || registro || {};
-            const cita = payload?.cita || null;
-            const resultadosCita = Array.isArray(payload?.resultados) ? payload.resultados : [];
-            if (cita?.paciente) {
-              setPaciente(cita.paciente);
-              setFacturaSeleccionada(null);
-              setResultados(resultadosCita);
-              return;
-            }
-          } catch {
-            // 404 esperado cuando no existe registro/cita
-          }
-        }
       }
 
-      /* ── 2. Código de muestra individual (L1234 o lab-code) ───── */
+      /* ── 2. Número de factura completo: FAC-YYYYMM-NNNNN ──────── */
+      if (/^FAC-/i.test(codigoLimpio)) {
+        if (await buscarFactura(codigoLimpio)) return;
+      }
+
+      /* ── 3. Número escaneado del código de barras de la factura ── */
+      //  El código de barras de la factura imprime el número "FAC-202602-00001"
+      //  Si el escáner lo lee sin guiones u otros chars, lo normalizamos
+      if (/^\d{3,}$/.test(codigoLimpio) || /^[A-Z0-9-]{6,}$/.test(codigoLimpio)) {
+        if (await buscarFactura(codigoLimpio)) return;
+        // Probar como FAC- con padding
+        const conPrefix = `FAC-${codigoLimpio}`;
+        if (await buscarFactura(conPrefix)) return;
+      }
+
+      /* ── 4. Código de muestra individual (L1234 o lab-code) ───── */
       if (/^L\d+$/i.test(codigoLimpio)) {
         try {
           const resultado = await api.getResultadoPorCodigoMuestra(raw);
@@ -188,7 +164,7 @@ const ConsultaRapida = () => {
         } catch { /* no encontrado */ }
       }
 
-      setError(`No se encontró ninguna factura/orden con el código: "${raw}". Use nombre o cédula para buscar el historial completo.`);
+      setError(`No se encontró ninguna factura con el código: "${raw}". Use nombre o cédula para buscar el historial completo.`);
       setTimeout(() => { setCodigo(''); setError(''); }, 6000);
     } catch (err) {
       setError('Error de búsqueda: ' + err.message);
@@ -200,12 +176,13 @@ const ConsultaRapida = () => {
   /* ─── Auto-envío cuando el escanner completa la lectura ──────── */
   useEffect(() => {
     if (!codigo.trim()) return;
-    const c = normalizarCodigo(codigo);
-    // Detectar: número de factura FAC-xxx, identificadores internos y código de muestra
+    const c = codigo.trim();
+    // Detectar: QR hex, número de factura FAC-xxx, matrícula numérica, o código de muestra
+    const esQR = /^[A-F0-9]{12,16}$/.test(c);
     const esFac = /^FAC-/i.test(c);
-    const esCodigo = /^\d{3,}$/.test(c) || /^[A-Z0-9-]{8,}$/.test(c);
+    const esCodigo = /^\d{3,}$/.test(c);  // cualquier número de 3+ dígitos
     const esCodigoMuestra = /^L\d{3,}$/i.test(c) || (/^MUE-/i.test(c) && c.length >= 13);
-    if (esFac || esCodigo || esCodigoMuestra) buscarPorCodigo(c);
+    if (esQR || esFac || esCodigo || esCodigoMuestra) buscarPorCodigo(c);
   }, [codigo, buscarPorCodigo]);
 
 
@@ -264,7 +241,10 @@ const ConsultaRapida = () => {
   /* ─── Verificar pago e imprimir ───────────────────────── */
   const verificarPagoEImprimir = async (resultado) => {
     try {
-      const data = await api.request(`/resultados/${resultado._id}/verificar-pago`);
+      const r = await fetch(`/api/resultados/${resultado._id}/verificar-pago`, {
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+      });
+      const data = await r.json();
       if (data.puede_imprimir === false && data.monto_pendiente > 0) {
         setPagoBloqueo({
           montoPendiente: data.monto_pendiente,
@@ -432,7 +412,7 @@ const ConsultaRapida = () => {
                   error ? error :
                     pagoBloqueo ? pagoBloqueo.mensaje :
                       paciente ? `${paciente.nombre} ${paciente.apellido}` :
-                        'Admite: código de barras/factura (FAC/ORD/número) y código de muestra'}
+                        'Admite: código QR, FAC-XXXXXX, ORD00001, L1234 o número de muestra'}
               </p>
             </div>
             <div style={{ maxWidth: 560, margin: '0 auto' }}>
