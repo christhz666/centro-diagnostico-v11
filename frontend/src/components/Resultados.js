@@ -31,6 +31,30 @@ const Resultados = () => {
       .toLowerCase()
       .trim();
 
+  const normalizarEstadoValor = (estado = '') => {
+    const valor = String(estado || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+    if (!valor) return 'normal';
+    if (valor.includes('normal')) return 'normal';
+    if (valor.includes('alto')) return valor.includes('crit') ? 'critico' : 'alto';
+    if (valor.includes('bajo')) return valor.includes('crit') ? 'critico' : 'bajo';
+    if (valor.includes('crit')) return 'critico';
+    return 'normal';
+  };
+
+  const normalizarListaValores = (valores = []) => {
+    if (!Array.isArray(valores) || valores.length === 0) {
+      return [{ parametro: '', valor: '', unidad: '', valorReferencia: '', estado: 'normal' }];
+    }
+    return valores.map(v => ({
+      ...v,
+      estado: normalizarEstadoValor(v?.estado)
+    }));
+  };
+
   const esEstudioLaboratorio = (estudio = {}) => {
     const texto = `${estudio?.tipo || ''} ${estudio?.categoria || ''} ${estudio?.nombre || ''}`
       .toString()
@@ -108,7 +132,7 @@ const Resultados = () => {
   const abrirModalNuevo = (cita) => {
     setCitaSeleccionada(cita);
     setNuevoResultado({
-      valores: [{ parametro: '', valor: '', unidad: '', valorReferencia: '', estado: 'Normal' }],
+      valores: [{ parametro: '', valor: '', unidad: '', valorReferencia: '', estado: 'normal' }],
       interpretacion: '',
       observaciones: '',
       conclusion: ''
@@ -119,7 +143,7 @@ const Resultados = () => {
   const abrirModalEditar = (resultado) => {
     setResultadoEditar(resultado);
     setNuevoResultado({
-      valores: resultado.valores?.length ? resultado.valores : [{ parametro: '', valor: '', unidad: '', valorReferencia: '', estado: 'Normal' }],
+      valores: normalizarListaValores(resultado.valores),
       interpretacion: resultado.interpretacion || '',
       observaciones: resultado.observaciones || '',
       conclusion: resultado.conclusion || ''
@@ -130,7 +154,7 @@ const Resultados = () => {
   const agregarValor = () => {
     setNuevoResultado({
       ...nuevoResultado,
-      valores: [...nuevoResultado.valores, { parametro: '', valor: '', unidad: '', valorReferencia: '', estado: 'Normal' }]
+      valores: [...nuevoResultado.valores, { parametro: '', valor: '', unidad: '', valorReferencia: '', estado: 'normal' }]
     });
   };
 
@@ -489,11 +513,10 @@ const Resultados = () => {
                                <div className="w-full md:w-36">
                                    <label className="text-[10px] font-label uppercase tracking-widest text-gray-600 dark:text-[#bacac7] mb-1 block">Estado</label>
                                    <select className="w-full bg-[#0b0e15] border border-[#3b4a48] rounded-lg p-2.5 text-xs text-gray-900 dark:text-[#e0e2ec] font-label focus:ring-1 focus:ring-[#47fbed] outline-none transition-all appearance-none" value={v.estado} onChange={e => actualizarValor(index, 'estado', e.target.value)}>
-                                       <option value="Normal">Normal</option>
-                                       <option value="Alto">Alto</option>
-                                       <option value="Bajo">Bajo</option>
-                                       <option value="Crítico Alto">Crítico Alto</option>
-                                       <option value="Crítico Bajo">Crítico Bajo</option>
+                                     <option value="normal">Normal</option>
+                                     <option value="alto">Alto</option>
+                                     <option value="bajo">Bajo</option>
+                                     <option value="critico">Crítico</option>
                                    </select>
                                </div>
                                <div className="mt-5">

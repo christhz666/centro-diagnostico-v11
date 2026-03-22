@@ -228,6 +228,9 @@ exports.getResultado = async (req, res, next) => {
 exports.createResultado = async (req, res, next) => {
     try {
         req.body.realizadoPor = req.user?._id;
+        if (req.body.valores !== undefined) {
+            req.body.valores = normalizarValoresResultado(req.body.valores);
+        }
 
         if (req.body.estado === 'completado') {
             if (!req.user?.firmaDigital) {
@@ -270,6 +273,31 @@ const _getMontoPendiente = async (facturaId) => {
 
 const MENSAJE_FIRMA_REQUERIDA = 'Debe registrar su firma en Mi Perfil antes de completar o validar resultados.';
 
+const normalizarTexto = (valor = '') =>
+    String(valor || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+
+const normalizarEstadoValor = (estadoRaw = '') => {
+    const estado = normalizarTexto(estadoRaw);
+    if (!estado) return '';
+    if (estado.includes('normal')) return 'normal';
+    if (estado.includes('alto')) return estado.includes('crit') ? 'critico' : 'alto';
+    if (estado.includes('bajo')) return estado.includes('crit') ? 'critico' : 'bajo';
+    if (estado.includes('crit')) return 'critico';
+    return '';
+};
+
+const normalizarValoresResultado = (valores = []) => {
+    if (!Array.isArray(valores)) return [];
+    return valores.map((valor = {}) => ({
+        ...valor,
+        estado: normalizarEstadoValor(valor.estado)
+    }));
+};
+
 // @desc    Actualizar resultado
 // @route   PUT /api/resultados/:id
 exports.updateResultado = async (req, res, next) => {
@@ -292,6 +320,10 @@ exports.updateResultado = async (req, res, next) => {
         allowedFields.forEach(field => {
             if (req.body[field] !== undefined) update[field] = req.body[field];
         });
+
+        if (update.valores !== undefined) {
+            update.valores = normalizarValoresResultado(update.valores);
+        }
 
         if (update.estado === 'completado') {
             if (!req.user?.firmaDigital) {
