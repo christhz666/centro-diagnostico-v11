@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, NavLink, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Joyride, { STATUS } from 'react-joyride';
 import './App.css';
 
@@ -9,6 +9,7 @@ import api from './services/api';
 import Login from './components/Login';
 import OfflineScreen from './components/OfflineScreen';
 import PortalPaciente from './components/PortalPaciente';
+import AppSidebar from './components/ui/sidebar';
 
 const Dashboard = lazy(() => import('./components/Dashboard'));
 const RegistroInteligente = lazy(() => import('./components/RegistroInteligente'));
@@ -261,109 +262,18 @@ function App() {
                 />
 
                 <div className="flex flex-1 overflow-hidden">
-                  {/* Mobile overlay */}
-                  {isMobile && sidebarOpen && (
-                    <div
-                      onClick={() => setSidebarOpen(false)}
-                      className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
-                    />
-                  )}
-
-                  {/* Sidebar Navigation */}
-                  <aside
-                    onMouseEnter={() => { if (!isMobile) setSidebarOpen(true); }}
-                    onMouseLeave={() => { if (!isMobile) setSidebarOpen(false); }}
-                    className={`fixed top-0 bottom-0 left-0 z-50 flex flex-col py-8 px-4 gap-y-6 transition-all duration-300 ease-in-out font-display tracking-tight
-                      bg-white/80 dark:bg-[rgba(22,26,34,0.8)] backdrop-blur-[24px] border-r border-gray-200 dark:border-white/5 shadow-[20px_0px_40px_rgba(0,0,0,0.05)] dark:shadow-[20px_0px_40px_rgba(0,0,0,0.2)]
-                      ${isMobile
-                          ? (sidebarOpen ? 'w-72 translate-x-0' : '-translate-x-full w-72')
-                          : (sidebarOpen ? 'w-64 translate-x-0' : 'w-20 translate-x-0')}
-                  `}>
-                     {/* Brand Identity Section */}
-                     <div className="flex items-center gap-x-3 px-2">
-                       <div className={`w-10 h-10 rounded-lg bg-[#3df5e7]/10 flex items-center justify-center border border-[#3df5e7]/20 shadow-[0_0_15px_rgba(61,245,231,0.1)] transition-all flex-shrink-0 ${!sidebarOpen && !isMobile ? 'mx-auto' : ''}`}>
-                          <span className="material-symbols-outlined text-[#3df5e7]" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24" }}>clinical_notes</span>
-                       </div>
-                       {(sidebarOpen || isMobile) && (
-                         <div className="flex flex-col overflow-hidden">
-                           <span className="text-[#3df5e7] font-bold text-xl tracking-widest leading-none truncate">{empresaConfig.nombre || 'LUMINA'}</span>
-                           <span className="text-gray-600 dark:text-[#bacac7] text-[10px] uppercase tracking-[0.2em] mt-1 opacity-70 truncate">Clinical Intelligence</span>
-                         </div>
-                       )}
-                     </div>
-
-                     {/* Navigation Links */}
-                     <nav className="flex-1 px-1 space-y-1 py-4 overflow-y-auto custom-scrollbar flex flex-col gap-y-1 mt-4">
-                        {filteredMenu.map((item, idx) => (
-                          <NavLink
-                              key={idx}
-                              to={item.path}
-                              end={item.path === '/'}
-                              onClick={() => isMobile && setSidebarOpen(false)}
-                              className={({ isActive }) => `
-                              flex items-center gap-x-3 px-4 py-3 rounded-md transition-all duration-300 group relative
-                              ${isActive
-                                  ? 'bg-[#3df5e7]/10 text-[#008f98] dark:text-[#3df5e7] font-semibold active:scale-95'
-                                  : (darkMode
-                                  ? 'text-[#d6e6e3]/60 hover:text-[#d6e6e3] hover:bg-[#272c37]/50 active:scale-95'
-                                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70 active:scale-95')}
-                              `}
-                          >
-                            <span className="material-symbols-outlined text-[20px] transition-transform group-hover:scale-110 flex-shrink-0" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24" }}>{item.icon}</span>
-                            <span className={`text-sm whitespace-nowrap transition-opacity duration-300 ${!sidebarOpen && !isMobile ? 'opacity-0 pointer-events-none w-0 overflow-hidden hidden' : 'block'}`}>
-                              {item.label}
-                            </span>
-                            
-                            {!sidebarOpen && !isMobile && (
-                              <div className={`absolute left-full ml-4 px-2 py-1 text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none z-50 transition-opacity whitespace-nowrap shadow-xl ${darkMode ? 'bg-[#272c37] border border-[#454850] text-[#f2f3fd]' : 'bg-slate-100 border border-slate-300 text-slate-800'}`}>
-                                {item.label}
-                              </div>
-                            )}
-                          </NavLink>
-                        ))}
-
-                        {/* Admin Submenu Section */}
-                        {isAdmin && (
-                          <div className="pt-2">
-                            <button
-                              onClick={() => setAdminOpen(!adminOpen)}
-                              className={`w-full flex items-center justify-between px-4 py-3 rounded-md transition-all duration-300 group relative
-                              ${adminOpen ? 'text-[#008f98] dark:text-[#3df5e7]' : (darkMode ? 'text-[#d6e6e3]/60 hover:text-[#d6e6e3] hover:bg-[#272c37]/50' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70')}
-                            `}
-                            >
-                              <div className="flex items-center gap-x-3">
-                                <span className="material-symbols-outlined text-[20px] flex-shrink-0" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24" }}>admin_panel_settings</span>
-                                <span className={`text-sm whitespace-nowrap transition-opacity duration-300 ${!sidebarOpen && !isMobile ? 'hidden' : 'block'}`}>Administración</span>
-                              </div>
-                              {(sidebarOpen || isMobile) && (
-                                <span className={`material-icons-round text-sm transition-transform ${adminOpen ? 'rotate-180' : ''}`}>expand_more</span>
-                              )}
-                            </button>
-
-                            <div className={`overflow-hidden transition-all duration-300 ${adminOpen && (sidebarOpen || isMobile) ? 'max-h-96 mt-1 opacity-100' : 'max-h-0 opacity-0'}`}>
-                              <div className="ml-9 space-y-1 border-l border-[#3df5e7]/20 pl-3">
-                                <NavLink to="/admin/usuarios" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#008f98] dark:text-[#3df5e7] font-bold bg-[#3df5e7]/10' : (darkMode ? 'text-[#d6e6e3]/60 hover:text-[#3df5e7]' : 'text-slate-600 hover:text-[#008f98]')}`}>Usuarios</NavLink>
-                                <NavLink to="/admin/medicos" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#008f98] dark:text-[#3df5e7] font-bold bg-[#3df5e7]/10' : (darkMode ? 'text-[#d6e6e3]/60 hover:text-[#3df5e7]' : 'text-slate-600 hover:text-[#008f98]')}`}>Médicos (Horarios)</NavLink>
-                                <NavLink to="/admin/equipos" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#008f98] dark:text-[#3df5e7] font-bold bg-[#3df5e7]/10' : (darkMode ? 'text-[#d6e6e3]/60 hover:text-[#3df5e7]' : 'text-slate-600 hover:text-[#008f98]')}`}>Equipos</NavLink>
-                                <NavLink to="/admin/estudios" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#008f98] dark:text-[#3df5e7] font-bold bg-[#3df5e7]/10' : (darkMode ? 'text-[#d6e6e3]/60 hover:text-[#3df5e7]' : 'text-slate-600 hover:text-[#008f98]')}`}>Catálogo</NavLink>
-                                <NavLink to="/admin" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#008f98] dark:text-[#3df5e7] font-bold bg-[#3df5e7]/10' : (darkMode ? 'text-[#d6e6e3]/60 hover:text-[#3df5e7]' : 'text-slate-600 hover:text-[#008f98]')}`}>Configuración</NavLink>
-                                <NavLink to="/contabilidad" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#008f98] dark:text-[#3df5e7] font-bold bg-[#3df5e7]/10' : (darkMode ? 'text-[#d6e6e3]/60 hover:text-[#3df5e7]' : 'text-slate-600 hover:text-[#008f98]')}`}>Contabilidad</NavLink>
-                                <NavLink to="/campana-whatsapp" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#008f98] dark:text-[#3df5e7] font-bold bg-[#3df5e7]/10' : (darkMode ? 'text-[#d6e6e3]/60 hover:text-[#3df5e7]' : 'text-slate-600 hover:text-[#008f98]')}`}>WhatsApp</NavLink>
-                                <NavLink to="/descargar-app" className={({ isActive }) => `block px-3 py-2 text-xs rounded-md transition-all ${isActive ? 'text-[#008f98] dark:text-[#3df5e7] font-bold bg-[#3df5e7]/10' : (darkMode ? 'text-[#d6e6e3]/60 hover:text-[#3df5e7]' : 'text-slate-600 hover:text-[#008f98]')}`}>Descargas</NavLink>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                     </nav>
-
-                     {/* Bottom Navigation CTA */}
-                     <div className="mt-auto px-2 border-t border-gray-200 dark:border-white/5 pt-4">
-                       <button onClick={handleLogout} className="w-full bg-gray-100 dark:bg-[#32353c]/30 hover:bg-[#d7383b]/20 text-[#d7383b] font-bold py-3.5 rounded-md flex items-center justify-center gap-x-2 transition-all duration-300 active:scale-95 group">
-                         <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24" }}>logout</span>
-                         {(sidebarOpen || isMobile) && <span className="text-sm">Log Out</span>}
-                       </button>
-                     </div>
-                  </aside>
+                  <AppSidebar
+                    isMobile={isMobile}
+                    sidebarOpen={sidebarOpen}
+                    setSidebarOpen={setSidebarOpen}
+                    darkMode={darkMode}
+                    filteredMenu={filteredMenu}
+                    isAdmin={isAdmin}
+                    adminOpen={adminOpen}
+                    setAdminOpen={setAdminOpen}
+                    empresaConfig={empresaConfig}
+                    handleLogout={handleLogout}
+                  />
 
                   {/* TopAppBar */}
                   <header className={`fixed top-0 right-0 h-16 bg-white/80 dark:bg-[rgba(16,19,27,0.7)] backdrop-blur-[16px] z-40 flex items-center justify-between px-4 lg:px-8 gap-x-6 border-b border-gray-200 dark:border-white/5 font-body text-sm transition-all duration-300
