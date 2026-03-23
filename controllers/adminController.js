@@ -265,7 +265,15 @@ exports.resetPassword = async (req, res, next) => {
             });
         }
 
-        usuario.password = req.body.newPassword || 'Password123!';
+        const newPassword = typeof req.body.newPassword === 'string' ? req.body.newPassword.trim() : '';
+        if (!newPassword || newPassword.length < 6) {
+            return res.status(400).json({
+                success: false,
+                message: 'Debe enviar una nueva contraseña de al menos 6 caracteres'
+            });
+        }
+
+        usuario.password = newPassword;
         await usuario.save();
 
         res.json({
