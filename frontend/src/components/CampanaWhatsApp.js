@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaWhatsapp, FaPaperPlane, FaSpinner, FaCheckCircle, FaExclamationTriangle, FaEye } from 'react-icons/fa';
+import api from '../services/api';
 
 const theme = {
   surface: 'var(--legacy-surface)',
@@ -39,10 +40,9 @@ const CampanaWhatsApp = () => {
       e.preventDefault();
       setCredencialesMsg('');
       try {
-        const token = localStorage.getItem('token');
         const r = await fetch('/api/whatsapp/credenciales', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          headers: api.getHeaders(),
           body: JSON.stringify(credenciales)
         });
         const d = await r.json();
@@ -65,9 +65,8 @@ const CampanaWhatsApp = () => {
 
   const cargarStats = async () => {
     try {
-      const token = localStorage.getItem('token');
       const r = await fetch('/api/whatsapp/estadisticas', {
-        headers: { 'Authorization': 'Bearer ' + token }
+        headers: api.getHeaders()
       });
       const d = await r.json();
       if (d.success) setStats(d.data);
@@ -77,9 +76,8 @@ const CampanaWhatsApp = () => {
   const verPreview = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
       const r = await fetch(`/api/whatsapp/preview?segmento=${segmento}&limit=3`, {
-        headers: { 'Authorization': 'Bearer ' + token }
+        headers: api.getHeaders()
       });
       const d = await r.json();
       if (d.success) setPreview(d.data);
@@ -100,10 +98,9 @@ const CampanaWhatsApp = () => {
     setLoading(true);
     setResultado(null);
     try {
-      const token = localStorage.getItem('token');
       const r = await fetch('/api/whatsapp/campana', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        headers: api.getHeaders(),
         body: JSON.stringify({ mensaje, segmento })
       });
       const d = await r.json();

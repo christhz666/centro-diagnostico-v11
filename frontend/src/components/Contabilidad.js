@@ -70,12 +70,11 @@ const Contabilidad = () => {
             if (filtroCategoria) params.categoria = filtroCategoria;
             if (searchTerm) params.search = searchTerm;
 
-            const token = localStorage.getItem('token');
             const [resumenRes, movimientosRes, facturasRes, facDiaRes] = await Promise.all([
                 api.getResumenContable(),
                 api.getMovimientosContables(params),
                 api.getFacturas({}).catch(() => []),
-                fetch('/api/contabilidad/facturacion-dia', { headers: { 'Authorization': 'Bearer ' + token } })
+                fetch('/api/contabilidad/facturacion-dia', { headers: api.getHeaders() })
                     .then(r => r.json()).then(d => d.data || null).catch(() => null)
             ]);
 
