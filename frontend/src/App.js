@@ -440,7 +440,7 @@ function App() {
                       <div className="w-px h-6 bg-gray-300 dark:bg-[#454850]/40 mx-2 hidden sm:block"></div>
 
                       {/* Profile Section */}
-                      <div className="flex items-center gap-x-3 group cursor-pointer" onClick={() => {/* profile nav logic if needed */}}>
+                      <div className="flex items-center gap-x-3 group cursor-pointer" onClick={() => { window.location.href = '/perfil'; }}>
                         <div className="hidden sm:flex flex-col items-end">
                           <span className="text-gray-800 dark:text-white font-semibold text-[13px] group-hover:text-primary transition-colors">{user.nombre || user.username || 'Dr. Lumina'}</span>
                           <span className="text-gray-500 dark:text-[#bacac7] text-[10px] uppercase tracking-wider opacity-60">{rol}</span>

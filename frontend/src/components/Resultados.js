@@ -264,6 +264,17 @@ const Resultados = () => {
   };
 
   const citasPendientesList = citas.filter(c => !resultados.find(r => r.cita?._id === c._id || r.cita === c._id));
+  const handleNuevoResultado = () => {
+    if (!canEditResultados) {
+      alert('No tiene permisos para editar resultados.');
+      return;
+    }
+    if (!citasPendientesList.length) {
+      alert('No hay citas pendientes para crear un resultado nuevo.');
+      return;
+    }
+    abrirModalNuevo(citasPendientesList[0]);
+  };
   const countPendientes = citasPendientesList.length;
   const countEnProceso = resultados.filter(r => r.estado === 'en_proceso' || r.estado === 'en proceso').length;
   const countCompletado = resultados.filter(r => r.estado === 'completado').length;
@@ -291,7 +302,7 @@ const Resultados = () => {
             <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24" }}>refresh</span>
             Actualizar
           </button>
-          <button className="px-6 py-2.5 bg-gradient-to-r from-[#00ded1] to-[#00716a] text-[#003733] font-headline text-sm font-bold rounded-lg shadow-[0_0_15px_rgba(71,251,237,0.2)] hover:shadow-[0_0_25px_rgba(71,251,237,0.3)] transition-all flex items-center gap-2">
+          <button onClick={handleNuevoResultado} className="px-6 py-2.5 bg-gradient-to-r from-[#00ded1] to-[#00716a] text-[#003733] font-headline text-sm font-bold rounded-lg shadow-[0_0_15px_rgba(71,251,237,0.2)] hover:shadow-[0_0_25px_rgba(71,251,237,0.3)] transition-all flex items-center gap-2">
             <span className="material-symbols-outlined text-lg">add</span>
             Nuevo Resultado
           </button>
