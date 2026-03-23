@@ -7,6 +7,6 @@ const router = express.Router();
 router.get('/activa', protect, getTurnoActivo);
 router.post('/abrir', protect, abrirTurno);
 router.post('/cerrar', protect, cerrarTurno);
-router.get('/historial', protect, authorize('admin', 'recepcion'), getHistorialTurnos);
+router.get('/historial', protect, authorize('admin', 'recepcion', 'recepcionista'), getHistorialTurnos);
 
 module.exports = router;

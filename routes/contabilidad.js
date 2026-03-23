@@ -8,7 +8,7 @@ const { protect, authorize } = require('../middleware/auth');
 const { idValidation } = require('../middleware/validators');
 
 router.use(protect);
-router.use(authorize('admin', 'recepcion'));
+router.use(authorize('admin', 'recepcion', 'recepcionista'));
 
 router.get('/resumen', getResumenContable);
 router.get('/flujo-caja', getFlujoCaja);
