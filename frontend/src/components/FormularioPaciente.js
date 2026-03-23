@@ -15,7 +15,7 @@ function FormularioPaciente() {
   const [loading, setLoading] = useState(false);
   const [pacienteCreado, setPacienteCreado] = useState(null);
 
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
   const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 
   const handleChange = (e) => {

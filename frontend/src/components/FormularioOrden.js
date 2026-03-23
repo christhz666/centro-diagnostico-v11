@@ -16,7 +16,7 @@ function FormularioOrden({ onSuccess }) {
   }, []);
 
   const cargarDatos = async () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     const headers = { Authorization: `Bearer ${token}` };
     const [resPacientes, resEstudios] = await Promise.all([
       axios.get(`${API_URL}/pacientes/`, { headers }),
@@ -52,7 +52,7 @@ function FormularioOrden({ onSuccess }) {
     }
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       await axios.post(`${API_URL}/ordenes/`, formData, {
         headers: { Authorization: `Bearer ${token}` }
       });

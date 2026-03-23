@@ -11,7 +11,7 @@ function BuscadorPacientes() {
   const [historial, setHistorial] = useState(null);
   const timeoutRef = useRef(null);
 
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
   const headers = { Authorization: `Bearer ${token}` };
 
   useEffect(() => {

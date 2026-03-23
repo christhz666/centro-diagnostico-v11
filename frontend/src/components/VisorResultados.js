@@ -14,7 +14,7 @@ const VisorResultados = () => {
 
   const API_URL = '/api';
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     fetch(`${API_URL}/configuracion/`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
@@ -30,7 +30,7 @@ const VisorResultados = () => {
   const fetchResultados = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       const response = await axios.get(`${API_URL}/resultados/`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -44,7 +44,7 @@ const VisorResultados = () => {
 
   const verDetalle = async (resultadoId) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       const response = await axios.get(`${API_URL}/resultados/${resultadoId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -59,7 +59,7 @@ const VisorResultados = () => {
 
   const verificarEstadoPago = async (resultadoId) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       const response = await axios.get(`${API_URL}/resultados/${resultadoId}/verificar-pago`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -87,7 +87,7 @@ const VisorResultados = () => {
 
     // Marcar como impreso en el backend
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
       await axios.put(`${API_URL}/resultados/${detalleResultado._id || detalleResultado.id}/imprimir`, {}, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
