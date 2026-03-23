@@ -24,8 +24,10 @@ function Cotizaciones() {
   });
   const [registrando, setRegistrando] = useState(false);
 
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
   const headers = { Authorization: `Bearer ${token}` };
+
+  const getId = (obj) => obj?._id || obj?.id;
 
   useEffect(() => {
     fetchEstudios();
@@ -35,7 +37,8 @@ function Cotizaciones() {
   const fetchEstudios = async () => {
     try {
       const res = await axios.get(`${API}/estudios/`, { headers });
-      setEstudios(res.data.estudios || []);
+      const lista = res.data?.data || res.data?.estudios || [];
+      setEstudios(Array.isArray(lista) ? lista : []);
     } catch (err) { console.error(err); }
   };
 
@@ -47,13 +50,15 @@ function Cotizaciones() {
   };
 
   const agregarEstudio = (e) => {
-    if (!seleccionados.find(s => s.id === e.id)) {
+    const id = getId(e);
+    if (!id) return;
+    if (!seleccionados.find(s => getId(s) === id)) {
       setSeleccionados([...seleccionados, { ...e, cantidad: 1 }]);
     }
   };
 
   const quitarEstudio = (id) => {
-    setSeleccionados(seleccionados.filter(s => s.id !== id));
+    setSeleccionados(seleccionados.filter(s => getId(s) !== id));
   };
 
   const formatMoney = (n) => 'RD$ ' + Number(n || 0).toLocaleString('es-DO', { minimumFractionDigits: 2 });
@@ -66,7 +71,7 @@ function Cotizaciones() {
       fecha: new Date().toISOString(),
       cliente: nombreCliente || 'Sin nombre',
       telefono: telefonoCliente,
-      estudios: seleccionados.map(s => ({ id: s.id, codigo: s.codigo, nombre: s.nombre, precio: s.precio })),
+      estudios: seleccionados.map(s => ({ id: getId(s), codigo: s.codigo, nombre: s.nombre, precio: s.precio })),
       total: total
     };
     const nuevas = [cotizacion, ...historialCotizaciones].slice(0, 50);
@@ -116,25 +121,47 @@ function Cotizaciones() {
       alert('Nombre y apellido son requeridos');
       return;
     }
+    if (!formPaciente.telefono || !formPaciente.sexo || !formPaciente.fecha_nacimiento) {
+      alert('Telefono, sexo y fecha de nacimiento son requeridos');
+      return;
+    }
     setRegistrando(true);
     try {
       // Crear paciente
-      const resPac = await axios.post(`${API}/pacientes/`, formPaciente, { headers });
-      const paciente = resPac.data.paciente;
+      const pacientePayload = {
+        nombre: formPaciente.nombre,
+        apellido: formPaciente.apellido,
+        cedula: formPaciente.cedula || undefined,
+        telefono: formPaciente.telefono,
+        telefonoSecundario: formPaciente.celular || undefined,
+        email: formPaciente.email || undefined,
+        sexo: formPaciente.sexo,
+        fechaNacimiento: formPaciente.fecha_nacimiento,
+        direccion: formPaciente.direccion ? { calle: formPaciente.direccion } : undefined,
+        seguro: formPaciente.seguro_medico ? { nombre: formPaciente.seguro_medico } : undefined
+      };
+      const resPac = await axios.post(`${API}/pacientes/`, pacientePayload, { headers });
+      const paciente = resPac.data?.data || resPac.data?.paciente;
+      const pacienteId = getId(paciente);
+      if (!pacienteId) throw new Error('No se pudo obtener el ID del paciente creado');
       
       // Crear orden con los estudios de la cotizacion
       const resOrden = await axios.post(`${API}/ordenes/`, {
-        paciente_id: paciente.id,
-        medico_referente: '',
-        prioridad: 'normal',
-        estudios: seleccionados.map(s => ({ estudio_id: s.id, descuento: 0 }))
+        paciente: pacienteId,
+        fecha: new Date().toISOString(),
+        horaInicio: new Date().toTimeString().slice(0, 5),
+        estudios: seleccionados.map(s => ({ estudio: getId(s), descuento: 0 }))
       }, { headers });
 
-      alert('Paciente registrado y orden creada: ' + resOrden.data.orden.numero_orden);
+      const cita = resOrden.data?.data || resOrden.data?.orden;
+      const citaId = getId(cita);
+      if (!citaId) throw new Error('No se pudo obtener el ID de la orden/cita creada');
+
+      alert('Paciente registrado y orden creada correctamente');
       setMostrarRegistro(false);
       
       if (window.confirm('Desea facturar esta orden ahora?')) {
-        navigate('/crear-factura/' + resOrden.data.orden.id);
+        navigate('/crear-factura/' + citaId);
       } else {
         navigate('/');
       }
@@ -155,7 +182,7 @@ function Cotizaciones() {
     setNombreCliente(cot.cliente);
     setTelefonoCliente(cot.telefono || '');
     const estudiosRecuperados = cot.estudios.map(e => {
-      const estudioCompleto = estudios.find(es => es.id === e.id);
+      const estudioCompleto = estudios.find(es => getId(es) === e.id);
       return estudioCompleto ? { ...estudioCompleto, cantidad: 1 } : { ...e, cantidad: 1 };
     }).filter(Boolean);
     setSeleccionados(estudiosRecuperados);
@@ -184,7 +211,7 @@ function Cotizaciones() {
             </div>
             <div className="estudios-list">
               {estudiosFiltrados.map(e => (
-                <div key={e.id} className="estudio-item" onClick={() => agregarEstudio(e)}>
+                <div key={getId(e)} className="estudio-item" onClick={() => agregarEstudio(e)}>
                   <span className="estudio-codigo">{e.codigo}</span>
                   <span className="estudio-nombre">{e.nombre}</span>
                   <span className="estudio-precio">{formatMoney(e.precio)}</span>
@@ -212,12 +239,12 @@ function Cotizaciones() {
             ) : (
               <div className="estudios-seleccionados">
                 {seleccionados.map(s => (
-                  <div key={s.id} className="estudio-sel-item">
+                  <div key={getId(s)} className="estudio-sel-item">
                     <div className="estudio-sel-info">
                       <strong>{s.nombre}</strong>
                       <span>{formatMoney(s.precio)}</span>
                     </div>
-                    <button className="btn-remove" onClick={() => quitarEstudio(s.id)}><FaTrash /></button>
+                    <button className="btn-remove" onClick={() => quitarEstudio(getId(s))}><FaTrash /></button>
                   </div>
                 ))}
               </div>

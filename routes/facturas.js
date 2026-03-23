@@ -11,16 +11,16 @@ router.use(protect);
 
 router.get('/resumen', authorize('admin'), getResumen);
 
-router.post('/crear-desde-orden/:ordenId', authorize('admin', 'recepcion'), crearDesdeOrden);
+router.post('/crear-desde-orden/:ordenId', authorize('admin', 'recepcion', 'recepcionista'), crearDesdeOrden);
 
 router.route('/')
     .get(getFacturas)
-    .post(authorize('admin', 'recepcion'), createFactura);
+    .post(authorize('admin', 'recepcion', 'recepcionista'), createFactura);
 
 router.route('/:id')
     .get(idValidation, getFactura);
 
-router.post('/:id/pagar', idValidation, authorize('admin', 'recepcion'), pagarFactura);
+router.post('/:id/pagar', idValidation, authorize('admin', 'recepcion', 'recepcionista'), pagarFactura);
 router.patch('/:id/anular', idValidation, authorize('admin'), anularFactura);
 
 module.exports = router;

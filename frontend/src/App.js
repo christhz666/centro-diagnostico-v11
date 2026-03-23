@@ -13,6 +13,8 @@ import PortalPaciente from './components/PortalPaciente';
 const Dashboard = lazy(() => import('./components/Dashboard'));
 const RegistroInteligente = lazy(() => import('./components/RegistroInteligente'));
 const Facturas = lazy(() => import('./components/Facturas'));
+const Cotizaciones = lazy(() => import('./components/Cotizaciones'));
+const CrearFacturaCompleta = lazy(() => import('./components/CrearFacturaCompleta'));
 const PortalMedico = lazy(() => import('./components/PortalMedico'));
 const AdminPanel = lazy(() => import('./components/AdminPanel'));
 const AdminUsuarios = lazy(() => import('./components/AdminUsuarios'));
@@ -185,8 +187,9 @@ function App() {
     { path: '/registro', icon: 'person_add', label: 'Registro', permission: 'registro', roles: ['admin', 'super-admin', 'recepcion', 'recepcionista'] },
     { path: '/consulta', icon: 'search', label: 'Consulta', permission: 'consulta', roles: ['admin', 'super-admin', 'recepcion', 'recepcionista', 'laboratorio', 'bioanalista'] },
     { path: '/facturas', icon: 'receipt_long', label: 'Facturas', permission: 'facturas', roles: ['admin', 'super-admin', 'recepcion', 'recepcionista'] },
+    { path: '/cotizaciones', icon: 'calculate', label: 'Cotizaciones', permission: 'facturas', roles: ['admin', 'super-admin', 'recepcion', 'recepcionista'] },
     { path: '/medico', icon: 'medical_services', label: 'Médico', permission: 'medico', roles: ['admin', 'super-admin', 'medico'] },
-    { path: '/resultados', icon: 'science', label: 'Resultados', permission: 'resultados', roles: ['admin', 'super-admin', 'medico', 'laboratorio', 'bioanalista'] },
+    { path: '/resultados', icon: 'science', label: 'Resultados', permission: 'resultados', roles: ['admin', 'super-admin', 'medico', 'laboratorio', 'bioanalista', 'recepcion', 'recepcionista'] },
     { path: '/imagenologia', icon: 'settings_overscan', label: 'Imágenes', permission: 'imagenologia', roles: ['admin', 'super-admin', 'medico', 'laboratorio', 'bioanalista', 'recepcion', 'recepcionista'] },
     { path: '/perfil', icon: 'badge', label: 'Mi Perfil', permission: 'perfil', roles: ['admin', 'super-admin', 'medico', 'recepcion', 'recepcionista', 'laboratorio', 'bioanalista'] },
     { path: '/admin', icon: 'settings', label: 'Panel Admin', permission: 'adminPanel', roles: ['admin', 'super-admin'] },
@@ -463,6 +466,8 @@ function App() {
                         <Route path="/registro" element={canAccess('registro', ['admin', 'super-admin', 'recepcion', 'recepcionista']) ? <RegistroInteligente /> : <Navigate to="/" />} />
                         <Route path="/consulta" element={canAccess('consulta', ['admin', 'super-admin', 'recepcion', 'recepcionista', 'laboratorio', 'bioanalista']) ? <ConsultaRapida /> : <Navigate to="/" />} />
                         <Route path="/facturas" element={canAccess('facturas', ['admin', 'super-admin', 'recepcion', 'recepcionista']) ? <Facturas /> : <Navigate to="/" />} />
+                        <Route path="/cotizaciones" element={canAccess('facturas', ['admin', 'super-admin', 'recepcion', 'recepcionista']) ? <Cotizaciones /> : <Navigate to="/" />} />
+                        <Route path="/crear-factura/:ordenId" element={canAccess('facturas', ['admin', 'super-admin', 'recepcion', 'recepcionista']) ? <CrearFacturaCompleta /> : <Navigate to="/" />} />
                         <Route path="/medico" element={canAccess('medico', ['admin', 'super-admin', 'medico']) ? <PortalMedico /> : <Navigate to="/" />} />
                         <Route path="/perfil" element={canAccess('perfil', ['admin', 'super-admin', 'medico', 'recepcion', 'recepcionista', 'laboratorio', 'bioanalista']) ? <Perfil user={user} onUserUpdate={handleUserUpdate} /> : <Navigate to="/" />} />
                         <Route path="/admin" element={canAccess('adminPanel', ['admin', 'super-admin']) ? <AdminPanel /> : <Navigate to="/" />} />
@@ -471,7 +476,7 @@ function App() {
                         <Route path="/admin/equipos" element={canAccess('adminEquipos', ['admin', 'super-admin']) ? <AdminEquipos /> : <Navigate to="/" />} />
                         <Route path="/admin/estudios" element={canAccess('adminEstudios', ['admin', 'super-admin']) ? <GestionEstudios /> : <Navigate to="/" />} />
                         <Route path="/contabilidad" element={canAccess('contabilidad', ['admin', 'super-admin']) ? <Contabilidad /> : <Navigate to="/" />} />
-                        <Route path="/resultados" element={canAccess('resultados', ['admin', 'super-admin', 'medico', 'laboratorio', 'bioanalista']) ? <Resultados /> : <Navigate to="/" />} />
+                        <Route path="/resultados" element={canAccess('resultados', ['admin', 'super-admin', 'medico', 'laboratorio', 'bioanalista', 'recepcion', 'recepcionista']) ? <Resultados /> : <Navigate to="/" />} />
                         <Route path="/imagenologia" element={canAccess('imagenologia', ['admin', 'super-admin', 'medico', 'laboratorio', 'bioanalista', 'recepcion', 'recepcionista']) ? <Imagenologia /> : <Navigate to="/" />} />
                         <Route path="/deploy" element={canAccess('deploy', ['admin', 'super-admin']) ? <DeployAgentes /> : <Navigate to="/" />} />
                         <Route path="/descargar-app" element={canAccess('descargarApp', ['admin', 'super-admin']) ? <DescargarApp /> : <Navigate to="/" />} />

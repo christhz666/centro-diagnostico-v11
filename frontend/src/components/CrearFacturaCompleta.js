@@ -21,8 +21,9 @@ function CrearFacturaCompleta() {
     descuento_global: 0
   });
 
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
   const headers = { Authorization: `Bearer ${token}` };
+  const getId = (obj) => obj?._id || obj?.id;
 
   useEffect(() => {
     cargarOrdenesPendientes();
@@ -36,45 +37,52 @@ function CrearFacturaCompleta() {
 
   const cargarOrdenesPendientes = async () => {
     try {
-      const res = await axios.get(`${API}/ordenes/pendientes`, { headers });
-      setOrdenesPendientes(res.data.ordenes || []);
+      const res = await axios.get(`${API}/ordenes/`, { headers });
+      const citas = res.data?.data || res.data?.ordenes || [];
+      const pendientes = (Array.isArray(citas) ? citas : []).filter(c => !c.pagado);
+      setOrdenesPendientes(pendientes);
     } catch (err) { console.error(err); }
   };
 
   const cargarOrdenDetalle = async (id) => {
     try {
       const res = await axios.get(`${API}/ordenes/${id}`, { headers });
-      setOrdenSeleccionada(res.data);
-      setOrdenDetalle(res.data);
+      const orden = res.data?.data || res.data;
+      setOrdenSeleccionada(orden);
+      setOrdenDetalle(orden);
     } catch (err) { console.error(err); }
   };
 
   const seleccionarOrden = (orden) => {
     setOrdenSeleccionada(orden);
-    cargarOrdenDetalle(orden.id);
+    cargarOrdenDetalle(getId(orden));
   };
 
   const formatMoney = (n) => 'RD$ ' + Number(n || 0).toLocaleString('es-DO', { minimumFractionDigits: 2 });
 
   const calcularTotal = () => {
-    if (!ordenDetalle || !ordenDetalle.detalles) return 0;
-    return ordenDetalle.detalles.reduce((sum, d) => sum + (d.precio_final || 0), 0);
+    if (!ordenDetalle || !ordenDetalle.estudios) return 0;
+    return ordenDetalle.estudios.reduce((sum, d) => {
+      const precio = d?.precio || d?.estudio?.precio || 0;
+      const descuento = d?.descuento || 0;
+      return sum + (precio - descuento);
+    }, 0);
   };
 
   const crearFactura = async () => {
     if (!ordenSeleccionada) { alert('Seleccione una orden'); return; }
     setLoading(true);
     try {
-      const res = await axios.post(`${API}/facturas/crear-desde-orden/${ordenSeleccionada.id}`, formData, { headers });
-      const facturaData = res.data.factura || res.data;
+      const res = await axios.post(`${API}/facturas/crear-desde-orden/${getId(ordenSeleccionada)}`, formData, { headers });
+      const facturaData = res.data?.data || res.data?.factura || res.data;
       
       setFacturaCreada({
         factura: facturaData,
         paciente: ordenSeleccionada.paciente,
-        estudios: ordenDetalle.detalles?.map(d => ({
-          nombre: d.estudio?.nombre || d.descripcion || 'Estudio',
-          precio: d.precio_final || d.precio || 0,
-          cobertura: d.cobertura || 0
+        estudios: ordenDetalle.estudios?.map(d => ({
+          nombre: d.estudio?.nombre || 'Estudio',
+          precio: d.precio || d.estudio?.precio || 0,
+          cobertura: d.descuento || 0
         })) || []
       });
     } catch (err) {
@@ -119,13 +127,13 @@ function CrearFacturaCompleta() {
             ) : (
               <div>
                 {ordenesPendientes.map(o => (
-                  <div key={o.id} className="result-item-inline" onClick={() => seleccionarOrden(o)} style={{border: ordenSeleccionada?.id === o.id ? '2px solid var(--primary)' : '2px solid transparent', background: ordenSeleccionada?.id === o.id ? 'var(--primary-bg)' : 'var(--gray-50)'}}>
+                  <div key={getId(o)} className="result-item-inline" onClick={() => seleccionarOrden(o)} style={{border: getId(ordenSeleccionada) === getId(o) ? '2px solid var(--primary)' : '2px solid transparent', background: getId(ordenSeleccionada) === getId(o) ? 'var(--primary-bg)' : 'var(--gray-50)'}}>
                     <div className="result-avatar"><FaClipboardList /></div>
                     <div className="result-info">
-                      <strong>{o.numero_orden}</strong>
-                      <span>{o.paciente?.nombre_completo || 'Paciente'} - {o.total_estudios || 0} estudios</span>
+                      <strong>{o.registroId || getId(o)}</strong>
+                      <span>{o.paciente?.nombre || 'Paciente'} {o.paciente?.apellido || ''} - {o.estudios?.length || 0} estudios</span>
                     </div>
-                    {ordenSeleccionada?.id === o.id && <FaCheck style={{color:'var(--primary)',fontSize:18}} />}
+                    {getId(ordenSeleccionada) === getId(o) && <FaCheck style={{color:'var(--primary)',fontSize:18}} />}
                   </div>
                 ))}
               </div>
