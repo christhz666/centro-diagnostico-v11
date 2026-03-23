@@ -190,6 +190,7 @@ function App() {
     { path: '/cotizaciones', icon: 'calculate', label: 'Cotizaciones', permission: 'facturas', roles: ['admin', 'super-admin', 'recepcion', 'recepcionista'] },
     { path: '/medico', icon: 'medical_services', label: 'Médico', permission: 'medico', roles: ['admin', 'super-admin', 'medico'] },
     { path: '/resultados', icon: 'science', label: 'Resultados', permission: 'resultados', roles: ['admin', 'super-admin', 'medico', 'laboratorio', 'bioanalista', 'recepcion', 'recepcionista'] },
+    { path: '/contabilidad', icon: 'monitoring', label: 'Contabilidad', permission: 'contabilidad', roles: ['admin', 'super-admin', 'recepcion', 'recepcionista'] },
     { path: '/imagenologia', icon: 'settings_overscan', label: 'Imágenes', permission: 'imagenologia', roles: ['admin', 'super-admin', 'medico', 'laboratorio', 'bioanalista', 'recepcion', 'recepcionista'] },
     { path: '/perfil', icon: 'badge', label: 'Mi Perfil', permission: 'perfil', roles: ['admin', 'super-admin', 'medico', 'recepcion', 'recepcionista', 'laboratorio', 'bioanalista'] },
     { path: '/admin', icon: 'settings', label: 'Panel Admin', permission: 'adminPanel', roles: ['admin', 'super-admin'] },
@@ -475,7 +476,7 @@ function App() {
                         <Route path="/admin/medicos" element={canAccess('adminMedicos', ['admin', 'super-admin']) ? <AdminMedicos /> : <Navigate to="/" />} />
                         <Route path="/admin/equipos" element={canAccess('adminEquipos', ['admin', 'super-admin']) ? <AdminEquipos /> : <Navigate to="/" />} />
                         <Route path="/admin/estudios" element={canAccess('adminEstudios', ['admin', 'super-admin']) ? <GestionEstudios /> : <Navigate to="/" />} />
-                        <Route path="/contabilidad" element={canAccess('contabilidad', ['admin', 'super-admin']) ? <Contabilidad /> : <Navigate to="/" />} />
+                        <Route path="/contabilidad" element={canAccess('contabilidad', ['admin', 'super-admin', 'recepcion', 'recepcionista']) ? <Contabilidad /> : <Navigate to="/" />} />
                         <Route path="/resultados" element={canAccess('resultados', ['admin', 'super-admin', 'medico', 'laboratorio', 'bioanalista', 'recepcion', 'recepcionista']) ? <Resultados /> : <Navigate to="/" />} />
                         <Route path="/imagenologia" element={canAccess('imagenologia', ['admin', 'super-admin', 'medico', 'laboratorio', 'bioanalista', 'recepcion', 'recepcionista']) ? <Imagenologia /> : <Navigate to="/" />} />
                         <Route path="/deploy" element={canAccess('deploy', ['admin', 'super-admin']) ? <DeployAgentes /> : <Navigate to="/" />} />
