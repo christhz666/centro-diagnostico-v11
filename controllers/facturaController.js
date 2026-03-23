@@ -137,14 +137,15 @@ exports.createFactura = async (req, res, next) => {
             });
         }
 
-        // Auto-crear registros de resultado para cada estudio de la factura
-        if (req.body.items && req.body.items.length > 0 && req.body.paciente) {
+        // Auto-crear registros de resultado solo cuando la factura está asociada a una cita real.
+        // Evita guardar referencias inválidas (ej. usar factura._id en el campo cita).
+        if (req.body.cita && req.body.items && req.body.items.length > 0 && req.body.paciente) {
             const resultadosPromises = req.body.items
                 .filter(item => item.estudio) // solo items con estudio asignado
                 .map(item => {
                     return Resultado.create({
                         paciente: req.body.paciente,
-                        cita: req.body.cita || factura._id, // usar cita si existe
+                        cita: req.body.cita,
                         factura: factura._id,
                         estudio: item.estudio,
                         estado: 'pendiente',
