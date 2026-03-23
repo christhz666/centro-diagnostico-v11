@@ -18,6 +18,7 @@ const theme = {
 
 const Facturas = () => {
   const [facturas, setFacturas] = useState([]);
+  const [resumenFiscal, setResumenFiscal] = useState(null);
   const [loading, setLoading] = useState(true);
   const [filtroEstado, setFiltroEstado] = useState('');
   const [facturaDetalle, setFacturaDetalle] = useState(null);
@@ -80,6 +81,16 @@ const Facturas = () => {
     }
   }, [filtroEstado]);
 
+  const fetchResumenFiscal = useCallback(async () => {
+    try {
+      const response = await api.getResumenFacturas();
+      setResumenFiscal(response?.data || response || null);
+    } catch (err) {
+      console.error('Error cargando resumen fiscal:', err);
+      setResumenFiscal(null);
+    }
+  }, []);
+
   const fetchCitasPendientes = useCallback(async (isSilent = false) => {
     try {
       const response = await api.getCitas({ pagado: false });
@@ -94,14 +105,16 @@ const Facturas = () => {
     fetchFacturas();
     fetchCitasPendientes();
     fetchTurnoActivo();
+    fetchResumenFiscal();
 
     const interval = setInterval(() => {
       fetchFacturas(true);
       fetchCitasPendientes(true);
+      fetchResumenFiscal();
     }, 20000);
 
     return () => clearInterval(interval);
-  }, [fetchFacturas, fetchCitasPendientes, fetchTurnoActivo]);
+  }, [fetchFacturas, fetchCitasPendientes, fetchTurnoActivo, fetchResumenFiscal]);
 
   const verDetalle = async (factura) => {
     try {
@@ -174,6 +187,7 @@ const Facturas = () => {
       setCitaSeleccionada(null);
       fetchFacturas();
       fetchCitasPendientes();
+      fetchResumenFiscal();
     } catch (err) { alert('Error: ' + err.message); }
   };
 
@@ -189,6 +203,7 @@ const Facturas = () => {
       setMontoPago('');
       setMetodoPago('efectivo');
       fetchFacturas();
+      fetchResumenFiscal();
     } catch (err) {
       alert('Error al registrar pago: ' + err.message);
     } finally {
@@ -306,7 +321,7 @@ const Facturas = () => {
         <div className="bg-[#1a2235] rounded-2xl p-8 border border-slate-800/50 shadow-xl flex justify-between" data-purpose="stat-card">
           <div>
             <span className="text-slate-400 text-xs font-bold uppercase tracking-widest block mb-2">Operaciones del Mes</span>
-            <div className="text-4xl font-bold text-gray-900 dark:text-white mb-4">RD$ {facturas.reduce((sum, f) => sum + (f.total || 0), 0).toLocaleString()}</div>
+            <div className="text-4xl font-bold text-gray-900 dark:text-white mb-4">RD$ {(resumenFiscal?.mes?.totalFacturado || 0).toLocaleString()}</div>
           </div>
           <div className="w-12 h-12 rounded-xl bg-slate-800/60 flex items-center justify-center border border-slate-700">
             <FaChartLine className="text-emerald-500 w-6 h-6" />

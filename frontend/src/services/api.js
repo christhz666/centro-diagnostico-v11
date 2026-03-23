@@ -321,6 +321,7 @@ class ApiService {
         const query = new URLSearchParams(params).toString();
         return this.request('/facturas/?' + query);
     }
+    async getResumenFacturas() { return this.request('/facturas/resumen'); }
     async getFactura(id) { return this.request('/facturas/' + id); }
 
     async createFactura(data) {

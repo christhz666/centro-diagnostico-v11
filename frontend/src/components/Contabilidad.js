@@ -220,6 +220,10 @@ const Contabilidad = () => {
                             <div style={{ fontSize: 12, color: theme.textMuted }}>Facturas Emitidas</div>
                         </div>
                         <div style={{ textAlign: 'center', background: theme.surface, padding: 15, borderRadius: 8, border: `1px solid ${theme.border}` }}>
+                            <div style={{ fontSize: 22, fontWeight: 'bold', color: '#8e44ad' }}>RD$ {(facturacionDia.mes?.totalFacturado || 0).toLocaleString()}</div>
+                            <div style={{ fontSize: 12, color: theme.textMuted }}>Facturado Mes</div>
+                        </div>
+                        <div style={{ textAlign: 'center', background: theme.surface, padding: 15, borderRadius: 8, border: `1px solid ${theme.border}` }}>
                             <div style={{ fontSize: 22, fontWeight: 'bold', color: '#e67e22' }}>RD$ {(facturacionDia.mes?.totalCobrado || 0).toLocaleString()}</div>
                             <div style={{ fontSize: 12, color: theme.textMuted }}>Cobrado Mes</div>
                         </div>
