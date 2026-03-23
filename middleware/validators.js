@@ -50,7 +50,7 @@ const registerValidation = [
         .isLength({ min: 6 }).withMessage('Mínimo 6 caracteres'),
     body('role')
         .optional()
-        .isIn(['admin', 'medico', 'recepcion', 'laboratorio', 'paciente'])
+        .isIn(['admin', 'super-admin', 'medico', 'bioanalista', 'recepcion', 'recepcionista', 'laboratorio', 'paciente'])
         .withMessage('Rol inválido'),
     validate
 ];
