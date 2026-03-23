@@ -1,5 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Menu, X, ChevronDown } from 'lucide-react';
 
 const cn = (...classes) => classes.filter(Boolean).join(' ');
 
@@ -26,14 +28,17 @@ function MenuLink({ item, isMobile, sidebarOpen, darkMode, onClick }) {
       >
         {item.icon}
       </span>
-      <span
-        className={cn(
-          'text-sm whitespace-nowrap overflow-hidden transition-all duration-200',
-          sidebarOpen || isMobile ? 'opacity-100 w-auto inline-block' : 'opacity-0 w-0 hidden'
-        )}
+      <motion.span
+        animate={{
+          opacity: sidebarOpen || isMobile ? 1 : 0,
+          width: sidebarOpen || isMobile ? 'auto' : 0,
+          display: sidebarOpen || isMobile ? 'inline-block' : 'none',
+        }}
+        transition={{ duration: 0.18 }}
+        className="text-sm whitespace-nowrap overflow-hidden"
       >
         {item.label}
-      </span>
+      </motion.span>
 
       {!sidebarOpen && !isMobile && (
         <div className={cn(
@@ -83,7 +88,7 @@ function AdminSection({
           {(sidebarOpen || isMobile) && <span className="text-sm whitespace-nowrap">Administracion</span>}
         </div>
         {(sidebarOpen || isMobile) && (
-          <span className={cn('material-icons-round text-sm transition-transform', adminOpen ? 'rotate-180' : 'rotate-0')}>expand_more</span>
+          <ChevronDown className={cn('h-4 w-4 transition-transform', adminOpen ? 'rotate-180' : 'rotate-0')} />
         )}
       </button>
 
@@ -138,25 +143,32 @@ export default function AppSidebar({
             className="h-10 w-10 rounded-xl bg-white/85 dark:bg-[#151922]/90 border border-gray-200 dark:border-white/10 shadow-lg flex items-center justify-center"
             aria-label="Abrir menu"
           >
-            <span className="material-icons-round text-slate-700 dark:text-slate-200">menu</span>
+            <Menu className="h-5 w-5 text-slate-700 dark:text-slate-200" />
           </button>
         </div>
       )}
 
-      {isMobile && sidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
-          onClick={closeMobile}
-        />
-      )}
-
-      <aside
-        className={cn(
-          sidebarBase,
-          isMobile
-            ? cn('w-72 transition-transform duration-200', sidebarOpen ? 'translate-x-0' : '-translate-x-full')
-            : cn('transition-all duration-200', sidebarOpen ? 'w-[260px]' : 'w-[80px]')
+      <AnimatePresence>
+        {isMobile && sidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+            onClick={closeMobile}
+          />
         )}
+      </AnimatePresence>
+
+      <motion.aside
+        className={cn(sidebarBase, isMobile ? 'w-72' : 'w-[64px]')}
+        animate={
+          isMobile
+            ? { x: sidebarOpen ? 0 : -320 }
+            : { width: sidebarOpen ? 260 : 80, x: 0 }
+        }
+        transition={{ duration: 0.24, ease: 'easeInOut' }}
         onMouseEnter={() => {
           if (!isMobile) setSidebarOpen(true);
         }}
@@ -171,7 +183,7 @@ export default function AppSidebar({
               className="h-8 w-8 rounded-md border border-gray-300/70 dark:border-white/10 flex items-center justify-center"
               aria-label="Cerrar menu"
             >
-              <span className="material-icons-round text-slate-700 dark:text-slate-200">close</span>
+              <X className="h-4 w-4 text-slate-700 dark:text-slate-200" />
             </button>
           </div>
         )}
@@ -189,14 +201,18 @@ export default function AppSidebar({
             </span>
           </div>
           {(sidebarOpen || isMobile) && (
-            <div className="flex flex-col overflow-hidden transition-opacity duration-200 opacity-100">
+            <motion.div
+              initial={{ opacity: 0, x: -6 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex flex-col overflow-hidden"
+            >
               <span className="text-[#3df5e7] font-bold text-xl tracking-widest leading-none truncate">
                 {empresaConfig.nombre || 'LUMINA'}
               </span>
               <span className="text-gray-600 dark:text-[#bacac7] text-[10px] uppercase tracking-[0.2em] mt-1 opacity-70 truncate">
                 Clinical Intelligence
               </span>
-            </div>
+            </motion.div>
           )}
         </div>
 
@@ -237,7 +253,7 @@ export default function AppSidebar({
             {(sidebarOpen || isMobile) && <span className="text-sm">Log Out</span>}
           </button>
         </div>
-      </aside>
+      </motion.aside>
     </>
   );
 }
