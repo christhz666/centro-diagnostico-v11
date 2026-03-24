@@ -1,0 +1,30 @@
+# ============================================
+# Centro Diagnóstico - .dockerignore
+# Excluir archivos innecesarios de la imagen
+# ============================================
+
+node_modules/
+frontend/node_modules/
+frontend/build/
+.git/
+.github/
+.vscode/
+.env
+.env.local
+*.md
+*.zip
+*.log
+mongodb_data/
+uploads/
+downloads/
+temp_stitch_*/
+test-barcode.png
+error.txt
+coverage/
+__pycache__/
+*.py
+venv/
+.stitch/
+.vc/
+.agents/
+.skills/

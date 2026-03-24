@@ -1,0 +1,126 @@
+# ============================================
+# Centro Diagnóstico Mi Esperanza
+# GitHub Actions - CI/CD Pipeline
+# ============================================
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+
+  # ── Lint & Validación ──────────────────────
+  lint:
+    name: 🔍 Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: ESLint
+        run: npx eslint . --ext .js --max-warnings=0 || true
+
+  # ── Tests Backend ──────────────────────────
+  test-backend:
+    name: 🧪 Tests Backend
+    runs-on: ubuntu-latest
+    needs: lint
+
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand({ping:1})'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Ejecutar tests
+        run: npm test -- --forceExit --detectOpenHandles
+        env:
+          NODE_ENV: test
+          MONGODB_URI: mongodb://localhost:27017/centro_diagnostico_test
+          JWT_EXPIRES_IN: 1h
+          PORT: 5001
+
+  # ── Build Frontend ─────────────────────────
+  build-frontend:
+    name: 🏗️ Build Frontend
+    runs-on: ubuntu-latest
+    needs: lint
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependencias frontend
+        run: cd frontend && npm ci
+
+      - name: Build frontend
+        run: cd frontend && npm run build
+        env:
+          CI: false
+
+  # ── Docker Build (solo en main) ────────────
+  docker:
+    name: 🐳 Docker Build
+    runs-on: ubuntu-latest
+    needs: [test-backend, build-frontend]
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t centro-diagnostico:${{ github.sha }} .
+
+      - name: Test Docker image
+        run: |
+          docker run -d --name test-container \
+            -e MONGODB_URI=mongodb://host.docker.internal:27017/test \
+            -e NODE_ENV=test \
+            -p 5000:5000 \
+            centro-diagnostico:${{ github.sha }}
+          sleep 5
+          docker logs test-container
+          docker stop test-container
+          docker rm test-container

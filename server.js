@@ -20,7 +20,7 @@ const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 // Inicializar Express
 const app = express();
-app.use(compression()); // Comprimir respuestas
+app.use(compression());
 app.set('trust proxy', 1);
 
 // Ruta raíz para evitar 404 en /
@@ -28,7 +28,7 @@ app.get('/', (req, res) => {
     res.json({
         success: true,
         message: 'Centro Diagnóstico API',
-        version: '1.0',
+        version: '11.0',
         date: new Date().toISOString()
     });
 });
@@ -58,11 +58,11 @@ const parseCorsOrigins = () => {
             .map(s => s.trim())
             .filter(Boolean);
     }
-    
-    // Siempe permitir las aplicaciones nativas de escritorio (Tauri)
+
+    // Siempre permitir las aplicaciones nativas de escritorio (Tauri)
     origins.push('http://tauri.localhost');
     origins.push('tauri://localhost');
-    
+
     return origins;
 };
 
@@ -72,16 +72,36 @@ const corsOrigins = parseCorsOrigins();
 // MIDDLEWARE DE SEGURIDAD
 // ==========================================
 
-// Helmet - headers de seguridad
+// Helmet - headers de seguridad con CSP configurada
 app.use(helmet({
-    crossOriginResourcePolicy: false,
-    contentSecurityPolicy: false
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+            fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+            imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+            connectSrc: [
+                "'self'",
+                process.env.PUBLIC_API_URL || 'http://localhost:5000',
+                process.env.FRONTEND_URL || 'http://localhost:3000',
+                process.env.ORTHANC_URL || 'http://localhost:8042'
+            ].filter(Boolean),
+            frameSrc: ["'self'"],
+            objectSrc: ["'none'"],
+            upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null,
+        },
+    },
+    crossOriginEmbedderPolicy: false, // Necesario para cargar imágenes externas
 }));
 
-// Rate limiting - prevenir ataques de fuerza bruta
+// Rate limiting general — prevenir abuso
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutos
-    max: Number(process.env.RATE_LIMIT_MAX || 2500),
+    max: Number(process.env.RATE_LIMIT_MAX || 500),
+    standardHeaders: true,
+    legacyHeaders: false,
     message: {
         success: false,
         message: 'Demasiadas peticiones desde esta IP. Intente en 15 minutos.'
@@ -92,7 +112,9 @@ app.use('/api/', limiter);
 // Rate limit estricto para login (previene fuerza bruta)
 const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: Number(process.env.RATE_LIMIT_LOGIN_MAX || 100),
+    max: Number(process.env.RATE_LIMIT_LOGIN_MAX || 10),
+    standardHeaders: true,
+    legacyHeaders: false,
     message: {
         success: false,
         message: 'Demasiados intentos de login. Intente en 15 minutos.'
@@ -111,9 +133,9 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization', 'x-sucursal-id']
 }));
 
-// Body parser
-app.use(express.json({ limit: '100mb' }));
-app.use(express.urlencoded({ extended: true, limit: '100mb' }));
+// Body parser — límite global de 10MB (seguro contra DoS)
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Logging
 if (process.env.NODE_ENV === 'development') {
@@ -126,6 +148,12 @@ if (process.env.NODE_ENV === 'development') {
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/uploads/imagenes', express.static(path.join(__dirname, 'uploads', 'imagenes')));
 app.use('/public', express.static(path.join(__dirname, 'public')));
+
+// ==========================================
+// MIDDLEWARE PARA UPLOAD PESADO (50MB)
+// Solo se aplica a rutas que realmente suben archivos
+// ==========================================
+const heavyPayload = express.json({ limit: '50mb' });
 
 // ==========================================
 // RUTAS DE LA API
@@ -176,15 +204,14 @@ app.use('/api/equipos', require('./routes/equipoRoutes'));
 app.use('/api/barcodes', require('./routes/poolBarcodes'));
 app.use('/api/contabilidad', require('./routes/contabilidad'));
 app.use('/api/configuracion', require('./routes/configuracion'));
-const deployRoutes = require('./routes/deploy');
-app.use('/api/deploy', deployRoutes);
-app.use('/api/downloads', require('./routes/downloads')); // No requiere autenticación
+app.use('/api/deploy', require('./routes/deploy'));
+app.use('/api/downloads', require('./routes/downloads'));
 app.use('/api/whatsapp', require('./routes/whatsapp'));
 app.use('/api/auditoria', require('./routes/auditoria'));
 app.use('/api/imagenologia', require('./routes/imagenologia'));
-app.use('/api/orthanc', require('./routes/orthanc')); // Proxy DICOM
-app.use("/api/verificar", require("./routes/verificar"));
-app.use("/verificar", require("./routes/verificar")); // Backward compatibility
+app.use('/api/orthanc', require('./routes/orthanc'));
+app.use('/api/verificar', require('./routes/verificar'));
+app.use('/verificar', require('./routes/verificar'));
 
 // Visor de imágenes médicas (acceso directo por URL)
 app.get('/visor', (req, res) => {
@@ -205,7 +232,6 @@ if (fs.existsSync(frontendBuild)) {
         if (req.originalUrl.startsWith('/api')) {
             return next();
         }
-
         return res.sendFile(path.join(frontendBuild, 'index.html'));
     });
 }
@@ -232,13 +258,13 @@ const startServer = async () => {
             const ips = getLocalIps();
             console.log('');
             console.log('+---------------------------------------------------+');
-            console.log('¦  Centro Diagnóstico - API Server                 ¦');
-            console.log(`¦  Host/Puerto: ${HOST}:${PORT}`);
+            console.log('|  Centro Diagnóstico - API Server v11              |');
+            console.log(`|  Host/Puerto: ${HOST}:${PORT}`);
             if (process.env.PUBLIC_API_URL) {
-                console.log(`¦  Public API: ${process.env.PUBLIC_API_URL}`);
+                console.log(`|  Public API: ${process.env.PUBLIC_API_URL}`);
             }
-            console.log(`¦  Local IPs: ${ips.join(', ') || 'N/A'}`);
-            console.log(`¦  CORS: ${corsOrigins.join(', ') || 'N/A'}`);
+            console.log(`|  Local IPs: ${ips.join(', ') || 'N/A'}`);
+            console.log(`|  CORS: ${corsOrigins.join(', ') || 'N/A'}`);
             console.log('+---------------------------------------------------+');
             console.log('');
         });
@@ -254,19 +280,27 @@ const startServer = async () => {
         // Iniciar polling de Orthanc para sincronizar imágenes DICOM
         const orthancService = require('./services/orthancService');
         setTimeout(() => {
-            console.log('🔄 Iniciando sincronización en background con Servidor Orthanc...');
+            console.log('🔄 Iniciando sincronización con Servidor Orthanc...');
             setInterval(() => {
                 orthancService.sincronizarImagenesListas().catch(e => console.error(e));
-            }, 30000); // Polling cada 30 segundos
+            }, 30000);
         }, 5000);
 
         // Graceful shutdown
         const shutdown = (signal) => {
-            console.log(`${signal} recibido. Cerrando servidor...`);
+            console.log(`\n${signal} recibido. Cerrando servidor...`);
             server.close(() => {
-                console.log('Servidor HTTP cerrado.');
-                process.exit(0);
+                mongoose.connection.close(false, () => {
+                    console.log('Conexión MongoDB cerrada.');
+                    console.log('Servidor HTTP cerrado.');
+                    process.exit(0);
+                });
             });
+            // Forzar cierre después de 10s
+            setTimeout(() => {
+                console.error('Cierre forzado después de 10s');
+                process.exit(1);
+            }, 10000);
         };
 
         process.on('SIGTERM', () => shutdown('SIGTERM'));

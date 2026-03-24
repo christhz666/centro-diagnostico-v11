@@ -1,10 +1,81 @@
+# ============================================
+# Centro Diagnóstico Mi Esperanza - .gitignore
+# ============================================
+
+# ── Dependencias ─────────────────────────────
 node_modules/
-agentes/*/dist/
+frontend/node_modules/
 agentes/*/node_modules/
-uploads/
+agentes/*/dist/
+
+# ── Variables de entorno (NUNCA subir) ───────
+.env
+.env.local
+.env.production
+.env.staging
+frontend/.env
+frontend/.env.local
+
+# ── Logs ─────────────────────────────────────
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── Runtime / Temp ───────────────────────────
+*.pid
+*.seed
+*.pid.lock
 cola_pendiente.json
+error.txt
+
+# ── Build outputs ────────────────────────────
+frontend/build/
+dist/
+*.exe
+
+# ── IDE / Editor ─────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ── Uploads y datos locales ──────────────────
+uploads/
+mongodb_data/
+downloads/
+
+# ── Archivos comprimidos ─────────────────────
+*.zip
+*.rar
+*.tar.gz
+*.7z
+
+# ── Tests temporales ─────────────────────────
 test_lis.js
 test_lis_directo.js
 _tmp_query.js
-frontend/node_modules/
+coverage/
+
+# ── Tauri build ──────────────────────────────
+frontend/src-tauri/target/
+frontend/src-tauri/bin/
+
+# ── Python cache (legacy) ────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+venv/
+.venv/
+
+# ── OS files ─────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
