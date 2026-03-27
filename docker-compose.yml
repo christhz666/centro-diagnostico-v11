@@ -1,0 +1,104 @@
+# ============================================================
+# Docker Compose para Centro Diagnóstico Mi Esperanza
+# Incluye: Backend, MongoDB, y servicios opcionales
+# ============================================================
+
+version: '3.8'
+
+services:
+  # =========================================
+  # MongoDB - Base de datos
+  # =========================================
+  mongodb:
+    image: mongo:6
+    container_name: centro-diagnostico-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASS:-securepassword123}
+      MONGO_INITDB_DATABASE: centro_diagnostico
+    volumes:
+      - mongo_data:/data/db
+      - mongo_backups:/backups
+    ports:
+      - "27017:27017"
+    networks:
+      - centro-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # =========================================
+  # Backend - API Node.js/Express
+  # =========================================
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: centro-diagnostico-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      MONGODB_URI: mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASS:-securepassword123}@mongodb:27017/centro_diagnostico?authSource=admin
+      JWT_SECRET: ${JWT_SECRET:-change-this-secret-in-production}
+      JWT_EXPIRES_IN: 24h
+      LOG_LEVEL: info
+      LOG_DIR: /app/logs
+      BACKUP_DIR: /app/backups
+      AUTO_BACKUP_ENABLED: "true"
+    volumes:
+      - ./logs:/app/logs
+      - ./backups:/app/backups
+      - ./uploads:/app/uploads
+    ports:
+      - "5000:5000"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - centro-network
+    command: sh -c "sleep 10 && node server.js"
+
+  # =========================================
+  # Backup Service - Backups automáticos
+  # =========================================
+  backup:
+    image: mongo:6
+    container_name: centro-diagnostico-backup
+    restart: unless-stopped
+    environment:
+      MONGODB_URI: mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASS:-securepassword123}@mongodb:27017/centro_diagnostico?authSource=admin
+      BACKUP_DIR: /backups
+      BACKUP_INTERVAL: ${BACKUP_INTERVAL:-24}
+    volumes:
+      - mongo_backups:/backups
+    depends_on:
+      - mongodb
+    networks:
+      - centro-network
+    entrypoint: >
+      sh -c '
+      while true; do
+        TIMESTAMP=$$(date +%Y%m%d_%H%M%S)
+        echo "Iniciando backup: $$TIMESTAMP"
+        mongodump --uri="$$MONGODB_URI" --out=/backups/dump_$$TIMESTAMP
+        tar -czf /backups/backup_$$TIMESTAMP.tar.gz -C /backups dump_$$TIMESTAMP
+        rm -rf /backups/dump_$$TIMESTAMP
+        find /backups -name "backup_*.tar.gz" -mtime +7 -delete
+        echo "Backup completado"
+        sleep $$(($$BACKUP_INTERVAL * 3600))
+      done
+      '
+
+networks:
+  centro-network:
+    driver: bridge
+
+volumes:
+  mongo_data:
+    driver: local
+  mongo_backups:
+    driver: local
