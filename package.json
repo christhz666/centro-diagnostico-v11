@@ -1,7 +1,7 @@
 {
   "name": "centro-diagnostico-backend",
-  "version": "1.0.0",
-  "description": "Backend API - Centro Diagnóstico Mi Esperanza",
+  "version": "11.0.0",
+  "description": "Backend API - Centro Diagnóstico Mi Esperanza v11",
   "main": "server.js",
   "bin": "server.js",
   "scripts": {
@@ -11,7 +11,17 @@
     "build:backend": "pkg . --targets node18-win-x64 --output frontend/src-tauri/bin/backend-x86_64-pc-windows-msvc.exe",
     "frontend:build": "cd frontend && npm run build",
     "tauri:dev": "cd frontend && npx tauri dev",
-    "tauri:build": "cd frontend && cross-env REACT_APP_API_URL=https://miesperanzalab.duckdns.org/api npx tauri build"
+    "tauri:build": "cross-env REACT_APP_API_URL=https://miesperanzalab.duckdns.org/api npx @tauri-apps/cli build",
+    "backup": "node scripts/backup-mongodb.js",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "test:unit": "jest tests/unit --coverage",
+    "test:integration": "jest tests/integration --coverage",
+    "test:e2e": "playwright test",
+    "lint": "eslint . --ext .js",
+    "lint:fix": "eslint . --ext .js --fix"
   },
   "pkg": {
     "scripts": [
@@ -35,25 +45,29 @@
     "compression": "^1.8.1",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
-    "express": "^4.18.2",
-    "express-rate-limit": "^7.1.4",
-    "express-validator": "^7.0.1",
-    "helmet": "^7.1.0",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "express-validator": "^7.2.1",
+    "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.0.3",
+    "mongoose": "^8.9.5",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
-    "nodemailer": "^6.9.7",
+    "nodemailer": "^6.10.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "twilio": "^5.12.2"
+    "twilio": "^5.4.0"
   },
   "optionalDependencies": {
     "serialport": "^12.0.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.50.0",
     "cross-env": "^10.1.0",
-    "nodemon": "^3.0.2",
-    "pkg": "^5.8.1"
+    "eslint": "^8.57.1",
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.9",
+    "pkg": "^5.8.1",
+    "supertest": "^7.0.0"
   }
 }

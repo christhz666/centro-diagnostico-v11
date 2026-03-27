@@ -1,0 +1,47 @@
+# Git
+.git
+.gitignore
+
+# Node modules
+node_modules
+npm-debug.log
+
+# Logs
+logs
+*.log
+
+# Backups
+backups
+*.tar.gz
+
+# Environment files (NO incluir .env real)
+.env
+!.env.example
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test files
+tests/coverage
+test-results
+
+# Temp files
+temp
+tmp
+.temp
+.tmp
+
+# Build outputs
+dist
+build
+*.exe
+
+# MongoDB data (si existe en el proyecto)
+mongodb_data
